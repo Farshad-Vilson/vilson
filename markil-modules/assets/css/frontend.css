@@ -3895,6 +3895,18 @@
 }
 
 /* =========================================================
+   Single Page Wrapper (markil-module post type)
+   ========================================================= */
+.markil-single-wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+}
+@media (max-width: 900px) {
+    .markil-single-wrap { padding: 16px 12px 40px; }
+}
+
+/* =========================================================
    Gallery Slider
    ========================================================= */
 .markil-fdc-gallery {

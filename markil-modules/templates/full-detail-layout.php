@@ -162,9 +162,13 @@ $uniq         = 'mgal-' . intval( $m['id'] );
                 <div class="markil-fdc-tab-panel <?php echo $ti === 0 ? 'active' : ''; ?>"
                      data-tab="fdc-<?php echo esc_attr( $ti ); ?>">
 
-                    <?php if ( ! empty( trim( wp_strip_all_tags( $tab['content'] ) ) ) ) : ?>
+                    <?php
+                    // Full page uses the FULL content; falls back to summary if empty.
+                    $tab_full = ! empty( $tab['content'] ) ? $tab['content'] : ( $tab['summary'] ?? '' );
+                    if ( ! empty( trim( wp_strip_all_tags( $tab_full ) ) ) ) :
+                    ?>
                     <div class="markil-fdc-tab-body markil-tab-body">
-                        <?php echo $tab['content']; ?>
+                        <?php echo $tab_full; ?>
                     </div>
                     <?php endif; ?>
 

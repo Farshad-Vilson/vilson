@@ -17,6 +17,23 @@ class Plugin {
         add_action( 'init', [ $this, 'init' ] );
         add_action( 'plugins_loaded', [ $this, 'plugins_loaded' ] );
         register_activation_hook( MARKIL_BASENAME, [ $this, 'activate' ] );
+        add_filter( 'single_template', [ $this, 'load_single_template' ] );
+    }
+
+    /**
+     * Override the single-post template for markil_module posts.
+     * Themes can override by placing single-markil_module.php in their theme root.
+     */
+    public function load_single_template( $template ) {
+        if ( is_singular( 'markil_module' ) ) {
+            // Allow theme override
+            $theme_template = locate_template( [ 'single-markil_module.php', 'markil-modules/single-markil_module.php' ] );
+            if ( $theme_template ) return $theme_template;
+
+            $plugin_template = MARKIL_PATH . 'templates/single-markil_module.php';
+            if ( file_exists( $plugin_template ) ) return $plugin_template;
+        }
+        return $template;
     }
 
     public function init() {

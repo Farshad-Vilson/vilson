@@ -92,7 +92,7 @@ class MetaBoxes {
         <tr>
             <th><label><?php _e('صفحه جزئیات (URL)','markil-modules'); ?></label></th>
             <td><input type="url" name="_markil_detail_page" value="<?php echo esc_attr($detail_page); ?>" class="regular-text">
-            <p class="description"><?php _e('برای دکمه جزئیات بیشتر - اگر خالی باشد پنجره جزئیات کامل (Full Detail Modal) باز می‌شود','markil-modules'); ?></p></td>
+            <p class="description"><?php _e('اگر خالی باشد به‌صورت خودکار به صفحه پیش‌فرض ماژول (/markil-module/slug/) هدایت می‌شود. توصیه می‌شود خالی بگذارید مگر اینکه آدرس سفارشی دارید.','markil-modules'); ?></p></td>
         </tr>
         <tr>
             <th><label><?php _e('متن دکمه اصلی','markil-modules'); ?></label></th>
@@ -111,8 +111,7 @@ class MetaBoxes {
             <td>
                 <input type="text" name="_markil_btn_secondary_text" value="<?php echo esc_attr($btn2_text ?: __('جزئیات بیشتر','markil-modules')); ?>" class="regular-text">
                 <select name="_markil_btn_secondary_action" id="markil-btn2-action-select">
-                    <option value="detail_page" <?php selected($btn2_action,'detail_page'); ?>><?php _e('رفتن به صفحه جزئیات','markil-modules'); ?></option>
-                    <option value="full_detail_modal" <?php selected($btn2_action,'full_detail_modal'); ?>><?php _e('باز کردن پنجره جزئیات کامل (Full Detail Modal)','markil-modules'); ?></option>
+                    <option value="detail_page" <?php selected($btn2_action,'detail_page'); ?>><?php _e('رفتن به صفحه جزئیات (پیشنهاد می‌شود)','markil-modules'); ?></option>
                     <option value="wc_add" <?php selected($btn2_action,'wc_add'); ?>><?php _e('افزودن به سبد خرید ووکامرس','markil-modules'); ?></option>
                     <option value="wc_page" <?php selected($btn2_action,'wc_page'); ?>><?php _e('رفتن به صفحه محصول ووکامرس','markil-modules'); ?></option>
                     <option value="custom_url" <?php selected($btn2_action,'custom_url'); ?>><?php _e('لینک دلخواه','markil-modules'); ?></option>
@@ -150,63 +149,174 @@ class MetaBoxes {
     }
 
     public function tabs_box( $post ) {
+        // Ensure editor scripts are loaded for wp.editor.initialize() in JS
+        if ( function_exists( 'wp_enqueue_editor' ) ) wp_enqueue_editor();
+
         $custom_tabs = get_post_meta( $post->ID, '_markil_custom_tabs', true );
         if ( ! is_array( $custom_tabs ) || empty( $custom_tabs ) ) {
             $custom_tabs = [
-                [ 'label' => get_post_meta( $post->ID, '_markil_tab1_label', true ) ?: __( 'جزئیات', 'markil-modules' ), 'content' => get_post_meta( $post->ID, '_markil_tab_details', true ), 'enabled' => '1' ],
-                [ 'label' => get_post_meta( $post->ID, '_markil_tab2_label', true ) ?: __( 'امکانات', 'markil-modules' ), 'content' => get_post_meta( $post->ID, '_markil_tab_features', true ), 'enabled' => '1' ],
-                [ 'label' => get_post_meta( $post->ID, '_markil_tab3_label', true ) ?: __( 'سازگاری', 'markil-modules' ), 'content' => get_post_meta( $post->ID, '_markil_tab_compatibility', true ), 'enabled' => '1' ],
-                [ 'label' => get_post_meta( $post->ID, '_markil_tab4_label', true ) ?: __( 'نقد و بررسی', 'markil-modules' ), 'content' => '[markil_reviews]', 'enabled' => '1' ],
+                [ 'label' => __( 'جزئیات', 'markil-modules' ),     'summary' => get_post_meta( $post->ID, '_markil_tab_details', true ),       'content' => '', 'enabled' => '1' ],
+                [ 'label' => __( 'امکانات', 'markil-modules' ),     'summary' => get_post_meta( $post->ID, '_markil_tab_features', true ),      'content' => '', 'enabled' => '1' ],
+                [ 'label' => __( 'سازگاری', 'markil-modules' ),     'summary' => get_post_meta( $post->ID, '_markil_tab_compatibility', true ), 'content' => '', 'enabled' => '1' ],
+                [ 'label' => __( 'نقد و بررسی', 'markil-modules' ), 'summary' => '[markil_reviews]', 'content' => '[markil_reviews]', 'enabled' => '1' ],
             ];
         }
         ?>
         <style>
         .markil-tabs-builder{direction:rtl;background:#fff;border:1px solid #dcdcde;border-radius:12px;padding:14px}
-        .markil-tab-builder-row{border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;margin-bottom:12px;overflow:hidden}
-        .markil-tab-builder-head{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border-bottom:1px solid #e2e8f0;cursor:move}
-        .markil-tab-builder-head strong{margin-left:auto;color:#1e293b}.markil-tab-builder-head input[type=text]{width:260px;max-width:100%;padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px}.markil-tab-builder-body{padding:12px}.markil-tab-builder-body textarea{width:100%;min-height:130px;border:1px solid #cbd5e1;border-radius:10px;padding:10px;direction:rtl}.markil-tab-builder-actions{display:flex;gap:8px;align-items:center}.markil-remove-tab{color:#b91c1c!important;border-color:#fecaca!important}.markil-tab-help{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 12px;margin-bottom:12px;color:#334155}.markil-tab-shortcode{font-family:monospace;direction:ltr;display:inline-block;background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:2px 6px}
+        .markil-tab-row{border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;margin-bottom:14px;overflow:hidden}
+        .markil-tab-head{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border-bottom:1px solid #e2e8f0}
+        .markil-tab-head strong{margin-left:auto;color:#1e293b;font-size:13px}
+        .markil-tab-head input[type=text]{width:260px;max-width:100%;padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px}
+        .markil-tab-body{padding:14px}
+        .markil-tab-field{margin-bottom:14px}
+        .markil-tab-field-label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#334155;margin-bottom:6px}
+        .markil-tab-field-label .markil-badge-blue{background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700}
+        .markil-tab-field-label .markil-badge-green{background:#d1fae5;color:#047857;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700}
+        .markil-tab-field-hint{font-size:11px;color:#64748b;margin:4px 0 0;line-height:1.6}
+        .markil-tab-summary-input{width:100%;min-height:70px;border:1px solid #cbd5e1;border-radius:8px;padding:10px;direction:rtl;font-family:inherit;font-size:13px}
+        .markil-remove-tab{color:#b91c1c!important;border-color:#fecaca!important}
+        .markil-tab-help{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 14px;margin-bottom:14px;color:#334155;line-height:1.7;font-size:13px}
+        .markil-tab-help code,.markil-tab-shortcode{font-family:monospace;direction:ltr;display:inline-block;background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:2px 6px;font-size:12px}
+        .markil-tab-help-row{margin-bottom:6px}
+        .markil-tab-help-row:last-child{margin-bottom:0}
         </style>
+
         <div class="markil-tab-help">
-            <?php _e('هر تب را می‌توانید حذف، غیرفعال یا اضافه کنید. نام دکمه تب و محتوای داخل آن کاملاً قابل ویرایش است. برای تب نظرات خودکار از کد ', 'markil-modules'); ?>
-            <span class="markil-tab-shortcode">[markil_reviews]</span>
-            <?php _e(' استفاده کنید. برای نمایش یک قالب المنتور داخل تب از ', 'markil-modules'); ?>
-            <span class="markil-tab-shortcode">[elementor-template id="123"]</span>
-            <?php _e(' استفاده کنید.', 'markil-modules'); ?>
+            <div class="markil-tab-help-row">
+                <strong>📝 ساختار جدید v2.5+:</strong> هر تب اکنون <strong>دو فیلد جدا</strong> دارد —
+                <span class="markil-badge-blue" style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:6px;font-size:11px">خلاصه</span>
+                برای پنل کناری نمایش‌داده‌می‌شود، و
+                <span class="markil-badge-green" style="background:#d1fae5;color:#047857;padding:2px 8px;border-radius:6px;font-size:11px">محتوای کامل</span>
+                در صفحه جزئیات کامل ماژول.
+            </div>
+            <div class="markil-tab-help-row">
+                <strong>🎨 طراحی با المنتور:</strong> برای استفاده از قالب طراحی‌شده در المنتور داخل هر تب، از شورت‌کد <code>[elementor-template id="123"]</code> استفاده کنید (ابتدا در Templates &gt; Saved Templates ساخته شود).
+            </div>
+            <div class="markil-tab-help-row">
+                <strong>⭐ نظرات کاربران:</strong> برای نمایش لیست نظرات و فرم ثبت نظر از <code>[markil_reviews]</code> استفاده کنید.
+            </div>
         </div>
+
         <div class="markil-tabs-builder" id="markil-tabs-builder">
             <?php foreach ( $custom_tabs as $i => $tab ) :
-                $label   = isset($tab['label']) ? $tab['label'] : '';
-                $content = isset($tab['content']) ? $tab['content'] : '';
-                $enabled = isset($tab['enabled']) ? $tab['enabled'] : '1';
+                $label    = isset($tab['label'])   ? $tab['label']   : '';
+                $summary  = isset($tab['summary']) ? $tab['summary'] : '';
+                $content  = isset($tab['content']) ? $tab['content'] : '';
+                $enabled  = isset($tab['enabled']) ? $tab['enabled'] : '1';
+                $editor_id = 'markil_tab_content_' . $i;
             ?>
-            <div class="markil-tab-builder-row">
-                <div class="markil-tab-builder-head">
-                    <strong><?php _e('تب', 'markil-modules'); ?></strong>
-                    <input type="text" name="_markil_custom_tabs[<?php echo esc_attr($i); ?>][label]" value="<?php echo esc_attr($label); ?>" placeholder="<?php esc_attr_e('نام تب مثل جزئیات یا مدت زمان اجرا','markil-modules'); ?>">
+            <div class="markil-tab-row">
+                <div class="markil-tab-head">
+                    <strong><?php _e('تب #', 'markil-modules'); ?><?php echo $i + 1; ?></strong>
+                    <input type="text" name="_markil_custom_tabs[<?php echo esc_attr($i); ?>][label]"
+                           value="<?php echo esc_attr($label); ?>"
+                           placeholder="<?php esc_attr_e('نام تب مثل جزئیات','markil-modules'); ?>">
                     <label><input type="checkbox" name="_markil_custom_tabs[<?php echo esc_attr($i); ?>][enabled]" value="1" <?php checked($enabled, '1'); ?>> <?php _e('فعال','markil-modules'); ?></label>
                     <button type="button" class="button markil-remove-tab"><?php _e('حذف','markil-modules'); ?></button>
                 </div>
-                <div class="markil-tab-builder-body">
-                    <textarea name="_markil_custom_tabs[<?php echo esc_attr($i); ?>][content]" placeholder="<?php esc_attr_e('محتوای این تب را بنویسید. HTML ساده مجاز است. همچنین می‌توانید از شورت‌کد [elementor-template id="xxx"] استفاده کنید.','markil-modules'); ?>"><?php echo esc_textarea($content); ?></textarea>
+                <div class="markil-tab-body">
+                    <!-- Summary (panel preview) -->
+                    <div class="markil-tab-field">
+                        <div class="markil-tab-field-label">
+                            <span class="markil-badge-blue">خلاصه</span>
+                            <?php _e('متن کوتاه برای پنل کناری (پیش‌نمایش سریع)', 'markil-modules'); ?>
+                        </div>
+                        <textarea class="markil-tab-summary-input"
+                                  name="_markil_custom_tabs[<?php echo esc_attr($i); ?>][summary]"
+                                  placeholder="<?php esc_attr_e('یک پاراگراف کوتاه — وقتی کاربر روی کارت کلیک کند، در پنل کناری همین نمایش داده می‌شود.','markil-modules'); ?>"><?php echo esc_textarea($summary); ?></textarea>
+                        <p class="markil-tab-field-hint"><?php _e('پیشنهاد: ۲ تا ۴ خط کوتاه. می‌توانید HTML و شورت‌کد استفاده کنید.','markil-modules'); ?></p>
+                    </div>
+
+                    <!-- Full Content (detail page) — wp_editor -->
+                    <div class="markil-tab-field">
+                        <div class="markil-tab-field-label">
+                            <span class="markil-badge-green">محتوای کامل</span>
+                            <?php _e('محتوای کامل برای صفحه جزئیات (با تصویر، فایل، ویدیو، المنتور و...)', 'markil-modules'); ?>
+                        </div>
+                        <div class="markil-editor-wrap">
+                            <?php
+                            wp_editor( $content, $editor_id, [
+                                'textarea_name' => '_markil_custom_tabs[' . $i . '][content]',
+                                'editor_height' => 280,
+                                'media_buttons' => true,
+                                'tinymce'       => [
+                                    'wpautop' => true,
+                                ],
+                                'quicktags'     => true,
+                                'drag_drop_upload' => true,
+                            ]);
+                            ?>
+                        </div>
+                        <p class="markil-tab-field-hint">
+                            <?php _e('این محتوا در صفحه /markil-module/slug/ نمایش داده می‌شود. می‌توانید تصویر، ویدیو، گالری، جدول، شورت‌کد المنتور و هر چیز دیگری اضافه کنید.', 'markil-modules'); ?>
+                        </p>
+                    </div>
                 </div>
             </div>
             <?php endforeach; ?>
         </div>
-        <p><button type="button" class="button button-primary" id="markil-add-custom-tab">+ <?php _e('افزودن تب جدید','markil-modules'); ?></button></p>
+        <p>
+            <button type="button" class="button button-primary" id="markil-add-custom-tab">
+                + <?php _e('افزودن تب جدید','markil-modules'); ?>
+            </button>
+        </p>
+
         <script>
         jQuery(function($){
-            var index = $('#markil-tabs-builder .markil-tab-builder-row').length;
+            var index = $('#markil-tabs-builder .markil-tab-row').length;
+
+            function initEditor(id){
+                if (typeof wp === 'undefined' || !wp.editor || !wp.editor.initialize) return;
+                try {
+                    wp.editor.initialize(id, {
+                        tinymce: {
+                            wpautop: true,
+                            plugins: 'charmap,colorpicker,hr,lists,media,paste,tabfocus,textcolor,fullscreen,wordpress,wpautoresize,wpeditimage,wpemoji,wpgallery,wplink,wpdialogs,wptextpattern,wpview',
+                            toolbar1: 'formatselect,bold,italic,bullist,numlist,blockquote,alignleft,aligncenter,alignright,link,wp_more,fullscreen,wp_adv',
+                            toolbar2: 'strikethrough,hr,forecolor,pastetext,removeformat,charmap,outdent,indent,undo,redo,wp_help'
+                        },
+                        quicktags: true,
+                        mediaButtons: true
+                    });
+                } catch(e) { console.warn('Markil editor init failed:', e); }
+            }
+
             $('#markil-add-custom-tab').on('click', function(){
-                var row = '<div class="markil-tab-builder-row">'+
-                    '<div class="markil-tab-builder-head"><strong><?php echo esc_js(__('تب','markil-modules')); ?></strong>'+
-                    '<input type="text" name="_markil_custom_tabs['+index+'][label]" value="" placeholder="<?php echo esc_js(__('نام تب مثل مدت زمان اجرا','markil-modules')); ?>">'+
-                    '<label><input type="checkbox" name="_markil_custom_tabs['+index+'][enabled]" value="1" checked> <?php echo esc_js(__('فعال','markil-modules')); ?></label>'+
-                    '<button type="button" class="button markil-remove-tab"><?php echo esc_js(__('حذف','markil-modules')); ?></button></div>'+
-                    '<div class="markil-tab-builder-body"><textarea name="_markil_custom_tabs['+index+'][content]" placeholder="<?php echo esc_js(__('محتوای این تب را بنویسید','markil-modules')); ?>"></textarea></div>'+
+                var i = index;
+                var editorId = 'markil_tab_content_' + i;
+                var row =
+                    '<div class="markil-tab-row">' +
+                        '<div class="markil-tab-head">' +
+                            '<strong>تب جدید</strong>' +
+                            '<input type="text" name="_markil_custom_tabs[' + i + '][label]" placeholder="نام تب">' +
+                            '<label><input type="checkbox" name="_markil_custom_tabs[' + i + '][enabled]" value="1" checked> فعال</label>' +
+                            '<button type="button" class="button markil-remove-tab">حذف</button>' +
+                        '</div>' +
+                        '<div class="markil-tab-body">' +
+                            '<div class="markil-tab-field">' +
+                                '<div class="markil-tab-field-label"><span class="markil-badge-blue">خلاصه</span> متن کوتاه برای پنل کناری</div>' +
+                                '<textarea class="markil-tab-summary-input" name="_markil_custom_tabs[' + i + '][summary]" placeholder="یک پاراگراف کوتاه"></textarea>' +
+                            '</div>' +
+                            '<div class="markil-tab-field">' +
+                                '<div class="markil-tab-field-label"><span class="markil-badge-green">محتوای کامل</span> برای صفحه جزئیات</div>' +
+                                '<textarea id="' + editorId + '" name="_markil_custom_tabs[' + i + '][content]" rows="10" style="width:100%"></textarea>' +
+                            '</div>' +
+                        '</div>' +
                     '</div>';
-                $('#markil-tabs-builder').append(row); index++;
+                $('#markil-tabs-builder').append(row);
+                initEditor(editorId);
+                index++;
             });
-            $(document).on('click','.markil-remove-tab',function(){ $(this).closest('.markil-tab-builder-row').remove(); });
+
+            $(document).on('click','.markil-remove-tab',function(){
+                var $row = $(this).closest('.markil-tab-row');
+                var editorId = $row.find('textarea[id^="markil_tab_content_"]').attr('id');
+                if (editorId && wp.editor && wp.editor.remove) {
+                    try { wp.editor.remove(editorId); } catch(e){}
+                }
+                $row.remove();
+            });
         });
         </script>
         <?php
@@ -623,12 +733,14 @@ class MetaBoxes {
         if ( isset( $_POST['_markil_custom_tabs'] ) && is_array( $_POST['_markil_custom_tabs'] ) ) {
             $tabs = [];
             foreach ( $_POST['_markil_custom_tabs'] as $tab ) {
-                $label   = isset( $tab['label'] ) ? sanitize_text_field( wp_unslash( $tab['label'] ) ) : '';
+                $label   = isset( $tab['label'] )   ? sanitize_text_field( wp_unslash( $tab['label'] ) ) : '';
+                $summary = isset( $tab['summary'] ) ? wp_kses_post( wp_unslash( $tab['summary'] ) ) : '';
                 $content = isset( $tab['content'] ) ? wp_kses_post( wp_unslash( $tab['content'] ) ) : '';
                 $enabled = isset( $tab['enabled'] ) ? '1' : '0';
-                if ( $label === '' && $content === '' ) continue;
+                if ( $label === '' && $summary === '' && $content === '' ) continue;
                 $tabs[] = [
                     'label'   => $label ?: __( 'تب جدید', 'markil-modules' ),
+                    'summary' => $summary,
                     'content' => $content,
                     'enabled' => $enabled,
                 ];

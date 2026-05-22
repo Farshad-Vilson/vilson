@@ -9,11 +9,12 @@ class Ajax {
         add_action( 'wp_ajax_nopriv_markil_filter_modules',     [ $this, 'filter_modules' ] );
         add_action( 'wp_ajax_markil_get_module_detail',         [ $this, 'get_module_detail' ] );
         add_action( 'wp_ajax_nopriv_markil_get_module_detail',  [ $this, 'get_module_detail' ] );
-        add_action( 'wp_ajax_markil_render_full_detail',        [ $this, 'render_full_detail' ] );
-        add_action( 'wp_ajax_nopriv_markil_render_full_detail', [ $this, 'render_full_detail' ] );
         add_action( 'wp_ajax_markil_submit_review',             [ $this, 'submit_review' ] );
         add_action( 'wp_ajax_markil_toggle_wishlist',           [ $this, 'toggle_wishlist' ] );
         add_action( 'wp_ajax_nopriv_markil_toggle_wishlist',    [ $this, 'toggle_wishlist' ] );
+        // Modal-based full-detail AJAX (markil_render_full_detail) was removed
+        // in v2.6 — the full detail page is now a real WordPress single page
+        // at /markil-module/{slug}/ (see Plugin::load_single_template()).
     }
 
     public function filter_modules() {
@@ -99,35 +100,6 @@ class Ajax {
         $post = get_post( $post_id );
         if ( ! $post ) wp_send_json_error( 'Not found' );
         wp_send_json_success( $this->format_module( $post_id, true ) );
-    }
-
-    /**
-     * Renders the full-detail page HTML via AJAX for the modal overlay.
-     */
-    public function render_full_detail() {
-        check_ajax_referer( 'markil_modules_nonce', 'nonce' );
-        $post_id = intval( $_POST['module_id'] );
-        if ( ! $post_id ) wp_send_json_error( 'Invalid ID' );
-        $post = get_post( $post_id );
-        if ( ! $post || $post->post_status !== 'publish' ) wp_send_json_error( 'Not found' );
-
-        $m        = $this->format_module( $post_id, true );
-        $currency = get_option( 'markil_currency', 'تومان' );
-        $settings = [
-            'show_breadcrumbs'    => 'yes',
-            'show_sidebar'        => 'yes',
-            'show_features_bar'   => 'yes',
-            'show_sidebar_feats'  => 'yes',
-            'show_detail_sections'=> 'yes',
-            'show_guarantee'      => 'yes',
-            'sidebar_position'    => 'left',
-        ];
-
-        ob_start();
-        include MARKIL_PATH . 'templates/full-detail-layout.php';
-        $html = ob_get_clean();
-
-        wp_send_json_success( [ 'html' => $html ] );
     }
 
     public function submit_review() {
@@ -228,22 +200,38 @@ class Ajax {
             if ( is_array( $custom_tabs ) && ! empty( $custom_tabs ) ) {
                 foreach ( $custom_tabs as $tab ) {
                     if ( isset( $tab['enabled'] ) && $tab['enabled'] !== '1' ) continue;
-                    $label   = isset( $tab['label'] ) ? sanitize_text_field( $tab['label'] ) : '';
+                    $label   = isset( $tab['label'] )   ? sanitize_text_field( $tab['label'] ) : '';
+                    $summary = isset( $tab['summary'] ) ? $tab['summary'] : '';
                     $content = isset( $tab['content'] ) ? $tab['content'] : '';
-                    if ( trim( $label ) === '' && trim( wp_strip_all_tags( $content ) ) === '' ) continue;
+                    if ( trim( $label ) === ''
+                         && trim( wp_strip_all_tags( $summary ) ) === ''
+                         && trim( wp_strip_all_tags( $content ) ) === '' ) continue;
+
+                    // Process summary: [markil_reviews] → reviews HTML, then shortcodes+filters
+                    if ( strpos( $summary, '[markil_reviews]' ) !== false ) {
+                        $summary = str_replace( '[markil_reviews]', $data['tab_reviews_html'], $summary );
+                    } else {
+                        $summary = do_shortcode( apply_filters( 'the_content', $summary ) );
+                    }
+                    // Process full content similarly
                     if ( strpos( $content, '[markil_reviews]' ) !== false ) {
                         $content = str_replace( '[markil_reviews]', $data['tab_reviews_html'], $content );
                     } else {
                         $content = do_shortcode( apply_filters( 'the_content', $content ) );
                     }
-                    $tabs[] = [ 'label' => $label ?: __( 'تب', 'markil-modules' ), 'content' => $content ];
+                    $tabs[] = [
+                        'label'   => $label ?: __( 'تب', 'markil-modules' ),
+                        'summary' => $summary,
+                        'content' => $content,
+                    ];
                 }
             }
             if ( empty( $tabs ) ) {
-                $tabs[] = [ 'label' => $data['tab1_label'], 'content' => $data['tab_details'] ?: '<p>' . esc_html( $data['excerpt'] ) . '</p>' ];
-                $tabs[] = [ 'label' => $data['tab2_label'], 'content' => $data['tab_features'] ];
-                $tabs[] = [ 'label' => $data['tab3_label'], 'content' => $data['tab_compatibility'] ];
-                $tabs[] = [ 'label' => $data['tab4_label'], 'content' => $data['tab_reviews_html'] ];
+                // Fallback to legacy single-field tabs
+                $tabs[] = [ 'label' => $data['tab1_label'], 'summary' => $data['tab_details'] ?: '<p>' . esc_html( $data['excerpt'] ) . '</p>', 'content' => $data['tab_details'] ];
+                $tabs[] = [ 'label' => $data['tab2_label'], 'summary' => $data['tab_features'],      'content' => $data['tab_features'] ];
+                $tabs[] = [ 'label' => $data['tab3_label'], 'summary' => $data['tab_compatibility'], 'content' => $data['tab_compatibility'] ];
+                $tabs[] = [ 'label' => $data['tab4_label'], 'summary' => $data['tab_reviews_html'],  'content' => $data['tab_reviews_html'] ];
             }
             $data['tabs'] = $tabs;
 

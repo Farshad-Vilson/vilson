@@ -49,10 +49,14 @@ class Assets {
         );
         wp_enqueue_style( 'wp-color-picker' );
 
-        // Gallery uploader - only on markil_module edit pages
+        // Gallery uploader + rich tab editors - only on markil_module edit pages
         global $post_type;
         if ( in_array( $hook, [ 'post.php', 'post-new.php' ], true ) && 'markil_module' === $post_type ) {
             wp_enqueue_media();
+            // Make sure wp.editor.initialize() works for dynamic tabs
+            if ( function_exists( 'wp_enqueue_editor' ) ) {
+                wp_enqueue_editor();
+            }
             wp_enqueue_script(
                 'markil-admin-gallery',
                 MARKIL_URL . 'assets/js/admin-gallery.js',

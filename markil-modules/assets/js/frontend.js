@@ -426,17 +426,19 @@
 
         var reviewCount = m.reviews ? m.reviews.length : 0;
         var tabs = (m.tabs && m.tabs.length) ? m.tabs : [
-            {label: m.tab1_label || 'جزئیات', content: m.tab_details || (m.excerpt ? '<p>' + escHtml(m.excerpt) + '</p>' : '')},
-            {label: m.tab2_label || 'امکانات', content: m.tab_features || ''},
-            {label: m.tab3_label || 'سازگاری', content: m.tab_compatibility || '<p class="markil-muted-empty">اطلاعات سازگاری در دسترس نیست.</p>'},
-            {label: (m.tab4_label || 'نقد و بررسی') + ' (' + reviewCount + ')', content: m.tab_reviews_html || '<p class="markil-muted-empty">هنوز نظری ثبت نشده است.</p>'}
+            {label: m.tab1_label || 'جزئیات',    summary: m.tab_details        || (m.excerpt ? '<p>' + escHtml(m.excerpt) + '</p>' : ''), content: ''},
+            {label: m.tab2_label || 'امکانات',    summary: m.tab_features       || '', content: ''},
+            {label: m.tab3_label || 'سازگاری',    summary: m.tab_compatibility  || '<p class="markil-muted-empty">اطلاعات سازگاری در دسترس نیست.</p>', content: ''},
+            {label: (m.tab4_label || 'نقد و بررسی') + ' (' + reviewCount + ')', summary: m.tab_reviews_html || '<p class="markil-muted-empty">هنوز نظری ثبت نشده است.</p>', content: ''}
         ];
 
+        // Side panel uses SHORT summary (fall back to content if summary empty)
         var tabsNav = '', tabsContent = '';
         tabs.forEach(function(tab, idx) {
             var key = 'tab-' + idx;
+            var shortContent = tab.summary || tab.content || '';
             tabsNav += '<button type="button" class="markil-panel-tab-btn" data-tab="' + key + '">' + escHtml(tab.label || ('تب ' + (idx + 1))) + '</button>';
-            tabsContent += '<div class="markil-panel-tab-content" data-tab="' + key + '"><div class="markil-tab-body">' + (tab.content || '') + '</div></div>';
+            tabsContent += '<div class="markil-panel-tab-content" data-tab="' + key + '"><div class="markil-tab-body">' + shortContent + '</div></div>';
         });
 
         var btn1Text   = escHtml(m.btn_primary_text   || 'افزودن به سبد خرید');
@@ -455,19 +457,14 @@
         else if (wc_id)                                 btn1Href = '?add-to-cart=' + encodeURIComponent(wc_id);
         else                                            btn1Href = detailUrl;
 
-        // Resolve secondary button href
-        var btn2Href = '#';
+        // Resolve secondary button href — always a real link, no modal
+        var btn2Href = detailUrl; // default: go to /markil-module/slug/
         if      (btn2Action === 'detail_page')           btn2Href = detailUrl;
         else if (btn2Action === 'wc_add'    && wc_id)    btn2Href = '?add-to-cart=' + encodeURIComponent(wc_id);
-        else if (btn2Action === 'wc_page'   && wc_id)    btn2Href = m.permalink || '#';
+        else if (btn2Action === 'wc_page'   && wc_id)    btn2Href = m.permalink || detailUrl;
         else if (btn2Action === 'custom_url')             btn2Href = m.secondary_custom_url || detailUrl;
 
-        // Secondary button: open full-detail modal?
-        var btn2IsModal = (btn2Action === 'full_detail_modal') ||
-                          (!m.detail_page && btn2Action !== 'wc_add' && btn2Action !== 'wc_page' && btn2Action !== 'custom_url');
-        var btn2Html = btn2IsModal
-            ? '<button type="button" class="markil-btn-secondary markil-open-full-detail" data-id="' + escAttr(m.id) + '">' + btn2Text + '</button>'
-            : '<a href="' + escAttr(btn2Href) + '" class="markil-btn-secondary">' + btn2Text + '</a>';
+        var btn2Html = '<a href="' + escAttr(btn2Href) + '" class="markil-btn-secondary">' + btn2Text + '</a>';
 
         return '<div class="markil-panel-content">' +
             statusHtml +
@@ -598,76 +595,11 @@
         return id;
     }
 
-    /* =====================================================================
-       Full Detail Modal
-       Opens a full-page overlay with PHP-rendered detail layout.
-       Triggered by: .markil-open-full-detail button in the side panel.
-    ====================================================================== */
-
-    function initFullDetailModal() {
-        if ($('#markil-full-modal-overlay').length) return;
-        var $overlay = $(
-            '<div id="markil-full-modal-overlay" class="markil-full-modal-overlay" role="dialog" aria-modal="true" aria-label="جزئیات ماژول">' +
-                '<div class="markil-full-modal-inner">' +
-                    '<button type="button" class="markil-full-modal-close" aria-label="بستن">✕</button>' +
-                    '<div class="markil-full-modal-content"></div>' +
-                '</div>' +
-            '</div>'
-        );
-        $('body').append($overlay);
-
-        $overlay.on('click', function(e) {
-            if ($(e.target).is('#markil-full-modal-overlay')) closeFullDetailModal();
-        });
-        $overlay.on('click', '.markil-full-modal-close', function() { closeFullDetailModal(); });
-        $(document).on('keydown.markil-modal', function(e) {
-            if (e.key === 'Escape') closeFullDetailModal();
-        });
-    }
-
-    function openFullDetailModal(moduleId, nonce) {
-        initFullDetailModal();
-        var $overlay = $('#markil-full-modal-overlay');
-        var $content = $overlay.find('.markil-full-modal-content');
-        $content.html('<div class="markil-full-modal-loading"><div class="markil-spinner"></div><span>در حال بارگذاری...</span></div>');
-        $overlay.addClass('markil-modal-open');
-        $('body').addClass('markil-modal-body-lock');
-
-        $.ajax({
-            url: MarkilModules.ajax_url,
-            type: 'POST',
-            data: {
-                action: 'markil_render_full_detail',
-                nonce: nonce || MarkilModules.nonce,
-                module_id: moduleId
-            },
-            success: function(res) {
-                if (!res || !res.success || !res.data || !res.data.html) {
-                    $content.html('<p style="text-align:center;padding:40px;color:#64748b">خطا در بارگذاری اطلاعات.</p>');
-                    return;
-                }
-                $content.html(res.data.html);
-                $content.find('.markil-fdc-tab-btn:first').addClass('active');
-                $content.find('.markil-fdc-tab-panel:first').addClass('active');
-            },
-            error: function() {
-                $content.html('<p style="text-align:center;padding:40px;color:#64748b">خطای شبکه. لطفاً دوباره تلاش کنید.</p>');
-            }
-        });
-    }
-
-    function closeFullDetailModal() {
-        $('#markil-full-modal-overlay').removeClass('markil-modal-open');
-        $('body').removeClass('markil-modal-body-lock');
-    }
-
-    // Delegate: any .markil-open-full-detail button anywhere on the page
-    $(document).on('click', '.markil-open-full-detail', function(e) {
-        e.preventDefault();
-        var id = $(this).data('id');
-        var nonce = $(this).closest('[data-nonce]').data('nonce') || MarkilModules.nonce;
-        if (id) openFullDetailModal(id, nonce);
-    });
+    // NOTE: The previous popup-modal full-detail system was removed in v2.6.
+    // The "more details" button now navigates to the post's own permalink
+    // (/markil-module/{slug}/) which renders a real WordPress page using
+    // the plugin's single-markil_module.php template. This scrolls naturally
+    // and works in any theme without z-index, focus-trap, or scroll issues.
 
     $(document).ready(function() {
         $('.markil-modules-wrapper').each(function() { initWrapper($(this)); });
