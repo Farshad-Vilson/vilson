@@ -17,6 +17,7 @@ class Plugin {
         add_action( 'init', [ $this, 'init' ] );
         add_action( 'plugins_loaded', [ $this, 'plugins_loaded' ] );
         register_activation_hook( MARKIL_BASENAME, [ $this, 'activate' ] );
+        register_deactivation_hook( MARKIL_BASENAME, [ $this, 'deactivate' ] );
         add_filter( 'single_template', [ $this, 'load_single_template' ] );
     }
 
@@ -132,6 +133,10 @@ class Plugin {
         $this->register_taxonomies();
         flush_rewrite_rules();
         $this->set_default_options();
+    }
+
+    public function deactivate() {
+        flush_rewrite_rules();
     }
 
     private function set_default_options() {

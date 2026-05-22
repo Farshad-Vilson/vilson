@@ -9,6 +9,13 @@ class Admin {
         add_action( 'admin_init', [ $this, 'register_settings' ] );
         add_filter( 'manage_markil_module_posts_columns', [ $this, 'add_columns' ] );
         add_action( 'manage_markil_module_posts_custom_column', [ $this, 'render_columns' ], 10, 2 );
+        add_filter( 'plugin_action_links_' . MARKIL_BASENAME, [ $this, 'add_action_links' ] );
+    }
+
+    public function add_action_links( $links ) {
+        $settings_link = '<a href="' . admin_url( 'edit.php?post_type=markil_module&page=markil-settings' ) . '">' . __( 'تنظیمات', 'markil-modules' ) . '</a>';
+        array_unshift( $links, $settings_link );
+        return $links;
     }
 
     public function add_menu() {
