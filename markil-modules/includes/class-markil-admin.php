@@ -31,16 +31,26 @@ class Admin {
         register_setting( 'markil_settings', 'markil_show_installs', [ 'type' => 'string', 'default' => '1' ] );
         register_setting( 'markil_settings', 'markil_wc_integration', [ 'type' => 'string', 'default' => '1' ] );
         register_setting( 'markil_settings', 'markil_primary_color', [ 'type' => 'string', 'default' => '#011627' ] );
+        // Detail page appearance
+        register_setting( 'markil_settings', 'markil_fdc_primary_color', [ 'type' => 'string', 'default' => '#011627' ] );
+        register_setting( 'markil_settings', 'markil_fdc_price_color',   [ 'type' => 'string', 'default' => '#011627' ] );
+        register_setting( 'markil_settings', 'markil_fdc_price_font',    [ 'type' => 'string', 'default' => '' ] );
+        register_setting( 'markil_settings', 'markil_fdc_btn_radius',    [ 'type' => 'string', 'default' => '12' ] );
+        register_setting( 'markil_settings', 'markil_fdc_tab_radius',    [ 'type' => 'string', 'default' => '10' ] );
+        register_setting( 'markil_settings', 'markil_fdc_google_fonts',  [ 'type' => 'string', 'default' => '' ] );
     }
 
     public function settings_page() {
+        $all_opts = [
+            'markil_modules_per_page','markil_default_layout','markil_currency',
+            'markil_show_price','markil_show_rating','markil_show_installs',
+            'markil_wc_integration','markil_primary_color',
+            'markil_fdc_primary_color','markil_fdc_price_color','markil_fdc_price_font',
+            'markil_fdc_btn_radius','markil_fdc_tab_radius','markil_fdc_google_fonts',
+        ];
         if ( isset( $_POST['submit'] ) ) {
             check_admin_referer( 'markil-options' );
-            foreach ( [
-                'markil_modules_per_page','markil_default_layout','markil_currency',
-                'markil_show_price','markil_show_rating','markil_show_installs',
-                'markil_wc_integration','markil_primary_color'
-            ] as $opt ) {
+            foreach ( $all_opts as $opt ) {
                 if ( isset( $_POST[$opt] ) ) update_option( $opt, sanitize_text_field( $_POST[$opt] ) );
                 else delete_option( $opt );
             }
@@ -51,6 +61,8 @@ class Admin {
             <h1>⚙️ <?php _e('تنظیمات مارکیل ماژول‌ها','markil-modules'); ?></h1>
             <form method="post">
                 <?php wp_nonce_field('markil-options'); ?>
+
+                <h2><?php _e('تنظیمات عمومی','markil-modules'); ?></h2>
                 <table class="form-table">
                     <tr>
                         <th><?php _e('تعداد ماژول در هر صفحه','markil-modules'); ?></th>
@@ -86,10 +98,61 @@ class Admin {
                         <td><label><input type="checkbox" name="markil_wc_integration" value="1" <?php checked(get_option('markil_wc_integration'),'1'); ?>> <?php _e('فعال','markil-modules'); ?></label></td>
                     </tr>
                     <tr>
-                        <th><?php _e('رنگ اصلی','markil-modules'); ?></th>
+                        <th><?php _e('رنگ اصلی (گرید)','markil-modules'); ?></th>
                         <td><input type="color" name="markil_primary_color" value="<?php echo esc_attr(get_option('markil_primary_color','#011627')); ?>"></td>
                     </tr>
                 </table>
+
+                <hr>
+                <h2><?php _e('ظاهر صفحه جزئیات ماژول','markil-modules'); ?></h2>
+                <p style="color:#666"><?php _e('این تنظیمات روی صفحه‌ی /markil-module/{slug}/ اعمال می‌شود.','markil-modules'); ?></p>
+                <table class="form-table">
+                    <tr>
+                        <th><?php _e('رنگ اصلی صفحه جزئیات','markil-modules'); ?></th>
+                        <td>
+                            <input type="color" name="markil_fdc_primary_color" value="<?php echo esc_attr(get_option('markil_fdc_primary_color','#011627')); ?>">
+                            <p class="description"><?php _e('رنگ دکمه‌ها، تب فعال و لینک‌ها در صفحه جزئیات.','markil-modules'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><?php _e('رنگ قیمت','markil-modules'); ?></th>
+                        <td>
+                            <input type="color" name="markil_fdc_price_color" value="<?php echo esc_attr(get_option('markil_fdc_price_color','#011627')); ?>">
+                            <p class="description"><?php _e('رنگ نمایش قیمت در سایدبار صفحه جزئیات.','markil-modules'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><?php _e('فونت قیمت (CSS)','markil-modules'); ?></th>
+                        <td>
+                            <input type="text" name="markil_fdc_price_font" value="<?php echo esc_attr(get_option('markil_fdc_price_font','')); ?>" placeholder="مثال: 'IRANSans', sans-serif" style="width:320px">
+                            <p class="description"><?php _e('مقدار font-family برای قیمت. اگر خالی باشد، از فونت اصلی سایت استفاده می‌شود.','markil-modules'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><?php _e('لینک گوگل فونت','markil-modules'); ?></th>
+                        <td>
+                            <input type="url" name="markil_fdc_google_fonts" value="<?php echo esc_attr(get_option('markil_fdc_google_fonts','')); ?>" placeholder="https://fonts.googleapis.com/css2?family=..." style="width:420px">
+                            <p class="description"><?php _e('لینک @import گوگل فونت — اگر از فونت سفارشی استفاده می‌کنید اینجا وارد کنید.','markil-modules'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><?php _e('شعاع دکمه‌های عملیات (px)','markil-modules'); ?></th>
+                        <td>
+                            <input type="number" name="markil_fdc_btn_radius" value="<?php echo esc_attr(get_option('markil_fdc_btn_radius','12')); ?>" min="0" max="40" style="width:80px">
+                            <span>px</span>
+                            <p class="description"><?php _e('border-radius دکمه‌های «افزودن به سبد» و «جزئیات بیشتر».','markil-modules'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><?php _e('شعاع دکمه‌های تب (px)','markil-modules'); ?></th>
+                        <td>
+                            <input type="number" name="markil_fdc_tab_radius" value="<?php echo esc_attr(get_option('markil_fdc_tab_radius','10')); ?>" min="0" max="40" style="width:80px">
+                            <span>px</span>
+                            <p class="description"><?php _e('border-radius تب‌های جزئیات / امکانات / سازگاری / نقد.','markil-modules'); ?></p>
+                        </td>
+                    </tr>
+                </table>
+
                 <p><input type="submit" name="submit" class="button button-primary" value="<?php _e('ذخیره تنظیمات','markil-modules'); ?>"></p>
             </form>
         </div>

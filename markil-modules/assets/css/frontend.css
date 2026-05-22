@@ -3339,8 +3339,29 @@
     direction: rtl;
     font-family: 'Vazirmatn', 'Tahoma', sans-serif;
     color: var(--markil-gray-800, #1e293b);
+    /* ── Customization variables (overridden by Settings > Detail Page Appearance) ── */
+    --markil-fdc-primary:    var(--markil-primary, #011627);
+    --markil-fdc-accent:     #2ec4b6;
+    --markil-fdc-price-font: 'Vazirmatn', 'Tahoma', sans-serif;
+    --markil-fdc-price-color: var(--markil-primary, #011627);
+    --markil-fdc-btn-radius:  12px;
+    --markil-fdc-tab-radius:  10px;
 }
 .markil-full-detail-wrap * { box-sizing: border-box; }
+
+/* ── Theme isolation: prevent active theme from overriding plugin buttons/links ── */
+.markil-full-detail-wrap button,
+.markil-full-detail-wrap a { font-family: inherit; }
+.markil-full-detail-wrap button[class*="markil-"],
+.markil-full-detail-wrap a[class*="markil-"] {
+    appearance: none; -webkit-appearance: none;
+    text-decoration: none; text-transform: none;
+    letter-spacing: normal; box-shadow: none; outline: none;
+}
+.markil-full-detail-wrap button[class*="markil-"]::before,
+.markil-full-detail-wrap button[class*="markil-"]::after,
+.markil-full-detail-wrap a[class*="markil-"]::before,
+.markil-full-detail-wrap a[class*="markil-"]::after { content: none !important; }
 
 /* ---- Breadcrumb ---- */
 .markil-fdc-breadcrumb {
@@ -3410,22 +3431,26 @@
 
 /* ---- Tabs Navigation ---- */
 .markil-fdc-tabs { margin-bottom: 24px; }
-.markil-fdc-tabs-nav {
+.markil-full-detail-wrap .markil-fdc-tabs-nav {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     margin-bottom: 20px;
     padding-bottom: 16px;
     border-bottom: 2px solid var(--markil-gray-100, #f1f5f9);
+    background: transparent;
+    border-top: none; border-left: none; border-right: none;
+    padding-top: 0;
 }
-.markil-fdc-tab-btn {
+.markil-full-detail-wrap .markil-fdc-tab-btn {
     min-height: 40px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     padding: 8px 18px;
+    margin: 0;
     border: 1.5px solid var(--markil-gray-200, #e2e8f0);
-    border-radius: 10px;
+    border-radius: var(--markil-fdc-tab-radius, 10px);
     background: #fff;
     color: var(--markil-gray-700, #334155);
     font-size: 13.5px;
@@ -3434,11 +3459,12 @@
     font-family: inherit;
     transition: all .18s ease;
     white-space: nowrap;
+    line-height: 1.4;
 }
-.markil-fdc-tab-btn:hover { border-color: var(--markil-primary, #011627); background: rgba(46,196,182,.07); }
-.markil-fdc-tab-btn.active {
-    background: var(--markil-primary, #011627);
-    border-color: var(--markil-primary, #011627);
+.markil-full-detail-wrap .markil-fdc-tab-btn:hover { border-color: var(--markil-fdc-primary, #011627); background: rgba(46,196,182,.07); }
+.markil-full-detail-wrap .markil-fdc-tab-btn.active {
+    background: var(--markil-fdc-primary, #011627);
+    border-color: var(--markil-fdc-primary, #011627);
     color: #fff;
     box-shadow: 0 4px 14px rgba(1,22,39,.18);
 }
@@ -3672,8 +3698,9 @@
 .markil-fdc-price {
     font-size: 24px;
     font-weight: 900;
-    color: var(--markil-primary, #011627);
+    color: var(--markil-fdc-price-color, var(--markil-primary, #011627));
     line-height: 1.2;
+    font-family: var(--markil-fdc-price-font, inherit);
 }
 .markil-fdc-price.free { color: #16a34a; }
 .markil-fdc-currency { font-size: 14px; font-weight: 600; color: var(--markil-gray-500, #64748b); margin-right: 4px; }
@@ -3693,15 +3720,16 @@
     gap: 10px;
     margin-bottom: 16px;
 }
-.markil-fdc-btn-primary,
-.markil-fdc-btn-secondary {
+.markil-full-detail-wrap .markil-fdc-btn-primary,
+.markil-full-detail-wrap .markil-fdc-btn-secondary {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 7px;
     min-height: 46px;
     padding: 11px 20px;
-    border-radius: 12px;
+    margin: 0;
+    border-radius: var(--markil-fdc-btn-radius, 12px);
     font-size: 14px;
     font-weight: 800;
     font-family: inherit;
@@ -3710,20 +3738,27 @@
     transition: all .2s ease;
     width: 100%;
     text-align: center;
+    line-height: 1.4;
 }
-.markil-fdc-btn-primary {
-    background: var(--markil-primary, #011627);
+.markil-full-detail-wrap .markil-fdc-btn-primary {
+    background: var(--markil-fdc-primary, #011627);
     color: #fff;
-    border: 2px solid var(--markil-primary, #011627);
+    border: 2px solid var(--markil-fdc-primary, #011627);
     box-shadow: 0 4px 14px rgba(1,22,39,.18);
 }
-.markil-fdc-btn-primary:hover { background: #0a2540; border-color: #0a2540; color: #fff; }
-.markil-fdc-btn-secondary {
+.markil-full-detail-wrap .markil-fdc-btn-primary:hover {
+    background: #0a2540; border-color: #0a2540; color: #fff;
+    text-decoration: none;
+}
+.markil-full-detail-wrap .markil-fdc-btn-secondary {
     background: #fff;
-    color: var(--markil-primary, #011627);
+    color: var(--markil-fdc-primary, #011627);
     border: 1.5px solid var(--markil-gray-200, #e2e8f0);
 }
-.markil-fdc-btn-secondary:hover { border-color: var(--markil-primary, #011627); background: rgba(46,196,182,.07); }
+.markil-full-detail-wrap .markil-fdc-btn-secondary:hover {
+    border-color: var(--markil-fdc-primary, #011627); background: rgba(46,196,182,.07);
+    text-decoration: none;
+}
 
 /* ---- Stats Table ---- */
 .markil-fdc-stats {
@@ -3935,13 +3970,12 @@
 }
 
 /* Prev / Next arrows */
-.markil-fdc-gallery-btn {
+.markil-full-detail-wrap .markil-fdc-gallery-btn {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
     z-index: 5;
-    width: 34px;
-    height: 34px;
+    width: 34px; height: 34px;
     border-radius: 50%;
     background: rgba(255,255,255,.88);
     border: none;
@@ -3955,13 +3989,14 @@
     box-shadow: 0 2px 8px rgba(0,0,0,.15);
     transition: background .18s;
     padding: 0;
+    margin: 0;
 }
-.markil-fdc-gallery-btn:hover { background: #fff; }
-.markil-fdc-gallery-prev { right: 8px; }
-.markil-fdc-gallery-next { left: 8px; }
+.markil-full-detail-wrap .markil-fdc-gallery-btn:hover { background: #fff; }
+.markil-full-detail-wrap .markil-fdc-gallery-prev { right: 8px; }
+.markil-full-detail-wrap .markil-fdc-gallery-next { left: 8px; }
 
 /* Dot indicators */
-.markil-fdc-gallery-dots {
+.markil-full-detail-wrap .markil-fdc-gallery-dots {
     position: absolute;
     bottom: 8px;
     left: 50%;
@@ -3970,17 +4005,16 @@
     gap: 5px;
     z-index: 5;
 }
-.markil-fdc-gallery-dot {
-    width: 7px;
-    height: 7px;
+.markil-full-detail-wrap .markil-fdc-gallery-dot {
+    width: 7px; height: 7px;
     border-radius: 50%;
     border: none;
     background: rgba(255,255,255,.55);
     cursor: pointer;
-    padding: 0;
+    padding: 0; margin: 0;
     transition: background .18s, transform .18s;
 }
-.markil-fdc-gallery-dot.active {
+.markil-full-detail-wrap .markil-fdc-gallery-dot.active {
     background: #fff;
     transform: scale(1.3);
 }
