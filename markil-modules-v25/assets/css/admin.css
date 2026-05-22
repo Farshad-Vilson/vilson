@@ -1,0 +1,16 @@
+/* Markil Modules - Admin Styles */
+.markil-meta-field { margin-bottom: 14px; }
+.markil-meta-field label { display: block; font-weight: 600; margin-bottom: 5px; color: #1d2327; font-size: 13px; }
+.markil-meta-field input[type="text"],
+.markil-meta-field input[type="number"],
+.markil-meta-field input[type="url"],
+.markil-meta-field select,
+.markil-meta-field textarea {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    font-size: 13px;
+}
+.markil-meta-field input[type="checkbox"] { width: auto; }
+#markil-features-list .markil-feature-row button { width: auto; min-width: 32px; }
