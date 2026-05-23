@@ -216,6 +216,8 @@ class MetaBoxes {
         .markil-tab-help code,.markil-tab-shortcode{font-family:monospace;direction:ltr;display:inline-block;background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:2px 6px;font-size:12px}
         .markil-tab-help-row{margin-bottom:6px}
         .markil-tab-help-row:last-child{margin-bottom:0}
+        .markil-main-editor-lbl{font-size:12px;background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:6px;border:1px solid #fcd34d;cursor:pointer;white-space:nowrap}
+        .markil-editor-notice{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;color:#166534;font-size:13px;display:none}
         </style>
 
         <div class="markil-tab-help">
@@ -236,11 +238,12 @@ class MetaBoxes {
 
         <div class="markil-tabs-builder" id="markil-tabs-builder">
             <?php foreach ( $custom_tabs as $i => $tab ) :
-                $label    = isset($tab['label'])   ? $tab['label']   : '';
-                $summary  = isset($tab['summary']) ? $tab['summary'] : '';
-                $content  = isset($tab['content']) ? $tab['content'] : '';
-                $enabled  = isset($tab['enabled']) ? $tab['enabled'] : '1';
-                $editor_id = 'markil_tab_content_' . $i;
+                $label      = isset($tab['label'])            ? $tab['label']            : '';
+                $summary    = isset($tab['summary'])          ? $tab['summary']          : '';
+                $content    = isset($tab['content'])          ? $tab['content']          : '';
+                $enabled    = isset($tab['enabled'])          ? $tab['enabled']          : '1';
+                $use_main   = ! empty( $tab['use_main_editor'] ) && $tab['use_main_editor'] === '1';
+                $editor_id  = 'markil_tab_content_' . $i;
             ?>
             <div class="markil-tab-row">
                 <div class="markil-tab-head">
@@ -249,6 +252,10 @@ class MetaBoxes {
                            value="<?php echo esc_attr($label); ?>"
                            placeholder="<?php esc_attr_e('نام تب مثل جزئیات','markil-modules'); ?>">
                     <label><input type="checkbox" name="_markil_custom_tabs[<?php echo esc_attr($i); ?>][enabled]" value="1" <?php checked($enabled, '1'); ?>> <?php _e('فعال','markil-modules'); ?></label>
+                    <label class="markil-main-editor-lbl" title="<?php esc_attr_e('محتوا از ویرایشگر اصلی صفحه (المنتور) خوانده می‌شود','markil-modules'); ?>">
+                        <input type="checkbox" name="_markil_custom_tabs[<?php echo esc_attr($i); ?>][use_main_editor]" value="1" class="markil-use-main-editor" <?php checked($use_main, true); ?>>
+                        🎨 <?php _e('ویرایشگر اصلی (المنتور)','markil-modules'); ?>
+                    </label>
                     <button type="button" class="button markil-remove-tab"><?php _e('حذف','markil-modules'); ?></button>
                 </div>
                 <div class="markil-tab-body">
@@ -264,13 +271,17 @@ class MetaBoxes {
                         <p class="markil-tab-field-hint"><?php _e('پیشنهاد: ۲ تا ۴ خط کوتاه. می‌توانید HTML و شورت‌کد استفاده کنید.','markil-modules'); ?></p>
                     </div>
 
-                    <!-- Full Content (detail page) — wp_editor -->
+                    <!-- Full Content (detail page) — wp_editor OR main editor notice -->
                     <div class="markil-tab-field">
                         <div class="markil-tab-field-label">
                             <span class="markil-badge-green">محتوای کامل</span>
-                            <?php _e('محتوای کامل برای صفحه جزئیات (با تصویر، فایل، ویدیو، المنتور و...)', 'markil-modules'); ?>
+                            <?php _e('محتوای کامل برای صفحه جزئیات', 'markil-modules'); ?>
                         </div>
-                        <div class="markil-editor-wrap">
+                        <!-- Notice when using main editor -->
+                        <div class="markil-editor-notice"<?php if ( ! $use_main ) echo ' style="display:none"'; ?>>
+                            ✅ <?php _e('این تب از <strong>ویرایشگر اصلی صفحه</strong> استفاده می‌کند. محتوا را با المنتور در بالای همین صفحه طراحی کنید.', 'markil-modules'); ?>
+                        </div>
+                        <div class="markil-editor-wrap"<?php if ( $use_main ) echo ' style="display:none"'; ?>>
                             <?php
                             wp_editor( $content, $editor_id, [
                                 'textarea_name' => '_markil_custom_tabs[' . $i . '][content]',
@@ -283,7 +294,7 @@ class MetaBoxes {
                                 'drag_drop_upload' => true,
                             ]);
                             ?>
-                        </div>
+                        </div><!-- /markil-editor-wrap -->
                         <p class="markil-tab-field-hint">
                             <?php _e('این محتوا در صفحه /markil-module/slug/ نمایش داده می‌شود. می‌توانید تصویر، ویدیو، گالری، جدول، شورت‌کد المنتور و هر چیز دیگری اضافه کنید.', 'markil-modules'); ?>
                         </p>
@@ -300,6 +311,27 @@ class MetaBoxes {
 
         <script>
         jQuery(function($){
+            // Sync all TinyMCE editors to textareas before publish/update
+            $('#post').off('submit.markil').on('submit.markil', function(){
+                if (typeof tinyMCE !== 'undefined') {
+                    try { tinyMCE.triggerSave(); } catch(e){}
+                }
+            });
+
+            // Toggle editor/notice when "use main editor" checkbox changes
+            $(document).on('change', '.markil-use-main-editor', function(){
+                var $row = $(this).closest('.markil-tab-row');
+                var $wrap = $row.find('.markil-editor-wrap');
+                var $notice = $row.find('.markil-editor-notice');
+                if ($(this).is(':checked')) {
+                    $wrap.hide();
+                    $notice.show();
+                } else {
+                    $wrap.show();
+                    $notice.hide();
+                }
+            });
+
             var index = $('#markil-tabs-builder .markil-tab-row').length;
 
             function initEditor(id){
@@ -789,16 +821,18 @@ class MetaBoxes {
         if ( isset( $_POST['_markil_custom_tabs'] ) && is_array( $_POST['_markil_custom_tabs'] ) ) {
             $tabs = [];
             foreach ( $_POST['_markil_custom_tabs'] as $tab ) {
-                $label   = isset( $tab['label'] )   ? sanitize_text_field( wp_unslash( $tab['label'] ) ) : '';
-                $summary = isset( $tab['summary'] ) ? wp_kses_post( wp_unslash( $tab['summary'] ) ) : '';
-                $content = isset( $tab['content'] ) ? wp_kses_post( wp_unslash( $tab['content'] ) ) : '';
-                $enabled = isset( $tab['enabled'] ) ? '1' : '0';
-                if ( $label === '' && $summary === '' && $content === '' ) continue;
+                $label     = isset( $tab['label'] )            ? sanitize_text_field( wp_unslash( $tab['label'] ) ) : '';
+                $summary   = isset( $tab['summary'] )          ? wp_kses_post( wp_unslash( $tab['summary'] ) ) : '';
+                $content   = isset( $tab['content'] )          ? wp_kses_post( wp_unslash( $tab['content'] ) ) : '';
+                $enabled   = isset( $tab['enabled'] )          ? '1' : '0';
+                $use_main  = ! empty( $tab['use_main_editor'] ) ? '1' : '0';
+                if ( $label === '' && $summary === '' && $content === '' && $use_main === '0' ) continue;
                 $tabs[] = [
-                    'label'   => $label ?: __( 'تب جدید', 'markil-modules' ),
-                    'summary' => $summary,
-                    'content' => $content,
-                    'enabled' => $enabled,
+                    'label'            => $label ?: __( 'تب جدید', 'markil-modules' ),
+                    'summary'          => $summary,
+                    'content'          => $content,
+                    'enabled'          => $enabled,
+                    'use_main_editor'  => $use_main,
                 ];
             }
             update_post_meta( $post_id, '_markil_custom_tabs', $tabs );

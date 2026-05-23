@@ -200,38 +200,53 @@ class Ajax {
             if ( is_array( $custom_tabs ) && ! empty( $custom_tabs ) ) {
                 foreach ( $custom_tabs as $tab ) {
                     if ( isset( $tab['enabled'] ) && $tab['enabled'] !== '1' ) continue;
-                    $label   = isset( $tab['label'] )   ? sanitize_text_field( $tab['label'] ) : '';
-                    $summary = isset( $tab['summary'] ) ? $tab['summary'] : '';
-                    $content = isset( $tab['content'] ) ? $tab['content'] : '';
-                    if ( trim( $label ) === ''
-                         && trim( wp_strip_all_tags( $summary ) ) === ''
-                         && trim( wp_strip_all_tags( $content ) ) === '' ) continue;
+                    $label     = isset( $tab['label'] )           ? sanitize_text_field( $tab['label'] ) : '';
+                    $summary   = isset( $tab['summary'] )         ? $tab['summary'] : '';
+                    $content   = isset( $tab['content'] )         ? $tab['content'] : '';
+                    $use_main  = ! empty( $tab['use_main_editor'] ) && $tab['use_main_editor'] === '1';
+                    $tab_type  = '';
+
+                    // "Use main editor" — replaces content with processed post_content (Elementor-ready)
+                    if ( $use_main ) {
+                        $content = $data['content'];
+                        if ( empty( $summary ) ) {
+                            $summary = $data['excerpt'] ? '<p>' . esc_html( $data['excerpt'] ) . '</p>' : '';
+                        }
+                    }
+
+                    // Skip truly empty tab (no label AND no content after resolution)
+                    if ( trim( $label ) === '' && $content === '' && $summary === '' ) continue;
 
                     // Process summary: [markil_reviews] → reviews HTML, then shortcodes+filters
-                    if ( strpos( $summary, '[markil_reviews]' ) !== false ) {
-                        $summary = str_replace( '[markil_reviews]', $data['tab_reviews_html'], $summary );
-                    } else {
+                    if ( strpos( (string) $summary, '[markil_reviews]' ) !== false ) {
+                        $summary  = str_replace( '[markil_reviews]', $data['tab_reviews_html'], $summary );
+                        $tab_type = 'reviews';
+                    } elseif ( ! $use_main ) {
                         $summary = do_shortcode( apply_filters( 'the_content', $summary ) );
                     }
+
                     // Process full content similarly
-                    if ( strpos( $content, '[markil_reviews]' ) !== false ) {
-                        $content = str_replace( '[markil_reviews]', $data['tab_reviews_html'], $content );
-                    } else {
+                    if ( strpos( (string) $content, '[markil_reviews]' ) !== false ) {
+                        $content  = str_replace( '[markil_reviews]', $data['tab_reviews_html'], $content );
+                        $tab_type = 'reviews';
+                    } elseif ( ! $use_main ) {
                         $content = do_shortcode( apply_filters( 'the_content', $content ) );
                     }
+
                     $tabs[] = [
                         'label'   => $label ?: __( 'تب', 'markil-modules' ),
                         'summary' => $summary,
                         'content' => $content,
+                        'type'    => $tab_type,
                     ];
                 }
             }
             if ( empty( $tabs ) ) {
                 // Fallback to legacy single-field tabs
-                $tabs[] = [ 'label' => $data['tab1_label'], 'summary' => $data['tab_details'] ?: '<p>' . esc_html( $data['excerpt'] ) . '</p>', 'content' => $data['tab_details'] ];
-                $tabs[] = [ 'label' => $data['tab2_label'], 'summary' => $data['tab_features'],      'content' => $data['tab_features'] ];
-                $tabs[] = [ 'label' => $data['tab3_label'], 'summary' => $data['tab_compatibility'], 'content' => $data['tab_compatibility'] ];
-                $tabs[] = [ 'label' => $data['tab4_label'], 'summary' => $data['tab_reviews_html'],  'content' => $data['tab_reviews_html'] ];
+                $tabs[] = [ 'label' => $data['tab1_label'], 'summary' => $data['tab_details'] ?: '<p>' . esc_html( $data['excerpt'] ) . '</p>', 'content' => $data['tab_details'],        'type' => '' ];
+                $tabs[] = [ 'label' => $data['tab2_label'], 'summary' => $data['tab_features'],      'content' => $data['tab_features'],      'type' => '' ];
+                $tabs[] = [ 'label' => $data['tab3_label'], 'summary' => $data['tab_compatibility'], 'content' => $data['tab_compatibility'], 'type' => '' ];
+                $tabs[] = [ 'label' => $data['tab4_label'], 'summary' => $data['tab_reviews_html'],  'content' => $data['tab_reviews_html'],  'type' => 'reviews' ];
             }
             $data['tabs'] = $tabs;
 

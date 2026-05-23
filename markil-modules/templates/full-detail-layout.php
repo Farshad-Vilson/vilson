@@ -165,12 +165,42 @@ $uniq         = 'mgal-' . intval( $m['id'] );
                      data-tab="fdc-<?php echo esc_attr( $ti ); ?>">
 
                     <?php
-                    // Full page uses the FULL content; falls back to summary if empty.
-                    $tab_full = ! empty( $tab['content'] ) ? $tab['content'] : ( $tab['summary'] ?? '' );
-                    if ( ! empty( trim( wp_strip_all_tags( $tab_full ) ) ) ) :
+                    // Full page: prefer content over summary; render whatever is set.
+                    $tab_full = ( isset( $tab['content'] ) && $tab['content'] !== '' ) ? $tab['content'] : ( $tab['summary'] ?? '' );
+                    $tab_type = $tab['type'] ?? '';
+                    if ( $tab_full !== '' ) :
                     ?>
                     <div class="markil-fdc-tab-body markil-tab-body">
                         <?php echo $tab_full; ?>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php if ( $tab_type === 'reviews' ) : ?>
+                    <div class="markil-fdc-review-form" id="markil-review-form-<?php echo intval( $m['id'] ); ?>" data-module-id="<?php echo intval( $m['id'] ); ?>">
+                        <h3 class="markil-fdc-sec-title"><?php _e( 'نظر خود را ثبت کنید', 'markil-modules' ); ?></h3>
+                        <?php if ( is_user_logged_in() ) : ?>
+                        <div class="markil-fdc-star-rating">
+                            <?php for ( $s = 5; $s >= 1; $s-- ) : ?>
+                            <input type="radio" name="markil_fdc_rating_<?php echo intval( $m['id'] ); ?>"
+                                   id="markil_fdc_star_<?php echo intval( $m['id'] ); ?>_<?php echo $s; ?>"
+                                   value="<?php echo $s; ?>">
+                            <label for="markil_fdc_star_<?php echo intval( $m['id'] ); ?>_<?php echo $s; ?>">★</label>
+                            <?php endfor; ?>
+                        </div>
+                        <textarea class="markil-fdc-review-text" rows="4"
+                                  placeholder="<?php esc_attr_e( 'نظر خود را بنویسید...', 'markil-modules' ); ?>"></textarea>
+                        <button type="button" class="markil-fdc-review-submit">
+                            <?php _e( 'ارسال نظر', 'markil-modules' ); ?>
+                        </button>
+                        <div class="markil-fdc-review-status" aria-live="polite"></div>
+                        <?php else : ?>
+                        <p class="markil-fdc-login-notice">
+                            <?php _e( 'برای ثبت نظر باید', 'markil-modules' ); ?>
+                            <a href="<?php echo esc_url( wp_login_url( get_permalink( $m['id'] ) ) ); ?>">
+                                <?php _e( 'وارد شوید', 'markil-modules' ); ?>
+                            </a>.
+                        </p>
+                        <?php endif; ?>
                     </div>
                     <?php endif; ?>
 
@@ -526,6 +556,46 @@ $uniq         = 'mgal-' . intval( $m['id'] );
             var diff = e.changedTouches[0].clientX - startX;
             if (Math.abs(diff) > 40) goTo(diff < 0 ? cur + 1 : cur - 1);
         }, {passive:true});
+    });
+
+    // Review form (full-detail page)
+    document.querySelectorAll('.markil-fdc-review-form').forEach(function(form){
+        var btn     = form.querySelector('.markil-fdc-review-submit');
+        var status  = form.querySelector('.markil-fdc-review-status');
+        if (!btn || !status) return;
+        btn.addEventListener('click', function(){
+            if (typeof MarkilModules === 'undefined') return;
+            var moduleId = form.dataset.moduleId;
+            var ratingEl = form.querySelector('[name^="markil_fdc_rating_"]:checked');
+            var rating   = ratingEl ? ratingEl.value : '';
+            var comment  = (form.querySelector('.markil-fdc-review-text') || {}).value || '';
+            status.className = 'markil-fdc-review-status';
+            if (!rating) { status.textContent = 'لطفاً امتیاز انتخاب کنید'; status.classList.add('error'); return; }
+            btn.disabled = true;
+            status.textContent = '...';
+            var fd = new FormData();
+            fd.append('action','markil_submit_review');
+            fd.append('nonce', MarkilModules.nonce);
+            fd.append('module_id', moduleId);
+            fd.append('rating', rating);
+            fd.append('comment', comment);
+            fetch(MarkilModules.ajax_url, {method:'POST', body:fd, credentials:'same-origin'})
+                .then(function(r){return r.json();})
+                .then(function(res){
+                    btn.disabled = false;
+                    if (res && res.success) {
+                        status.textContent = res.data.message;
+                        status.classList.add('success');
+                        var txt = form.querySelector('.markil-fdc-review-text');
+                        if (txt) txt.value = '';
+                        if (ratingEl) ratingEl.checked = false;
+                    } else {
+                        status.textContent = (res && res.data) ? res.data : 'خطایی رخ داد';
+                        status.classList.add('error');
+                    }
+                })
+                .catch(function(){ btn.disabled = false; status.textContent = 'خطا در ارتباط با سرور'; status.classList.add('error'); });
+        });
     });
 
     // Contact form
