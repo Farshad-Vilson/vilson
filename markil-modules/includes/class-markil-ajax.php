@@ -182,10 +182,12 @@ class Ajax {
         ];
 
         if ( $full ) {
+            // Main post content: Elementor SHOULD process this (it's the Elementor-built content)
             $data['content']            = apply_filters( 'the_content', get_post_field( 'post_content', $post_id ) );
-            $data['tab_details']        = apply_filters( 'the_content', $meta['_markil_tab_details'][0] ?? '' );
-            $data['tab_features']       = apply_filters( 'the_content', $meta['_markil_tab_features'][0] ?? '' );
-            $data['tab_compatibility']  = apply_filters( 'the_content', $meta['_markil_tab_compatibility'][0] ?? '' );
+            // Legacy tab fields: must bypass Elementor to avoid full-page replacement
+            $data['tab_details']        = $this->process_meta_content( $meta['_markil_tab_details'][0] ?? '' );
+            $data['tab_features']       = $this->process_meta_content( $meta['_markil_tab_features'][0] ?? '' );
+            $data['tab_compatibility']  = $this->process_meta_content( $meta['_markil_tab_compatibility'][0] ?? '' );
             $data['tab_reviews_html']   = $this->get_reviews_html( $post_id );
             $data['features_list']      = maybe_unserialize( $meta['_markil_features_list'][0] ?? '' ) ?: [];
             $data['compatibility_list'] = maybe_unserialize( $meta['_markil_compatibility_list'][0] ?? '' ) ?: [];
@@ -222,15 +224,15 @@ class Ajax {
                         $summary  = str_replace( '[markil_reviews]', $data['tab_reviews_html'], $summary );
                         $tab_type = 'reviews';
                     } elseif ( ! $use_main ) {
-                        $summary = do_shortcode( apply_filters( 'the_content', $summary ) );
+                        $summary = $this->process_meta_content( $summary );
                     }
 
-                    // Process full content similarly
+                    // Process full content — bypass Elementor filter to avoid page-level override
                     if ( strpos( (string) $content, '[markil_reviews]' ) !== false ) {
                         $content  = str_replace( '[markil_reviews]', $data['tab_reviews_html'], $content );
                         $tab_type = 'reviews';
                     } elseif ( ! $use_main ) {
-                        $content = do_shortcode( apply_filters( 'the_content', $content ) );
+                        $content = $this->process_meta_content( $content );
                     }
 
                     $tabs[] = [
@@ -293,6 +295,44 @@ class Ajax {
         }
 
         return $data;
+    }
+
+    /**
+     * Process meta-box HTML content (tab fields, legacy tab fields) through
+     * standard WordPress filters WITHOUT triggering Elementor's page-level
+     * content replacement.
+     *
+     * When Elementor is active on a post, apply_filters('the_content', $anything)
+     * is intercepted by Elementor's apply_builder_in_content() and returns the
+     * full Elementor-rendered post instead of the passed string. This method
+     * temporarily removes that filter so meta content is processed normally.
+     */
+    private function process_meta_content( $content ) {
+        if ( $content === '' || $content === null ) return '';
+
+        // Remove Elementor's the_content hook temporarily
+        $el_removed  = false;
+        $el_frontend = null;
+        if ( class_exists( '\Elementor\Plugin' ) ) {
+            try {
+                $el_frontend = \Elementor\Plugin::instance()->frontend;
+                if ( $el_frontend && has_filter( 'the_content', [ $el_frontend, 'apply_builder_in_content' ] ) ) {
+                    remove_filter( 'the_content', [ $el_frontend, 'apply_builder_in_content' ] );
+                    $el_removed = true;
+                }
+            } catch ( \Exception $e ) {
+                $el_removed = false;
+            }
+        }
+
+        $result = do_shortcode( apply_filters( 'the_content', $content ) );
+
+        // Restore Elementor's filter at the same default priority (10)
+        if ( $el_removed && $el_frontend ) {
+            add_filter( 'the_content', [ $el_frontend, 'apply_builder_in_content' ] );
+        }
+
+        return $result;
     }
 
     private function get_reviews_html( $post_id ) {
