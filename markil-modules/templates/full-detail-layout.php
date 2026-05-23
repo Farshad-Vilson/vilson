@@ -584,13 +584,14 @@ $uniq         = 'mgal-' . intval( $m['id'] );
                 .then(function(res){
                     btn.disabled = false;
                     if (res && res.success) {
-                        status.textContent = res.data.message;
+                        status.textContent = (res.data && res.data.message) ? res.data.message : 'ثبت شد';
                         status.classList.add('success');
                         var txt = form.querySelector('.markil-fdc-review-text');
                         if (txt) txt.value = '';
                         if (ratingEl) ratingEl.checked = false;
                     } else {
-                        status.textContent = (res && res.data) ? res.data : 'خطایی رخ داد';
+                        var errMsg = res && res.data;
+                        status.textContent = (typeof errMsg === 'string' && errMsg) ? errMsg : 'خطایی رخ داد';
                         status.classList.add('error');
                     }
                 })
@@ -617,11 +618,12 @@ $uniq         = 'mgal-' . intval( $m['id'] );
                 .then(function(res){
                     btn.disabled = false;
                     if (res && res.success) {
-                        status.textContent = res.data.message;
+                        status.textContent = (res.data && res.data.message) ? res.data.message : 'ارسال شد';
                         status.classList.add('success');
                         form.reset();
                     } else {
-                        status.textContent = (res && res.data) ? res.data : 'خطا در ارسال';
+                        var errMsg = res && res.data;
+                        status.textContent = (typeof errMsg === 'string' && errMsg) ? errMsg : 'خطا در ارسال';
                         status.classList.add('error');
                     }
                 })

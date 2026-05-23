@@ -218,6 +218,9 @@ class MetaBoxes {
         .markil-tab-help-row:last-child{margin-bottom:0}
         .markil-main-editor-lbl{font-size:12px;background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:6px;border:1px solid #fcd34d;cursor:pointer;white-space:nowrap}
         .markil-editor-notice{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;color:#166534;font-size:13px;display:none}
+        .markil-badge-purple{background:#ede9fe;color:#5b21b6;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700}
+        .markil-el-field-wrap{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+        .markil-el-page-id-input{width:160px;padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px}
         </style>
 
         <div class="markil-tab-help">
@@ -229,7 +232,10 @@ class MetaBoxes {
                 در صفحه جزئیات کامل ماژول.
             </div>
             <div class="markil-tab-help-row">
-                <strong>🎨 طراحی با المنتور:</strong> برای استفاده از قالب طراحی‌شده در المنتور داخل هر تب، از شورت‌کد <code>[elementor-template id="123"]</code> استفاده کنید (ابتدا در Templates &gt; Saved Templates ساخته شود).
+                <strong>🎨 طراحی جدا با المنتور:</strong> برای طراحی محتوای هر تب به‌صورت مستقل در المنتور، یک صفحه وردپرس بسازید، با المنتور طراحی کنید، سپس شناسه آن صفحه (Page ID) را در فیلد «🎨 المنتور» داخل همان تب وارد کنید.
+            </div>
+            <div class="markil-tab-help-row">
+                <strong>📌 شورت‌کد المنتور:</strong> جایگزین ساده‌تر — از <code>[elementor-template id="123"]</code> در ویرایشگر تب استفاده کنید (ابتدا در Templates &gt; Saved Templates ساخته شود).
             </div>
             <div class="markil-tab-help-row">
                 <strong>⭐ نظرات کاربران:</strong> برای نمایش لیست نظرات و فرم ثبت نظر از <code>[markil_reviews]</code> استفاده کنید.
@@ -238,12 +244,14 @@ class MetaBoxes {
 
         <div class="markil-tabs-builder" id="markil-tabs-builder">
             <?php foreach ( $custom_tabs as $i => $tab ) :
-                $label      = isset($tab['label'])            ? $tab['label']            : '';
-                $summary    = isset($tab['summary'])          ? $tab['summary']          : '';
-                $content    = isset($tab['content'])          ? $tab['content']          : '';
-                $enabled    = isset($tab['enabled'])          ? $tab['enabled']          : '1';
-                $use_main   = ! empty( $tab['use_main_editor'] ) && $tab['use_main_editor'] === '1';
-                $editor_id  = 'markil_tab_content_' . $i;
+                $label             = isset($tab['label'])             ? $tab['label']             : '';
+                $summary           = isset($tab['summary'])           ? $tab['summary']           : '';
+                $content           = isset($tab['content'])           ? $tab['content']           : '';
+                $enabled           = isset($tab['enabled'])           ? $tab['enabled']           : '1';
+                $use_main          = ! empty( $tab['use_main_editor'] ) && $tab['use_main_editor'] === '1';
+                $elementor_page_id = intval( $tab['elementor_page_id'] ?? 0 );
+                $editor_id         = 'markil_tab_content_' . $i;
+                $el_edit_url       = $elementor_page_id > 0 ? admin_url( 'post.php?post=' . $elementor_page_id . '&action=elementor' ) : '#';
             ?>
             <div class="markil-tab-row">
                 <div class="markil-tab-head">
@@ -297,6 +305,34 @@ class MetaBoxes {
                         </div><!-- /markil-editor-wrap -->
                         <p class="markil-tab-field-hint">
                             <?php _e('این محتوا در صفحه /markil-module/slug/ نمایش داده می‌شود. می‌توانید تصویر، ویدیو، گالری، جدول، شورت‌کد المنتور و هر چیز دیگری اضافه کنید.', 'markil-modules'); ?>
+                        </p>
+                    </div>
+
+                    <!-- Elementor Page ID — independent Elementor design per tab -->
+                    <div class="markil-tab-field">
+                        <div class="markil-tab-field-label">
+                            <span class="markil-badge-purple">🎨 المنتور</span>
+                            <?php _e('طراحی مستقل با المنتور (اختیاری)', 'markil-modules'); ?>
+                        </div>
+                        <div class="markil-el-field-wrap">
+                            <input type="number" min="0"
+                                   name="_markil_custom_tabs[<?php echo esc_attr($i); ?>][elementor_page_id]"
+                                   value="<?php echo esc_attr( $elementor_page_id ?: '' ); ?>"
+                                   class="markil-el-page-id-input"
+                                   placeholder="<?php esc_attr_e('شناسه صفحه المنتور (Page ID)', 'markil-modules'); ?>">
+                            <a href="<?php echo esc_url( $el_edit_url ); ?>"
+                               class="button markil-el-edit-btn"
+                               target="_blank" rel="noopener"
+                               <?php if ( ! $elementor_page_id ) echo 'style="display:none"'; ?>>
+                                🎨 <?php _e('ویرایش در المنتور', 'markil-modules'); ?>
+                            </a>
+                            <a href="<?php echo esc_url( admin_url('post-new.php?post_type=page') ); ?>"
+                               class="button" target="_blank" rel="noopener">
+                                + <?php _e('ایجاد صفحه جدید', 'markil-modules'); ?>
+                            </a>
+                        </div>
+                        <p class="markil-tab-field-hint">
+                            <?php _e('یک صفحه وردپرس بسازید، با المنتور طراحی کنید، شناسه (ID) آن را اینجا وارد کنید. وقتی پر باشد، محتوای این تب از آن صفحه خوانده می‌شود و ویرایشگر بالا نادیده گرفته می‌شود.', 'markil-modules'); ?>
                         </p>
                     </div>
                 </div>
@@ -375,6 +411,18 @@ class MetaBoxes {
                 $('#markil-tabs-builder').append(row);
                 initEditor(editorId);
                 index++;
+            });
+
+            // Update "Edit in Elementor" link when page ID changes
+            $(document).on('input change', '.markil-el-page-id-input', function(){
+                var id  = parseInt($(this).val(), 10);
+                var $btn = $(this).closest('.markil-el-field-wrap').find('.markil-el-edit-btn');
+                if (id > 0) {
+                    var base = (typeof ajaxurl !== 'undefined') ? ajaxurl.replace('admin-ajax.php', '') : '/wp-admin/';
+                    $btn.attr('href', base + 'post.php?post=' + id + '&action=elementor').show();
+                } else {
+                    $btn.attr('href', '#').hide();
+                }
             });
 
             $(document).on('click','.markil-remove-tab',function(){
@@ -821,18 +869,20 @@ class MetaBoxes {
         if ( isset( $_POST['_markil_custom_tabs'] ) && is_array( $_POST['_markil_custom_tabs'] ) ) {
             $tabs = [];
             foreach ( $_POST['_markil_custom_tabs'] as $tab ) {
-                $label     = isset( $tab['label'] )            ? sanitize_text_field( wp_unslash( $tab['label'] ) ) : '';
-                $summary   = isset( $tab['summary'] )          ? wp_kses_post( wp_unslash( $tab['summary'] ) ) : '';
-                $content   = isset( $tab['content'] )          ? wp_kses_post( wp_unslash( $tab['content'] ) ) : '';
-                $enabled   = isset( $tab['enabled'] )          ? '1' : '0';
-                $use_main  = ! empty( $tab['use_main_editor'] ) ? '1' : '0';
-                if ( $label === '' && $summary === '' && $content === '' && $use_main === '0' ) continue;
+                $label             = isset( $tab['label'] )            ? sanitize_text_field( wp_unslash( $tab['label'] ) ) : '';
+                $summary           = isset( $tab['summary'] )          ? wp_kses_post( wp_unslash( $tab['summary'] ) ) : '';
+                $content           = isset( $tab['content'] )          ? wp_kses_post( wp_unslash( $tab['content'] ) ) : '';
+                $enabled           = isset( $tab['enabled'] )          ? '1' : '0';
+                $use_main          = ! empty( $tab['use_main_editor'] ) ? '1' : '0';
+                $elementor_page_id = intval( $tab['elementor_page_id'] ?? 0 );
+                if ( $label === '' && $summary === '' && $content === '' && $use_main === '0' && $elementor_page_id === 0 ) continue;
                 $tabs[] = [
-                    'label'            => $label ?: __( 'تب جدید', 'markil-modules' ),
-                    'summary'          => $summary,
-                    'content'          => $content,
-                    'enabled'          => $enabled,
-                    'use_main_editor'  => $use_main,
+                    'label'             => $label ?: __( 'تب جدید', 'markil-modules' ),
+                    'summary'           => $summary,
+                    'content'           => $content,
+                    'enabled'           => $enabled,
+                    'use_main_editor'   => $use_main,
+                    'elementor_page_id' => $elementor_page_id,
                 ];
             }
             update_post_meta( $post_id, '_markil_custom_tabs', $tabs );

@@ -10,6 +10,7 @@ class Ajax {
         add_action( 'wp_ajax_markil_get_module_detail',         [ $this, 'get_module_detail' ] );
         add_action( 'wp_ajax_nopriv_markil_get_module_detail',  [ $this, 'get_module_detail' ] );
         add_action( 'wp_ajax_markil_submit_review',             [ $this, 'submit_review' ] );
+        add_action( 'wp_ajax_nopriv_markil_submit_review',      [ $this, 'submit_review' ] );
         add_action( 'wp_ajax_markil_toggle_wishlist',           [ $this, 'toggle_wishlist' ] );
         add_action( 'wp_ajax_nopriv_markil_toggle_wishlist',    [ $this, 'toggle_wishlist' ] );
         // Modal-based full-detail AJAX (markil_render_full_detail) was removed
@@ -202,14 +203,24 @@ class Ajax {
             if ( is_array( $custom_tabs ) && ! empty( $custom_tabs ) ) {
                 foreach ( $custom_tabs as $tab ) {
                     if ( isset( $tab['enabled'] ) && $tab['enabled'] !== '1' ) continue;
-                    $label     = isset( $tab['label'] )           ? sanitize_text_field( $tab['label'] ) : '';
-                    $summary   = isset( $tab['summary'] )         ? $tab['summary'] : '';
-                    $content   = isset( $tab['content'] )         ? $tab['content'] : '';
-                    $use_main  = ! empty( $tab['use_main_editor'] ) && $tab['use_main_editor'] === '1';
-                    $tab_type  = '';
+                    $label             = isset( $tab['label'] )            ? sanitize_text_field( $tab['label'] ) : '';
+                    $summary           = isset( $tab['summary'] )          ? $tab['summary'] : '';
+                    $content           = isset( $tab['content'] )          ? $tab['content'] : '';
+                    $use_main          = ! empty( $tab['use_main_editor'] ) && $tab['use_main_editor'] === '1';
+                    $elementor_page_id = intval( $tab['elementor_page_id'] ?? 0 );
+                    $tab_type          = '';
 
-                    // "Use main editor" — replaces content with processed post_content (Elementor-ready)
-                    if ( $use_main ) {
+                    // Priority 1: Elementor page ID — render a separate page/template designed in Elementor
+                    if ( $elementor_page_id > 0 && class_exists( '\Elementor\Plugin' ) ) {
+                        try {
+                            $el_html = \Elementor\Plugin::instance()->frontend->get_builder_content_for_display( $elementor_page_id );
+                            $content = $el_html !== '' ? $el_html : $this->process_meta_content( $content );
+                        } catch ( \Exception $e ) {
+                            $content = $this->process_meta_content( $content );
+                        }
+                        $summary = $summary !== '' ? $this->process_meta_content( $summary ) : '';
+                    } elseif ( $use_main ) {
+                        // Priority 2: main editor (current post's Elementor/block content)
                         $content = $data['content'];
                         if ( empty( $summary ) ) {
                             $summary = $data['excerpt'] ? '<p>' . esc_html( $data['excerpt'] ) . '</p>' : '';
@@ -219,20 +230,21 @@ class Ajax {
                     // Skip truly empty tab (no label AND no content after resolution)
                     if ( trim( $label ) === '' && $content === '' && $summary === '' ) continue;
 
-                    // Process summary: [markil_reviews] → reviews HTML, then shortcodes+filters
-                    if ( strpos( (string) $summary, '[markil_reviews]' ) !== false ) {
-                        $summary  = str_replace( '[markil_reviews]', $data['tab_reviews_html'], $summary );
-                        $tab_type = 'reviews';
-                    } elseif ( ! $use_main ) {
-                        $summary = $this->process_meta_content( $summary );
-                    }
+                    // Process summary/content for regular tabs (no Elementor page, no main editor)
+                    if ( $elementor_page_id <= 0 ) {
+                        if ( strpos( (string) $summary, '[markil_reviews]' ) !== false ) {
+                            $summary  = str_replace( '[markil_reviews]', $data['tab_reviews_html'], $summary );
+                            $tab_type = 'reviews';
+                        } elseif ( ! $use_main ) {
+                            $summary = $this->process_meta_content( $summary );
+                        }
 
-                    // Process full content — bypass Elementor filter to avoid page-level override
-                    if ( strpos( (string) $content, '[markil_reviews]' ) !== false ) {
-                        $content  = str_replace( '[markil_reviews]', $data['tab_reviews_html'], $content );
-                        $tab_type = 'reviews';
-                    } elseif ( ! $use_main ) {
-                        $content = $this->process_meta_content( $content );
+                        if ( strpos( (string) $content, '[markil_reviews]' ) !== false ) {
+                            $content  = str_replace( '[markil_reviews]', $data['tab_reviews_html'], $content );
+                            $tab_type = 'reviews';
+                        } elseif ( ! $use_main ) {
+                            $content = $this->process_meta_content( $content );
+                        }
                     }
 
                     $tabs[] = [
