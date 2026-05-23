@@ -53,11 +53,71 @@ class Plugin {
         new Ajax();
         new Admin();
         new MetaBoxes();
+        add_action( 'rest_api_init', [ $this, 'register_rest_routes' ] );
 
         if ( did_action( 'elementor/loaded' ) ) {
             require_once MARKIL_PATH . 'includes/class-markil-elementor.php';
             new Elementor();
         }
+    }
+
+    public function register_rest_routes() {
+        register_rest_route( 'markil/v1', '/modules', [
+            'methods'             => 'GET',
+            'callback'            => [ $this, 'rest_get_modules' ],
+            'permission_callback' => '__return_true',
+            'args'                => [
+                'per_page' => [ 'type' => 'integer', 'default' => 12, 'minimum' => 1, 'maximum' => 100 ],
+                'page'     => [ 'type' => 'integer', 'default' => 1,  'minimum' => 1 ],
+                'category' => [ 'type' => 'string',  'default' => '' ],
+                'search'   => [ 'type' => 'string',  'default' => '' ],
+            ],
+        ]);
+        register_rest_route( 'markil/v1', '/modules/(?P<id>\d+)', [
+            'methods'             => 'GET',
+            'callback'            => [ $this, 'rest_get_module' ],
+            'permission_callback' => '__return_true',
+            'args'                => [
+                'id' => [ 'type' => 'integer', 'required' => true ],
+            ],
+        ]);
+    }
+
+    public function rest_get_modules( \WP_REST_Request $request ) {
+        $args = [
+            'post_type'      => 'markil_module',
+            'post_status'    => 'publish',
+            'posts_per_page' => $request->get_param( 'per_page' ),
+            'paged'          => $request->get_param( 'page' ),
+            'no_found_rows'  => false,
+        ];
+        $search = $request->get_param( 'search' );
+        if ( $search ) $args['s'] = $search;
+        $cat = $request->get_param( 'category' );
+        if ( $cat ) {
+            $args['tax_query'] = [[ 'taxonomy' => 'markil_category', 'field' => 'slug', 'terms' => $cat ]];
+        }
+        $q = new \WP_Query( $args );
+        $ajax = new Ajax();
+        $items = [];
+        foreach ( $q->posts as $post ) {
+            $items[] = $ajax->format_module( $post->ID );
+        }
+        return new \WP_REST_Response([
+            'items'       => $items,
+            'total'       => $q->found_posts,
+            'total_pages' => $q->max_num_pages,
+        ], 200);
+    }
+
+    public function rest_get_module( \WP_REST_Request $request ) {
+        $id   = absint( $request->get_param( 'id' ) );
+        $post = get_post( $id );
+        if ( ! $post || $post->post_type !== 'markil_module' || $post->post_status !== 'publish' ) {
+            return new \WP_REST_Response( [ 'error' => 'Not found' ], 404 );
+        }
+        $ajax = new Ajax();
+        return new \WP_REST_Response( $ajax->format_module( $id, true ), 200 );
     }
 
     public function register_post_types() {

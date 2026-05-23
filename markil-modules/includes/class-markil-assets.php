@@ -9,6 +9,7 @@ class Assets {
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin' ] );
         add_action( 'elementor/frontend/after_enqueue_styles', [ $this, 'enqueue_frontend' ] );
         add_action( 'wp_head', [ $this, 'output_detail_page_styles' ] );
+        add_action( 'wp_head', [ $this, 'output_seo_meta' ], 1 );
     }
 
     public function enqueue_frontend() {
@@ -66,6 +67,65 @@ class Assets {
         if ( ! empty( $vars ) ) {
             echo '<style>.markil-full-detail-wrap{' . implode( ' ', $vars ) . '}</style>' . "\n";
         }
+    }
+
+    public function output_seo_meta() {
+        if ( ! is_singular( 'markil_module' ) ) return;
+        $post_id = get_the_ID();
+        if ( ! $post_id ) return;
+
+        $title       = get_the_title( $post_id );
+        $excerpt     = get_the_excerpt( $post_id );
+        $permalink   = get_permalink( $post_id );
+        $img_url     = get_the_post_thumbnail_url( $post_id, 'large' );
+        $price       = get_post_meta( $post_id, '_markil_price', true );
+        $is_free     = get_post_meta( $post_id, '_markil_is_free', true );
+        $version     = get_post_meta( $post_id, '_markil_version', true ) ?: '1.0';
+        $currency    = get_option( 'markil_currency', 'تومان' );
+        $site_name   = get_bloginfo( 'name' );
+
+        echo "\n<!-- Markil Modules: Open Graph & JSON-LD -->\n";
+
+        // Open Graph
+        echo '<meta property="og:type" content="product">' . "\n";
+        echo '<meta property="og:title" content="' . esc_attr( $title ) . '">' . "\n";
+        echo '<meta property="og:description" content="' . esc_attr( wp_strip_all_tags( $excerpt ) ) . '">' . "\n";
+        echo '<meta property="og:url" content="' . esc_attr( $permalink ) . '">' . "\n";
+        echo '<meta property="og:site_name" content="' . esc_attr( $site_name ) . '">' . "\n";
+        if ( $img_url ) {
+            echo '<meta property="og:image" content="' . esc_attr( $img_url ) . '">' . "\n";
+        }
+
+        // Twitter Card
+        echo '<meta name="twitter:card" content="summary_large_image">' . "\n";
+        echo '<meta name="twitter:title" content="' . esc_attr( $title ) . '">' . "\n";
+        echo '<meta name="twitter:description" content="' . esc_attr( wp_strip_all_tags( $excerpt ) ) . '">' . "\n";
+        if ( $img_url ) {
+            echo '<meta name="twitter:image" content="' . esc_attr( $img_url ) . '">' . "\n";
+        }
+
+        // JSON-LD SoftwareApplication + Product
+        $price_val = $is_free ? '0' : ( $price ?: '0' );
+        $json_ld = [
+            '@context' => 'https://schema.org',
+            '@type'    => 'SoftwareApplication',
+            'name'     => $title,
+            'description' => wp_strip_all_tags( $excerpt ),
+            'url'      => $permalink,
+            'softwareVersion' => $version,
+            'applicationCategory' => 'WebApplication',
+            'operatingSystem' => 'WordPress',
+            'offers'   => [
+                '@type'         => 'Offer',
+                'price'         => $price_val,
+                'priceCurrency' => 'IRR',
+                'availability'  => 'https://schema.org/InStock',
+            ],
+        ];
+        if ( $img_url ) {
+            $json_ld['image'] = $img_url;
+        }
+        echo '<script type="application/ld+json">' . wp_json_encode( $json_ld, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT ) . '</script>' . "\n";
     }
 
     public function enqueue_admin( $hook ) {

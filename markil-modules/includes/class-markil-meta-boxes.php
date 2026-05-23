@@ -602,6 +602,26 @@ class MetaBoxes {
                 </div>
             </div>
 
+            <!-- ===== ضمانت کیفیت ===== -->
+            <div class="markil-fd-section-wrap">
+                <h4 class="markil-fd-section-title">🛡️ ضمانت کیفیت (اختیاری - اگر خالی باشد از تنظیمات سایت می‌خواند)</h4>
+                <div class="markil-meta-field">
+                    <label>عنوان ضمانت</label>
+                    <input type="text" name="_markil_guarantee_title" value="<?php echo esc_attr(get_post_meta($post->ID,'_markil_guarantee_title',true)); ?>" placeholder="ضمانت کیفیت خدمات">
+                </div>
+                <div class="markil-meta-field" style="margin-top:8px">
+                    <label>متن ضمانت</label>
+                    <textarea name="_markil_guarantee_text" rows="3" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:6px"><?php echo esc_textarea(get_post_meta($post->ID,'_markil_guarantee_text',true)); ?></textarea>
+                </div>
+                <!-- Demo URL -->
+                <h4 class="markil-fd-section-title" style="margin-top:18px">🔗 لینک دمو (اختیاری)</h4>
+                <input type="url" name="_markil_demo_url" value="<?php echo esc_attr(get_post_meta($post->ID,'_markil_demo_url',true)); ?>" placeholder="https://demo.example.com" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:8px">
+                <!-- Changelog -->
+                <h4 class="markil-fd-section-title" style="margin-top:18px">📋 تاریخچه تغییرات (Changelog)</h4>
+                <div class="markil-fd-help">هر نسخه در یک خط جدید — مثال: v1.2 — افزودن قابلیت جدید</div>
+                <textarea name="_markil_changelog" rows="6" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:6px;direction:rtl"><?php echo esc_textarea(get_post_meta($post->ID,'_markil_changelog',true)); ?></textarea>
+            </div>
+
         </div>
         <script>
         jQuery(function($){
@@ -706,7 +726,7 @@ class MetaBoxes {
             '_markil_btn_primary_action', '_markil_btn_secondary_action',
             '_markil_wc_product_id', '_markil_detail_page', '_markil_installs', '_markil_rating',
             '_markil_delivery_time', '_markil_primary_custom_url', '_markil_secondary_custom_url',
-            '_markil_video_url',
+            '_markil_video_url', '_markil_demo_url', '_markil_guarantee_title',
         ];
 
         foreach ( $text_fields as $field ) {
@@ -804,6 +824,13 @@ class MetaBoxes {
             $raw_ids = sanitize_text_field( wp_unslash( $_POST['_markil_gallery_images'] ) );
             $ids     = array_filter( array_map( 'absint', explode( ',', $raw_ids ) ) );
             update_post_meta( $post_id, '_markil_gallery_images', implode( ',', $ids ) );
+        }
+
+        if ( isset( $_POST['_markil_guarantee_text'] ) ) {
+            update_post_meta( $post_id, '_markil_guarantee_text', sanitize_textarea_field( wp_unslash( $_POST['_markil_guarantee_text'] ) ) );
+        }
+        if ( isset( $_POST['_markil_changelog'] ) ) {
+            update_post_meta( $post_id, '_markil_changelog', sanitize_textarea_field( wp_unslash( $_POST['_markil_changelog'] ) ) );
         }
 
         // Video

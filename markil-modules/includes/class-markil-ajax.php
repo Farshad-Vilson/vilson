@@ -269,6 +269,12 @@ class Ajax {
             $data['video_url']        = $meta['_markil_video_url'][0] ?? '';
             $data['video_embed']      = $meta['_markil_video_embed'][0] ?? '';
             $data['video_membership'] = ! empty( $meta['_markil_video_membership'][0] ) && $meta['_markil_video_membership'][0] === '1';
+            $data['demo_url']        = $meta['_markil_demo_url'][0] ?? '';
+            $data['changelog']       = $meta['_markil_changelog'][0] ?? '';
+            $g_title = $meta['_markil_guarantee_title'][0] ?? '';
+            $g_text  = $meta['_markil_guarantee_text'][0] ?? '';
+            $data['guarantee_title'] = $g_title ?: get_option( 'markil_guarantee_title', 'ضمانت کیفیت خدمات' );
+            $data['guarantee_text']  = $g_text  ?: get_option( 'markil_guarantee_text',  'ما کیفیت کار خود را تضمین می‌کنیم. در صورت نارضایتی، پشتیبانی تا رضایت شما ادامه دارد.' );
         }
 
         return $data;
