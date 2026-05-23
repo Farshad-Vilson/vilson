@@ -9,7 +9,25 @@ class Admin {
         add_action( 'admin_init', [ $this, 'register_settings' ] );
         add_filter( 'manage_markil_module_posts_columns', [ $this, 'add_columns' ] );
         add_action( 'manage_markil_module_posts_custom_column', [ $this, 'render_columns' ], 10, 2 );
+        add_filter( 'manage_edit-markil_module_sortable_columns', [ $this, 'sortable_columns' ] );
+        add_filter( 'post_row_actions', [ $this, 'add_row_actions' ], 10, 2 );
         add_filter( 'plugin_action_links_' . MARKIL_BASENAME, [ $this, 'add_action_links' ] );
+    }
+
+    public function sortable_columns( $cols ) {
+        $cols['markil_views']    = 'markil_views';
+        $cols['markil_price']    = 'markil_price';
+        $cols['markil_installs'] = 'markil_installs';
+        return $cols;
+    }
+
+    public function add_row_actions( $actions, $post ) {
+        if ( $post->post_type !== 'markil_module' ) return $actions;
+        $url = get_permalink( $post->ID );
+        if ( $url ) {
+            $actions['markil_preview'] = '<a href="' . esc_url( $url ) . '" target="_blank" rel="noopener">' . __( 'پیش‌نمایش سریع', 'markil-modules' ) . '</a>';
+        }
+        return $actions;
     }
 
     public function add_action_links( $links ) {
@@ -47,6 +65,10 @@ class Admin {
         register_setting( 'markil_settings', 'markil_fdc_btn_radius',    [ 'type' => 'string', 'default' => '12' ] );
         register_setting( 'markil_settings', 'markil_fdc_tab_radius',    [ 'type' => 'string', 'default' => '10' ] );
         register_setting( 'markil_settings', 'markil_fdc_google_fonts',  [ 'type' => 'string', 'default' => '' ] );
+        // Contact form
+        register_setting( 'markil_settings', 'markil_contact_enabled', [ 'type' => 'string', 'default' => '1' ] );
+        register_setting( 'markil_settings', 'markil_contact_title',   [ 'type' => 'string', 'default' => 'سوالی درباره این ماژول دارید؟' ] );
+        register_setting( 'markil_settings', 'markil_contact_sub',     [ 'type' => 'string', 'default' => 'پیام خود را ارسال کنید، در اسرع وقت پاسخ می‌دهیم.' ] );
     }
 
     public function settings_page() {
@@ -57,10 +79,11 @@ class Admin {
             'markil_guarantee_title','markil_guarantee_text',
             'markil_fdc_primary_color','markil_fdc_price_color','markil_fdc_price_font',
             'markil_fdc_btn_radius','markil_fdc_tab_radius','markil_fdc_google_fonts',
+            'markil_contact_enabled','markil_contact_title','markil_contact_sub',
         ];
         if ( isset( $_POST['submit'] ) ) {
             check_admin_referer( 'markil-options' );
-            $textarea_opts = [ 'markil_guarantee_text' ];
+            $textarea_opts = [ 'markil_guarantee_text', 'markil_contact_sub' ];
             foreach ( $all_opts as $opt ) {
                 if ( isset( $_POST[$opt] ) ) {
                     $val = in_array( $opt, $textarea_opts, true )
@@ -178,6 +201,24 @@ class Admin {
                     </tr>
                 </table>
 
+                <hr>
+                <h2><?php _e('فرم تماس ماژول','markil-modules'); ?></h2>
+                <p style="color:#666"><?php _e('فرم تماس در پایین صفحه‌ی هر ماژول نمایش داده می‌شود. پیام‌ها در دیتابیس ذخیره و به ایمیل مدیر ارسال می‌گردد.','markil-modules'); ?></p>
+                <table class="form-table">
+                    <tr>
+                        <th><?php _e('فعال‌سازی فرم تماس','markil-modules'); ?></th>
+                        <td><label><input type="checkbox" name="markil_contact_enabled" value="1" <?php checked(get_option('markil_contact_enabled','1'),'1'); ?>> <?php _e('فعال','markil-modules'); ?></label></td>
+                    </tr>
+                    <tr>
+                        <th><?php _e('عنوان فرم','markil-modules'); ?></th>
+                        <td><input type="text" name="markil_contact_title" value="<?php echo esc_attr(get_option('markil_contact_title','سوالی درباره این ماژول دارید؟')); ?>" style="width:420px"></td>
+                    </tr>
+                    <tr>
+                        <th><?php _e('زیرنویس فرم','markil-modules'); ?></th>
+                        <td><textarea name="markil_contact_sub" rows="2" style="width:420px"><?php echo esc_textarea(get_option('markil_contact_sub','پیام خود را ارسال کنید، در اسرع وقت پاسخ می‌دهیم.')); ?></textarea></td>
+                    </tr>
+                </table>
+
                 <p><input type="submit" name="submit" class="button button-primary" value="<?php _e('ذخیره تنظیمات','markil-modules'); ?>"></p>
             </form>
         </div>
@@ -192,6 +233,7 @@ class Admin {
                 $new['markil_price']    = __('قیمت','markil-modules');
                 $new['markil_rating']   = __('امتیاز','markil-modules');
                 $new['markil_installs'] = __('نصب‌ها','markil-modules');
+                $new['markil_views']    = __('بازدید','markil-modules');
                 $new['markil_status']   = __('وضعیت','markil-modules');
             }
         }
@@ -212,6 +254,10 @@ class Admin {
             case 'markil_installs':
                 $i = intval(get_post_meta($post_id,'_markil_installs',true));
                 echo $i ? '+' . number_format($i) : '—';
+                break;
+            case 'markil_views':
+                $v = intval(get_post_meta($post_id,'_markil_views',true));
+                echo $v ? '👁 ' . number_format($v) : '—';
                 break;
             case 'markil_status':
                 $s = get_post_meta($post_id,'_markil_status',true) ?: 'active';

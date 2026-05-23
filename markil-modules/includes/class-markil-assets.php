@@ -40,6 +40,8 @@ class Assets {
      * Only outputs on markil_module single pages and pages that embed the widget.
      */
     public function output_detail_page_styles() {
+        // Only emit on pages that actually need it (perf: avoid running on every wp_head)
+        if ( ! is_singular( 'markil_module' ) ) return;
         $primary    = sanitize_hex_color( get_option( 'markil_fdc_primary_color', '' ) );
         $price_clr  = sanitize_hex_color( get_option( 'markil_fdc_price_color',   '' ) );
         $price_font = get_option( 'markil_fdc_price_font',   '' );

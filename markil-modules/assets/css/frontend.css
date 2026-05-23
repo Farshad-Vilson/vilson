@@ -4191,3 +4191,73 @@
 @media (max-width: 420px) {
     .markil-fdc-related-grid { grid-template-columns: 1fr; }
 }
+
+/* ===== Contact Form (per-module) ===== */
+.markil-fdc-contact {
+    margin-top: 36px;
+    padding: 28px;
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+}
+.markil-fdc-contact-title {
+    margin: 0 0 6px;
+    font-size: 22px;
+    color: var(--markil-fdc-primary, #011627);
+}
+.markil-fdc-contact-sub {
+    margin: 0 0 18px;
+    color: #475569;
+    font-size: 14px;
+}
+.markil-fdc-contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+}
+.markil-fdc-contact-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.markil-fdc-contact-form input[type="text"],
+.markil-fdc-contact-form input[type="email"],
+.markil-fdc-contact-form textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    background: #fff;
+    box-sizing: border-box;
+    direction: rtl;
+}
+.markil-fdc-contact-form input:focus,
+.markil-fdc-contact-form textarea:focus {
+    outline: none;
+    border-color: var(--markil-fdc-primary, #011627);
+}
+.markil-fdc-contact-form textarea { resize: vertical; min-height: 100px; }
+.markil-fdc-contact-btn {
+    align-self: flex-start;
+    padding: 12px 28px;
+    background: var(--markil-fdc-primary, #011627);
+    color: #fff;
+    border: none;
+    border-radius: var(--markil-fdc-btn-radius, 12px);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .2s;
+}
+.markil-fdc-contact-btn:hover { opacity: .9; }
+.markil-fdc-contact-btn:disabled { opacity: .5; cursor: not-allowed; }
+.markil-fdc-contact-status { font-size: 13px; min-height: 18px; }
+.markil-fdc-contact-status.success { color: #047857; }
+.markil-fdc-contact-status.error   { color: #dc2626; }
+@media (max-width: 600px) {
+    .markil-fdc-contact-row { grid-template-columns: 1fr; }
+    .markil-fdc-contact { padding: 18px; }
+}

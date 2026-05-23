@@ -111,9 +111,6 @@ $uniq         = 'mgal-' . intval( $m['id'] );
         <div class="markil-fdc-main">
 
             <h1 class="markil-fdc-title"><?php echo esc_html( $m['title'] ); ?></h1>
-            <?php if ( ! empty( $m['content'] ) ) : ?>
-            <div class="markil-fdc-post-content markil-tab-body"><?php echo $m['content']; ?></div>
-            <?php endif; ?>
 
             <!-- Features Bar (top badges) -->
             <?php if ( $show_fb && ! empty( $m['features_bar'] ) ) : ?>
@@ -414,6 +411,26 @@ $uniq         = 'mgal-' . intval( $m['id'] );
 
     </div><!-- /markil-fdc-layout -->
 
+    <!-- Contact Form (per-module) -->
+    <?php if ( get_option( 'markil_contact_enabled', '1' ) === '1' ) : ?>
+    <div class="markil-fdc-contact" id="markil-contact-<?php echo intval( $m['id'] ); ?>">
+        <h2 class="markil-fdc-contact-title"><?php echo esc_html( get_option( 'markil_contact_title', 'سوالی درباره این ماژول دارید؟' ) ); ?></h2>
+        <p class="markil-fdc-contact-sub"><?php echo esc_html( get_option( 'markil_contact_sub', 'پیام خود را ارسال کنید، در اسرع وقت پاسخ می‌دهیم.' ) ); ?></p>
+        <form class="markil-fdc-contact-form" data-module-id="<?php echo intval( $m['id'] ); ?>">
+            <div class="markil-fdc-contact-row">
+                <input type="text" name="name" placeholder="<?php esc_attr_e( 'نام و نام خانوادگی', 'markil-modules' ); ?>" required>
+                <input type="email" name="email" placeholder="<?php esc_attr_e( 'ایمیل', 'markil-modules' ); ?>" required>
+            </div>
+            <input type="text" name="phone" placeholder="<?php esc_attr_e( 'شماره تماس (اختیاری)', 'markil-modules' ); ?>">
+            <textarea name="message" rows="4" placeholder="<?php esc_attr_e( 'پیام شما...', 'markil-modules' ); ?>" required></textarea>
+            <!-- honeypot -->
+            <input type="text" name="website" style="position:absolute;left:-9999px" tabindex="-1" autocomplete="off">
+            <button type="submit" class="markil-fdc-contact-btn"><?php _e( 'ارسال پیام', 'markil-modules' ); ?></button>
+            <div class="markil-fdc-contact-status" aria-live="polite"></div>
+        </form>
+    </div>
+    <?php endif; ?>
+
     <!-- Related Modules -->
     <?php
     $cats = $m['categories'] ?? [];
@@ -509,6 +526,41 @@ $uniq         = 'mgal-' . intval( $m['id'] );
             var diff = e.changedTouches[0].clientX - startX;
             if (Math.abs(diff) > 40) goTo(diff < 0 ? cur + 1 : cur - 1);
         }, {passive:true});
+    });
+
+    // Contact form
+    document.querySelectorAll('.markil-fdc-contact-form').forEach(function(form){
+        form.addEventListener('submit', function(e){
+            e.preventDefault();
+            if (typeof MarkilModules === 'undefined') return;
+            var status = form.querySelector('.markil-fdc-contact-status');
+            var btn    = form.querySelector('.markil-fdc-contact-btn');
+            var data = new FormData(form);
+            data.append('action', 'markil_contact_submit');
+            data.append('nonce', MarkilModules.nonce);
+            data.append('module_id', form.dataset.moduleId);
+            btn.disabled = true;
+            status.textContent = MarkilModules.loading || '...';
+            status.className = 'markil-fdc-contact-status';
+            fetch(MarkilModules.ajax_url, { method: 'POST', body: data, credentials: 'same-origin' })
+                .then(function(r){ return r.json(); })
+                .then(function(res){
+                    btn.disabled = false;
+                    if (res && res.success) {
+                        status.textContent = res.data.message;
+                        status.classList.add('success');
+                        form.reset();
+                    } else {
+                        status.textContent = (res && res.data) ? res.data : 'خطا در ارسال';
+                        status.classList.add('error');
+                    }
+                })
+                .catch(function(){
+                    btn.disabled = false;
+                    status.textContent = 'خطا در ارتباط با سرور';
+                    status.classList.add('error');
+                });
+        });
     });
 })();
 </script>

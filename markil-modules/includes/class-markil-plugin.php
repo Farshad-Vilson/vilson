@@ -48,11 +48,13 @@ class Plugin {
         require_once MARKIL_PATH . 'includes/class-markil-ajax.php';
         require_once MARKIL_PATH . 'includes/class-markil-admin.php';
         require_once MARKIL_PATH . 'includes/class-markil-meta-boxes.php';
+        require_once MARKIL_PATH . 'includes/class-markil-engagement.php';
 
         new Assets();
         new Ajax();
         new Admin();
         new MetaBoxes();
+        new Engagement();
         add_action( 'rest_api_init', [ $this, 'register_rest_routes' ] );
 
         if ( did_action( 'elementor/loaded' ) ) {

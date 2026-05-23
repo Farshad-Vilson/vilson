@@ -18,6 +18,42 @@ class MetaBoxes {
         add_meta_box( 'markil_module_features',    __( '✅ ویژگی‌های کلیدی', 'markil-modules' ),                 [ $this, 'features_box' ],    'markil_module', 'normal', 'default' );
         add_meta_box( 'markil_module_gallery_video', __( '🖼️ گالری تصاویر و ویدیو', 'markil-modules' ), [ $this, 'gallery_video_box' ], 'markil_module', 'normal', 'high' );
         add_meta_box( 'markil_module_full_detail', __( '🖥️ صفحه جزئیات کامل (Full Detail Page)', 'markil-modules' ), [ $this, 'full_detail_box' ], 'markil_module', 'normal', 'default' );
+        add_meta_box( 'markil_module_messages',    __( '📨 پیام‌های دریافتی', 'markil-modules' ),                   [ $this, 'messages_box' ],    'markil_module', 'normal', 'low' );
+    }
+
+    public function messages_box( $post ) {
+        $messages = get_post_meta( $post->ID, '_markil_contact_messages', true );
+        $views    = intval( get_post_meta( $post->ID, '_markil_views', true ) );
+        if ( ! is_array( $messages ) ) $messages = [];
+        ?>
+        <p style="margin:0 0 10px"><strong><?php _e( 'تعداد بازدید این ماژول:', 'markil-modules' ); ?></strong> <?php echo number_format( $views ); ?></p>
+        <?php if ( empty( $messages ) ) : ?>
+            <p style="color:#666"><?php _e( 'تاکنون پیامی دریافت نشده است.', 'markil-modules' ); ?></p>
+        <?php else :
+            $messages = array_reverse( $messages );
+        ?>
+            <p><strong><?php echo count( $messages ); ?></strong> <?php _e( 'پیام', 'markil-modules' ); ?></p>
+            <table class="widefat striped" style="margin-top:8px">
+                <thead><tr>
+                    <th><?php _e( 'تاریخ', 'markil-modules' ); ?></th>
+                    <th><?php _e( 'نام', 'markil-modules' ); ?></th>
+                    <th><?php _e( 'ایمیل', 'markil-modules' ); ?></th>
+                    <th><?php _e( 'تلفن', 'markil-modules' ); ?></th>
+                    <th><?php _e( 'پیام', 'markil-modules' ); ?></th>
+                </tr></thead>
+                <tbody>
+                <?php foreach ( $messages as $msg ) : ?>
+                    <tr>
+                        <td><?php echo esc_html( $msg['date'] ?? '' ); ?></td>
+                        <td><?php echo esc_html( $msg['name'] ?? '' ); ?></td>
+                        <td><a href="mailto:<?php echo esc_attr( $msg['email'] ?? '' ); ?>"><?php echo esc_html( $msg['email'] ?? '' ); ?></a></td>
+                        <td><?php echo esc_html( $msg['phone'] ?? '' ); ?></td>
+                        <td style="white-space:pre-wrap"><?php echo esc_html( $msg['message'] ?? '' ); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif;
     }
 
     public function pricing_box( $post ) {

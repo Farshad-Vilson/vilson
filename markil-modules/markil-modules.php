@@ -3,7 +3,7 @@
  * Plugin Name: ماژول حرف اول
  * Plugin URI: https://markil.ir
  * Description: بهترین افزونه برای نمایش و فروش ماژول‌های وب‌سایت با المنتور - کاملاً یکپارچه با ووکامرس
- * Version: 2.8.0
+ * Version: 2.9.0
  * Author: مارکیل
  * Author URI: https://markil.ir
  * Text Domain: markil-modules
@@ -16,7 +16,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'MARKIL_VERSION', '2.8.0' );
+define( 'MARKIL_VERSION', '2.9.0' );
 define( 'MARKIL_PATH', plugin_dir_path( __FILE__ ) );
 define( 'MARKIL_URL', plugin_dir_url( __FILE__ ) );
 define( 'MARKIL_BASENAME', plugin_basename( __FILE__ ) );
