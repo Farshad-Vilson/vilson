@@ -303,36 +303,26 @@ class Ajax {
      * content replacement.
      *
      * When Elementor is active on a post, apply_filters('the_content', $anything)
-     * is intercepted by Elementor's apply_builder_in_content() and returns the
-     * full Elementor-rendered post instead of the passed string. This method
-     * temporarily removes that filter so meta content is processed normally.
+     * is intercepted by Elementor and replaces ANY content passed to it with
+     * the full Elementor-rendered page when the current post is Elementor-built.
+     *
+     * Root cause: apply_filters('the_content') triggers Elementor's
+     * apply_builder_in_content() which ignores the passed string entirely and
+     * returns the global $post content rendered by Elementor. The priority of
+     * that filter varies by Elementor version so remove_filter() is unreliable.
+     *
+     * Solution: skip apply_filters('the_content') entirely for meta content.
+     * TinyMCE already saves properly formatted HTML — we just need wpautop
+     * (paragraph wrapping for plain-text entries) and do_shortcode.
      */
     private function process_meta_content( $content ) {
         if ( $content === '' || $content === null ) return '';
-
-        // Remove Elementor's the_content hook temporarily
-        $el_removed  = false;
-        $el_frontend = null;
-        if ( class_exists( '\Elementor\Plugin' ) ) {
-            try {
-                $el_frontend = \Elementor\Plugin::instance()->frontend;
-                if ( $el_frontend && has_filter( 'the_content', [ $el_frontend, 'apply_builder_in_content' ] ) ) {
-                    remove_filter( 'the_content', [ $el_frontend, 'apply_builder_in_content' ] );
-                    $el_removed = true;
-                }
-            } catch ( \Exception $e ) {
-                $el_removed = false;
-            }
-        }
-
-        $result = do_shortcode( apply_filters( 'the_content', $content ) );
-
-        // Restore Elementor's filter at the same default priority (10)
-        if ( $el_removed && $el_frontend ) {
-            add_filter( 'the_content', [ $el_frontend, 'apply_builder_in_content' ] );
-        }
-
-        return $result;
+        // wpautop handles paragraph formatting for plain-text meta entries.
+        // do_shortcode handles any shortcodes ([elementor-template id=…] etc.).
+        // We intentionally bypass apply_filters('the_content') to prevent
+        // Elementor (and other page-builder) filters from replacing the meta
+        // content with the full rendered page.
+        return wpautop( do_shortcode( $content ) );
     }
 
     private function get_reviews_html( $post_id ) {
