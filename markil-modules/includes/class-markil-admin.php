@@ -38,6 +38,8 @@ class Admin {
         register_setting( 'markil_settings', 'markil_show_installs', [ 'type' => 'string', 'default' => '1' ] );
         register_setting( 'markil_settings', 'markil_wc_integration', [ 'type' => 'string', 'default' => '1' ] );
         register_setting( 'markil_settings', 'markil_primary_color', [ 'type' => 'string', 'default' => '#011627' ] );
+        register_setting( 'markil_settings', 'markil_guarantee_title', [ 'type' => 'string', 'default' => 'ضمانت کیفیت خدمات' ] );
+        register_setting( 'markil_settings', 'markil_guarantee_text',  [ 'type' => 'string', 'default' => 'ما کیفیت کار خود را تضمین می‌کنیم. در صورت نارضایتی، پشتیبانی تا رضایت شما ادامه دارد.' ] );
         // Detail page appearance
         register_setting( 'markil_settings', 'markil_fdc_primary_color', [ 'type' => 'string', 'default' => '#011627' ] );
         register_setting( 'markil_settings', 'markil_fdc_price_color',   [ 'type' => 'string', 'default' => '#011627' ] );
@@ -52,14 +54,22 @@ class Admin {
             'markil_modules_per_page','markil_default_layout','markil_currency',
             'markil_show_price','markil_show_rating','markil_show_installs',
             'markil_wc_integration','markil_primary_color',
+            'markil_guarantee_title','markil_guarantee_text',
             'markil_fdc_primary_color','markil_fdc_price_color','markil_fdc_price_font',
             'markil_fdc_btn_radius','markil_fdc_tab_radius','markil_fdc_google_fonts',
         ];
         if ( isset( $_POST['submit'] ) ) {
             check_admin_referer( 'markil-options' );
+            $textarea_opts = [ 'markil_guarantee_text' ];
             foreach ( $all_opts as $opt ) {
-                if ( isset( $_POST[$opt] ) ) update_option( $opt, sanitize_text_field( $_POST[$opt] ) );
-                else delete_option( $opt );
+                if ( isset( $_POST[$opt] ) ) {
+                    $val = in_array( $opt, $textarea_opts, true )
+                        ? sanitize_textarea_field( $_POST[$opt] )
+                        : sanitize_text_field( $_POST[$opt] );
+                    update_option( $opt, $val );
+                } else {
+                    delete_option( $opt );
+                }
             }
             echo '<div class="notice notice-success"><p>' . __('تنظیمات ذخیره شد','markil-modules') . '</p></div>';
         }
@@ -107,6 +117,14 @@ class Admin {
                     <tr>
                         <th><?php _e('رنگ اصلی (گرید)','markil-modules'); ?></th>
                         <td><input type="color" name="markil_primary_color" value="<?php echo esc_attr(get_option('markil_primary_color','#011627')); ?>"></td>
+                    </tr>
+                    <tr>
+                        <th><?php _e('عنوان بخش ضمانت','markil-modules'); ?></th>
+                        <td><input type="text" name="markil_guarantee_title" value="<?php echo esc_attr(get_option('markil_guarantee_title','ضمانت کیفیت خدمات')); ?>" style="width:320px"></td>
+                    </tr>
+                    <tr>
+                        <th><?php _e('متن ضمانت','markil-modules'); ?></th>
+                        <td><textarea name="markil_guarantee_text" rows="3" style="width:420px"><?php echo esc_textarea(get_option('markil_guarantee_text','ما کیفیت کار خود را تضمین می‌کنیم. در صورت نارضایتی، پشتیبانی تا رضایت شما ادامه دارد.')); ?></textarea></td>
                     </tr>
                 </table>
 

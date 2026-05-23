@@ -78,6 +78,11 @@ if ( $has_video ) {
     }
 }
 
+$demo_url  = $m['demo_url']  ?? '';
+$changelog = $m['changelog'] ?? '';
+$guar_title = $m['guarantee_title'] ?? get_option( 'markil_guarantee_title', 'ضمانت کیفیت خدمات' );
+$guar_text  = $m['guarantee_text']  ?? get_option( 'markil_guarantee_text',  'ما کیفیت کار خود را تضمین می‌کنیم. در صورت نارضایتی، پشتیبانی تا رضایت شما ادامه دارد.' );
+
 $layout_class = 'markil-fdc-layout markil-fdc-sidebar-' . esc_attr( $sidebar_pos );
 $uniq         = 'mgal-' . intval( $m['id'] );
 ?>
@@ -106,8 +111,8 @@ $uniq         = 'mgal-' . intval( $m['id'] );
         <div class="markil-fdc-main">
 
             <h1 class="markil-fdc-title"><?php echo esc_html( $m['title'] ); ?></h1>
-            <?php if ( ! empty( $m['excerpt'] ) ) : ?>
-            <p class="markil-fdc-excerpt"><?php echo esc_html( $m['excerpt'] ); ?></p>
+            <?php if ( ! empty( $m['content'] ) ) : ?>
+            <div class="markil-fdc-post-content markil-tab-body"><?php echo $m['content']; ?></div>
             <?php endif; ?>
 
             <!-- Features Bar (top badges) -->
@@ -213,6 +218,30 @@ $uniq         = 'mgal-' . intval( $m['id'] );
 
                 </div>
                 <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Demo URL button -->
+            <?php if ( ! empty( $demo_url ) ) : ?>
+            <div class="markil-fdc-demo-wrap">
+                <a href="<?php echo esc_url( $demo_url ); ?>" class="markil-fdc-demo-btn" target="_blank" rel="noopener noreferrer">
+                    <span>🔗</span> <?php _e( 'مشاهده دمو آنلاین', 'markil-modules' ); ?>
+                </a>
+            </div>
+            <?php endif; ?>
+
+            <!-- Changelog -->
+            <?php if ( ! empty( $changelog ) ) : ?>
+            <div class="markil-fdc-changelog">
+                <h3 class="markil-fdc-sec-title"><span class="markil-fdc-sec-icon">📋</span> <?php _e( 'تاریخچه تغییرات', 'markil-modules' ); ?></h3>
+                <div class="markil-fdc-changelog-body">
+                    <?php
+                    $lines = array_filter( array_map( 'trim', explode( "\n", $changelog ) ) );
+                    foreach ( $lines as $line ) :
+                        echo '<p class="markil-fdc-cl-row">' . esc_html( $line ) . '</p>';
+                    endforeach;
+                    ?>
                 </div>
             </div>
             <?php endif; ?>
@@ -373,8 +402,8 @@ $uniq         = 'mgal-' . intval( $m['id'] );
                 <div class="markil-fdc-guarantee">
                     <span class="markil-fdc-guar-icon" aria-hidden="true">🛡️</span>
                     <div class="markil-fdc-guar-text">
-                        <strong><?php _e( 'ضمانت کیفیت خدمات', 'markil-modules' ); ?></strong>
-                        <p><?php _e( 'ما کیفیت کار خود را تضمین می‌کنیم. در صورت نارضایتی، پشتیبانی تا رضایت شما ادامه دارد.', 'markil-modules' ); ?></p>
+                        <strong><?php echo esc_html( $guar_title ); ?></strong>
+                        <p><?php echo esc_html( $guar_text ); ?></p>
                     </div>
                 </div>
                 <?php endif; ?>
@@ -384,6 +413,57 @@ $uniq         = 'mgal-' . intval( $m['id'] );
         <?php endif; ?>
 
     </div><!-- /markil-fdc-layout -->
+
+    <!-- Related Modules -->
+    <?php
+    $cats = $m['categories'] ?? [];
+    if ( ! empty( $cats ) ) :
+        $cat_obj = is_object( $cats[0] ) ? $cats[0] : (object) $cats[0];
+        $related = new WP_Query([
+            'post_type'      => 'markil_module',
+            'posts_per_page' => 3,
+            'post__not_in'   => [ $m['id'] ],
+            'tax_query'      => [[
+                'taxonomy' => 'markil_category',
+                'field'    => 'term_id',
+                'terms'    => (int) $cat_obj->term_id,
+            ]],
+            'no_found_rows'       => true,
+            'ignore_sticky_posts' => true,
+        ]);
+        if ( $related->have_posts() ) :
+    ?>
+    <div class="markil-fdc-related">
+        <h2 class="markil-fdc-related-title"><?php _e( 'ماژول‌های مرتبط', 'markil-modules' ); ?></h2>
+        <div class="markil-fdc-related-grid">
+        <?php while ( $related->have_posts() ) : $related->the_post();
+            $r_id    = get_the_ID();
+            $r_price = get_post_meta( $r_id, '_markil_price', true );
+            $r_free  = get_post_meta( $r_id, '_markil_is_free', true );
+            $r_img   = get_the_post_thumbnail_url( $r_id, 'medium' );
+            $r_url   = get_permalink( $r_id );
+        ?>
+        <a href="<?php echo esc_url( $r_url ); ?>" class="markil-fdc-related-card">
+            <?php if ( $r_img ) : ?>
+            <div class="markil-fdc-related-img">
+                <img src="<?php echo esc_url( $r_img ); ?>" alt="<?php echo esc_attr( get_the_title() ); ?>" loading="lazy">
+            </div>
+            <?php endif; ?>
+            <div class="markil-fdc-related-info">
+                <span class="markil-fdc-related-name"><?php the_title(); ?></span>
+                <span class="markil-fdc-related-price">
+                    <?php if ( $r_free ) {
+                        _e( 'رایگان', 'markil-modules' );
+                    } elseif ( $r_price ) {
+                        echo number_format( (int) $r_price ) . ' ' . esc_html( get_option( 'markil_currency', 'تومان' ) );
+                    } ?>
+                </span>
+            </div>
+        </a>
+        <?php endwhile; wp_reset_postdata(); ?>
+        </div>
+    </div>
+    <?php endif; endif; ?>
 
 </div><!-- /markil-full-detail-wrap -->
 
