@@ -47,7 +47,7 @@ final class HA_Sites_Plugin {
     private function register_components(): void {
         HA_Sites_Post_Type::register_all();
         HA_Sites_Admin::register();
-        HA_Sites_REST_API::register();
+        HA_Sites_REST_API::register_routes();
         HA_Sites_Shortcode::register();
     }
 
