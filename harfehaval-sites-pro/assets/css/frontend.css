@@ -41,7 +41,9 @@
 	background:         var(--ha-bg);
 }
 
-/* ── 3. Hard isolation reset — stops theme/Elementor global styles leaking ── */
+/* ── 3. Hard isolation reset — stops theme/Elementor global styles leaking ──
+   Uses :where() everywhere so specificity stays at 0,1,0 and our own component
+   classes (which are also 0,1,0 or higher) win via source order. ── */
 .ha-sites-pro :where(a, button, input, select, textarea, label) {
 	font-family:     var(--ha-font) !important;
 	letter-spacing:  normal !important;
@@ -49,20 +51,27 @@
 	text-decoration: none !important;
 }
 
-.ha-sites-pro :where(button, a.ha-pro-btn, input, select) {
+.ha-sites-pro :where(button, a.ha-pro-btn, a.ha-pro-hero-btn, a.ha-pro-preview-open, input, select, textarea) {
 	-webkit-appearance: none !important;
 	appearance:         none !important;
+	background:         transparent;
+	border:             0;
+	border-radius:      0;
+	margin:             0;
+	padding:            0;
+	color:              inherit;
+	font:               inherit;
+	font-family:        var(--ha-font) !important;
+	line-height:        inherit;
+	text-align:         inherit;
+	box-sizing:         border-box;
+	outline:            none;
+	box-shadow:         none;
 }
 
-.ha-sites-pro button,
-.ha-sites-pro input,
-.ha-sites-pro select,
-.ha-sites-pro .ha-pro-btn,
-.ha-sites-pro .ha-pro-hero-btn,
-.ha-sites-pro .ha-pro-preview-open {
-	all:         unset;
-	box-sizing:  border-box !important;
-	font-family: var(--ha-font) !important;
+.ha-sites-pro :where(button, a.ha-pro-btn, a.ha-pro-hero-btn) {
+	cursor:      pointer;
+	user-select: none;
 }
 
 .ha-sites-pro img,
@@ -1118,6 +1127,63 @@ html.ha-pro-modal-open { overflow: hidden !important; }
 	transition:    all .3s ease;
 	display:       block;
 }
+
+/* Loading spinner over iframe */
+.ha-pro-frame-wrap.is-loading::before {
+	content:        '';
+	position:       absolute;
+	inset:          50% auto auto 50%;
+	width:          48px;
+	height:         48px;
+	margin:         -24px 0 0 -24px;
+	border:         4px solid rgba(46,196,182,.15);
+	border-top-color: var(--ha-accent);
+	border-radius:  50%;
+	animation:      ha-spin .8s linear infinite;
+	z-index:        2;
+}
+@keyframes ha-spin { to { transform: rotate(360deg); } }
+
+/* Iframe-blocked fallback overlay */
+.ha-pro-frame-wrap.is-blocked iframe { visibility: hidden; }
+
+.ha-pro-frame-fallback {
+	position:        absolute;
+	inset:           0;
+	display:         flex;
+	align-items:     center;
+	justify-content: center;
+	padding:         24px;
+	z-index:         3;
+}
+.ha-pro-frame-fallback-box {
+	max-width:    480px;
+	background:   #fff;
+	border:       1px solid var(--ha-border);
+	border-radius: 18px;
+	padding:      32px 28px;
+	text-align:   center;
+	box-shadow:   0 20px 60px rgba(1,22,39,.18);
+}
+.ha-pro-frame-fallback-icon { font-size: 3rem; margin-bottom: 12px; }
+.ha-pro-frame-fallback h3 {
+	font-size:   1.1rem;
+	font-weight: 800;
+	color:       var(--ha-text);
+	margin:      0 0 10px;
+}
+.ha-pro-frame-fallback p {
+	font-size:   .9rem;
+	color:       var(--ha-muted);
+	line-height: 1.8;
+	margin:      0 0 20px;
+}
+.ha-pro-frame-fallback-actions {
+	display:        flex;
+	flex-direction: column;
+	gap:            10px;
+}
+.ha-pro-frame-fallback-actions .ha-pro-btn { width: 100%; }
 
 .ha-pro-frame-wrap.is-tablet iframe {
 	width:      768px;

@@ -506,9 +506,42 @@
 
 	App.prototype._openModal = function (item) {
 		if (!this.refs.modal || !this.refs.frame) return;
+		var self = this;
+		var wrap = this.refs.frame.closest('.ha-pro-frame-wrap');
+
+		/* Clear previous error state */
+		if (wrap) wrap.classList.remove('is-blocked', 'is-loading');
+		var oldErr = wrap ? wrap.querySelector('.ha-pro-frame-fallback') : null;
+		if (oldErr) oldErr.remove();
+
+		/* Loading state + iframe blocked detection (X-Frame-Options / CSP) */
+		if (wrap) wrap.classList.add('is-loading');
+		clearTimeout(this._frameTimer);
+		var loaded = false;
+		this.refs.frame.onload = function () { loaded = true; if (wrap) wrap.classList.remove('is-loading'); };
+		this._frameTimer = setTimeout(function () {
+			if (!loaded && wrap) {
+				wrap.classList.remove('is-loading');
+				wrap.classList.add('is-blocked');
+				var fb = document.createElement('div');
+				fb.className = 'ha-pro-frame-fallback';
+				fb.innerHTML =
+					'<div class="ha-pro-frame-fallback-box">' +
+						'<div class="ha-pro-frame-fallback-icon">🛡️</div>' +
+						'<h3>این سایت پیش‌نمایش داخل صفحه را مسدود کرده</h3>' +
+						'<p>برخی سایت‌ها به دلایل امنیتی اجازه نمایش در iframe را نمی‌دهند. می‌توانید آن را در تب جدید باز کنید.</p>' +
+						'<div class="ha-pro-frame-fallback-actions">' +
+							'<a class="ha-pro-btn ha-pro-btn-primary" href="' + esc(item.demo_url) + '" target="_blank" rel="noopener noreferrer">باز کردن در تب جدید ↗</a>' +
+							(previewBase ? '<a class="ha-pro-btn ha-pro-btn-secondary" href="' + previewBase + '?browser_url=' + encodeURIComponent(item.demo_url) + '" target="_blank" rel="noopener noreferrer">صفحه پیش‌نمایش اختصاصی</a>' : '') +
+						'</div>' +
+					'</div>';
+				wrap.appendChild(fb);
+			}
+		}, 4500);
+
 		this.refs.frame.src = item.demo_url;
 		if (this.refs.previewTitle)  this.refs.previewTitle.textContent  = item.title || '';
-		if (this.refs.previewDomain) this.refs.previewDomain.textContent = domainOf(item.demo_url);
+		if (this.refs.previewDomain) this.refs.previewDomain.textContent = domainOf(item.demo_url) || (item.demo_url || '');
 		if (this.refs.previewOpen)   this.refs.previewOpen.href = item.demo_url;
 		if (this.refs.modalInfo)     this.refs.modalInfo.innerHTML = this._sideHtml(item);
 		this.refs.modal.hidden = false;
@@ -562,7 +595,10 @@
 		if (!this.refs.modal) return;
 		this.refs.modal.hidden = true;
 		this.refs.modal.setAttribute('aria-hidden', 'true');
-		if (this.refs.frame) this.refs.frame.src = 'about:blank';
+		if (this.refs.frame) { this.refs.frame.src = 'about:blank'; this.refs.frame.onload = null; }
+		clearTimeout(this._frameTimer);
+		var wrap = this.refs.frame ? this.refs.frame.closest('.ha-pro-frame-wrap') : null;
+		if (wrap) { wrap.classList.remove('is-loading','is-blocked'); var fb = wrap.querySelector('.ha-pro-frame-fallback'); if (fb) fb.remove(); }
 		document.documentElement.classList.remove('ha-pro-modal-open');
 	};
 

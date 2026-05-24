@@ -143,7 +143,8 @@ class HA_Sites_Pro_Post_Type {
 		$schema = self::meta_schema();
 		?>
 		<div class="ha-pro-admin-card">
-			<p class="ha-pro-admin-help">این اطلاعات در کارت، مودال پیش‌نمایش و فیلترهای افزونه استفاده می‌شود. متاهای نسخه قبلی حفظ شده‌اند.</p>
+			<p class="ha-pro-admin-help">⚡ همه این فیلدها در کارت، نوار کناری مودال پیش‌نمایش و سفارش واتساپ استفاده می‌شوند. هر فیلد را که خالی بگذارید نمایش داده نمی‌شود.</p>
+				<p class="ha-pro-admin-help ha-pro-admin-help-soft">💡 برای ساخت <b>تب‌های اختصاصی</b> (امکانات، توضیحات، نقد و بررسی، گالری...) از باکس «تب‌های دلخواه پیش‌نمایش» پایین همین صفحه استفاده کنید — هر تعداد تب با HTML/شورت‌کد المنتور یا متن ساده.</p>
 			<div class="ha-pro-meta-grid">
 				<?php foreach ( $schema as $key => $field ) : ?>
 					<?php $value = get_post_meta( $post->ID, $key, true ); ?>
