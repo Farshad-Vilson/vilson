@@ -29,6 +29,10 @@ class HA_Sites_Pro_Renderer {
 			'show_sort'            => 'yes',
 			'show_layout_switcher' => 'yes',
 			'show_counter'         => 'yes',
+			'show_stats'           => 'yes',
+			'show_swatches'        => 'yes',
+			'show_fab'             => 'yes',
+			'show_keyboard_hints'  => 'yes',
 			'show_image'           => 'yes',
 			'show_badge'           => 'yes',
 			'show_excerpt'         => 'yes',
@@ -152,6 +156,10 @@ class HA_Sites_Pro_Renderer {
 			'show_sort'            => self::bool_attr( $atts['show_sort'] ),
 			'show_layout_switcher' => self::bool_attr( $atts['show_layout_switcher'] ),
 			'show_counter'         => self::bool_attr( $atts['show_counter'] ),
+			'show_stats'           => self::bool_attr( $atts['show_stats'] ),
+			'show_swatches'        => self::bool_attr( $atts['show_swatches'] ),
+			'show_fab'             => self::bool_attr( $atts['show_fab'] ),
+			'show_keyboard_hints'  => self::bool_attr( $atts['show_keyboard_hints'] ),
 			'show_image'           => self::bool_attr( $atts['show_image'] ),
 			'show_badge'           => self::bool_attr( $atts['show_badge'] ),
 			'show_excerpt'         => self::bool_attr( $atts['show_excerpt'] ),
@@ -244,7 +252,7 @@ class HA_Sites_Pro_Renderer {
 					</header>
 				<?php endif; ?>
 
-				<?php if ( $config['show_search'] || $config['show_sort'] || $config['show_layout_switcher'] ) : ?>
+				<?php if ( $config['show_search'] || $config['show_sort'] || $config['show_layout_switcher'] || $config['show_swatches'] ) : ?>
 					<div class="ha-pro-toolbar" data-ha-toolbar>
 						<?php if ( $config['show_search'] ) : ?>
 							<label class="ha-pro-search" aria-label="<?php echo esc_attr( $config['search_placeholder'] ); ?>">
@@ -255,6 +263,22 @@ class HA_Sites_Pro_Renderer {
 							</label>
 						<?php endif; ?>
 						<div class="ha-pro-toolbar-actions">
+							<?php if ( $config['show_swatches'] ) :
+								$swatches = array(
+									array( 'main' => '#2ec4b6', 'dark' => '#20a49a' ),
+									array( 'main' => '#3b82f6', 'dark' => '#1d4ed8' ),
+									array( 'main' => '#8b5cf6', 'dark' => '#6b21a8' ),
+									array( 'main' => '#ef4444', 'dark' => '#b91c1c' ),
+									array( 'main' => '#f59e0b', 'dark' => '#d97706' ),
+								);
+							?>
+								<div class="ha-pro-theme-swatches" role="group" aria-label="<?php esc_attr_e( 'تغییر رنگ', 'harfehaval-sites-pro' ); ?>">
+									<small>🎨</small>
+									<?php foreach ( $swatches as $i => $s ) : ?>
+										<button type="button" class="ha-pro-swatch <?php echo 0 === $i ? 'is-active' : ''; ?>" data-ha-swatch="<?php echo esc_attr( $s['main'] ); ?>" data-ha-swatch-dark="<?php echo esc_attr( $s['dark'] ); ?>" style="background:<?php echo esc_attr( $s['main'] ); ?>" aria-label="رنگ"></button>
+									<?php endforeach; ?>
+								</div>
+							<?php endif; ?>
 							<?php if ( $config['show_sort'] ) : ?>
 								<label class="ha-pro-sort-wrap">
 									<span><?php echo esc_html( $config['sort_label'] ); ?></span>
@@ -288,6 +312,18 @@ class HA_Sites_Pro_Renderer {
 						<?php if ( $config['show_status_filter'] ) : ?>
 							<div class="ha-pro-filter-row ha-pro-statuses" data-ha-statuses></div>
 						<?php endif; ?>
+					</div>
+				<?php endif; ?>
+
+				<?php if ( $config['show_stats'] ) : ?>
+					<div class="ha-pro-stats" data-ha-stats></div>
+				<?php endif; ?>
+
+				<?php if ( $config['show_keyboard_hints'] ) : ?>
+					<div class="ha-pro-kbd-hints" aria-hidden="true">
+						<span><kbd>/</kbd> جستجوی سریع</span>
+						<span><kbd>R</kbd> پاک کردن فیلترها</span>
+						<span><kbd>Esc</kbd> بستن پیش‌نمایش</span>
 					</div>
 				<?php endif; ?>
 
@@ -348,6 +384,13 @@ class HA_Sites_Pro_Renderer {
 					</div>
 				</div>
 			<?php endif; ?>
+
+			<?php if ( $config['show_fab'] ) :
+				$wa = preg_replace( '/\D/', '', (string) HA_Sites_Pro_Settings::get( 'whatsapp' ) );
+				if ( $wa ) :
+			?>
+				<a href="<?php echo esc_url( 'https://wa.me/' . $wa ); ?>" class="ha-pro-fab" target="_blank" rel="noopener noreferrer" aria-label="<?php esc_attr_e( 'تماس واتساپ', 'harfehaval-sites-pro' ); ?>" title="<?php esc_attr_e( 'پیام در واتساپ', 'harfehaval-sites-pro' ); ?>">💬</a>
+			<?php endif; endif; ?>
 		</section>
 		<?php
 		return ob_get_clean();

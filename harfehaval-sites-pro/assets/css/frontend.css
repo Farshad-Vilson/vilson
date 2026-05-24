@@ -1344,3 +1344,381 @@ html.ha-pro-modal-open { overflow: hidden !important; }
 @media (max-width: 1024px) {
 	.ha-pro-shell { padding: 24px 16px 48px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   v3.1 — MODERNIZATION LAYER (high-specificity, theme-leak-proof)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Bulletproof modal: portal-mounted to <body>, max z-index ── */
+html body .ha-pro-modal.ha-pro-modal {
+	z-index: 2147483646 !important;
+}
+html body .ha-pro-modal .ha-pro-modal-backdrop { z-index: 1 !important; }
+html body .ha-pro-modal .ha-pro-preview       { z-index: 2 !important; }
+html.ha-pro-modal-open body { overflow: hidden !important; padding-right: 0 !important; }
+/* Hide common fixed/sticky theme bars when modal open */
+html.ha-pro-modal-open #wpadminbar,
+html.ha-pro-modal-open .elementor-sticky--active,
+html.ha-pro-modal-open .sticky-header,
+html.ha-pro-modal-open .site-header.is-sticky,
+html.ha-pro-modal-open header[class*="sticky"],
+html.ha-pro-modal-open header[class*="fixed"] { z-index: 1 !important; }
+
+/* ── Bulletproof buttons: html body prefix beats virtually any theme ── */
+html body .ha-sites-pro .ha-pro-btn,
+html body .ha-sites-pro a.ha-pro-btn,
+html body .ha-sites-pro button.ha-pro-btn {
+	display:         inline-flex !important;
+	align-items:     center !important;
+	justify-content: center !important;
+	gap:             8px !important;
+	padding:         12px 20px !important;
+	border:          0 !important;
+	border-radius:   12px !important;
+	font-family:     var(--ha-font) !important;
+	font-size:       .9rem !important;
+	font-weight:     800 !important;
+	line-height:     1 !important;
+	letter-spacing:  .01em !important;
+	text-decoration: none !important;
+	text-transform:  none !important;
+	white-space:     nowrap !important;
+	min-height:      44px !important;
+	cursor:          pointer !important;
+	transition:      transform .15s ease, box-shadow .2s ease, background .2s ease, color .2s ease, border-color .2s ease !important;
+	position:        relative !important;
+	overflow:        hidden !important;
+	box-shadow:      none;
+}
+html body .ha-sites-pro .ha-pro-btn-primary {
+	background: linear-gradient(135deg, var(--ha-accent) 0%, var(--ha-accent-2) 100%) !important;
+	color:      #fff !important;
+	box-shadow: 0 4px 14px rgba(46,196,182,.35), inset 0 1px 0 rgba(255,255,255,.2) !important;
+}
+html body .ha-sites-pro .ha-pro-btn-primary:hover {
+	transform:  translateY(-2px) !important;
+	box-shadow: 0 10px 28px rgba(46,196,182,.5), inset 0 1px 0 rgba(255,255,255,.3) !important;
+	color:      #fff !important;
+}
+html body .ha-sites-pro .ha-pro-btn-secondary {
+	background: #fff !important;
+	color:      var(--ha-primary) !important;
+	box-shadow: inset 0 0 0 1.5px var(--ha-border), 0 1px 3px rgba(1,22,39,.04) !important;
+}
+html body .ha-sites-pro .ha-pro-btn-secondary:hover {
+	transform:  translateY(-2px) !important;
+	color:      var(--ha-accent) !important;
+	box-shadow: inset 0 0 0 1.5px var(--ha-accent), 0 8px 22px rgba(46,196,182,.18) !important;
+}
+/* Ripple effect on click */
+html body .ha-sites-pro .ha-pro-btn::after {
+	content: ''; position: absolute; inset: 0;
+	background: radial-gradient(circle at var(--ha-rx, 50%) var(--ha-ry, 50%), rgba(255,255,255,.4) 0%, transparent 50%);
+	opacity: 0; transition: opacity .4s ease; pointer-events: none;
+}
+html body .ha-sites-pro .ha-pro-btn:active::after { opacity: 1; transition: opacity 0s; }
+
+/* ════════════════════════════════════════════════════════
+   ★ NEW FEATURE 1 — TOAST NOTIFICATIONS
+   ════════════════════════════════════════════════════════ */
+.ha-pro-toast-wrap {
+	position: fixed;
+	bottom:   24px;
+	right:    24px;
+	z-index:  2147483647;
+	display:  flex;
+	flex-direction: column;
+	gap:      10px;
+	pointer-events: none;
+	max-width: 380px;
+	font-family: var(--ha-font);
+	direction: rtl;
+}
+.ha-pro-toast {
+	background:   #fff;
+	border:       1px solid var(--ha-border, #dbe5ef);
+	border-right: 4px solid var(--ha-accent, #2ec4b6);
+	border-radius: 12px;
+	padding:      12px 16px;
+	box-shadow:   0 12px 32px rgba(1,22,39,.18);
+	font-size:    .88rem;
+	color:        #011627;
+	display:      flex;
+	align-items:  center;
+	gap:          10px;
+	pointer-events: auto;
+	animation:    ha-toast-in .3s cubic-bezier(.34,1.56,.64,1);
+	min-width:    240px;
+}
+.ha-pro-toast.is-error   { border-right-color: #ef4444; }
+.ha-pro-toast.is-success { border-right-color: #10b981; }
+.ha-pro-toast.is-info    { border-right-color: #3b82f6; }
+.ha-pro-toast-icon { font-size: 1.2rem; flex-shrink: 0; }
+.ha-pro-toast-text { flex: 1; line-height: 1.5; }
+@keyframes ha-toast-in {
+	from { opacity: 0; transform: translateX(-20px) scale(.9); }
+	to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+.ha-pro-toast.is-leaving { animation: ha-toast-out .25s ease forwards; }
+@keyframes ha-toast-out {
+	to { opacity: 0; transform: translateX(-20px) scale(.95); }
+}
+@media (max-width: 640px) {
+	.ha-pro-toast-wrap { right: 12px; left: 12px; max-width: none; bottom: 12px; }
+}
+
+/* ════════════════════════════════════════════════════════
+   ★ NEW FEATURE 2 — SHARE DROPDOWN (in modal header)
+   ════════════════════════════════════════════════════════ */
+.ha-pro-share { position: relative; }
+.ha-pro-share-btn {
+	padding:       7px 14px !important;
+	background:    rgba(255,255,255,.1) !important;
+	color:         rgba(255,255,255,.85) !important;
+	border-radius: 7px !important;
+	font-size:     .8rem !important;
+	font-weight:   700 !important;
+	box-shadow:    inset 0 0 0 1px rgba(255,255,255,.15) !important;
+	cursor:        pointer !important;
+}
+.ha-pro-share-btn:hover { background: rgba(255,255,255,.2) !important; }
+.ha-pro-share-menu {
+	position:      absolute;
+	top:           calc(100% + 8px);
+	right:         0;
+	background:    #fff;
+	border:        1px solid var(--ha-border);
+	border-radius: 12px;
+	box-shadow:    0 16px 40px rgba(1,22,39,.18);
+	min-width:     220px;
+	padding:       6px;
+	display:       none;
+	z-index:       3;
+	animation:     ha-toast-in .2s ease;
+}
+.ha-pro-share.is-open .ha-pro-share-menu { display: block; }
+.ha-pro-share-item {
+	display:       flex;
+	align-items:   center;
+	gap:           10px;
+	width:         100%;
+	padding:       10px 12px;
+	background:    transparent !important;
+	color:         var(--ha-text) !important;
+	font-size:     .85rem !important;
+	font-weight:   600 !important;
+	border-radius: 8px;
+	cursor:        pointer;
+	text-align:    right !important;
+	transition:    background .15s;
+}
+.ha-pro-share-item:hover { background: var(--ha-bg) !important; }
+.ha-pro-share-item-icon {
+	width: 28px; height: 28px;
+	display: flex; align-items: center; justify-content: center;
+	border-radius: 7px; font-size: .95rem; flex-shrink: 0;
+}
+.ha-pro-share-item[data-share="whatsapp"] .ha-pro-share-item-icon { background: #25d36620; color: #25d366; }
+.ha-pro-share-item[data-share="telegram"] .ha-pro-share-item-icon { background: #0088cc20; color: #0088cc; }
+.ha-pro-share-item[data-share="x"]        .ha-pro-share-item-icon { background: #00000010; color: #000; }
+.ha-pro-share-item[data-share="copy"]     .ha-pro-share-item-icon { background: var(--ha-soft); color: var(--ha-accent); }
+
+/* ════════════════════════════════════════════════════════
+   ★ NEW FEATURE 3 — QR CODE FOR MOBILE PREVIEW
+   ════════════════════════════════════════════════════════ */
+.ha-pro-qr {
+	margin:        16px 20px;
+	padding:       14px;
+	background:    linear-gradient(135deg, var(--ha-bg) 0%, #fff 100%);
+	border:        1px dashed var(--ha-border);
+	border-radius: 12px;
+	display:       flex;
+	gap:           12px;
+	align-items:   center;
+}
+.ha-pro-qr img { width: 88px; height: 88px; border-radius: 8px; background: #fff; padding: 4px; }
+.ha-pro-qr-text { flex: 1; }
+.ha-pro-qr-text b { display: block; font-size: .85rem; font-weight: 800; color: var(--ha-text); margin-bottom: 4px; }
+.ha-pro-qr-text span { display: block; font-size: .75rem; color: var(--ha-muted); line-height: 1.5; }
+
+/* ════════════════════════════════════════════════════════
+   ★ NEW FEATURE 4 — RECENTLY VIEWED BADGE
+   ════════════════════════════════════════════════════════ */
+.ha-pro-card.is-recent .ha-pro-thumb::before {
+	content:       'اخیراً دیده';
+	position:      absolute;
+	bottom:        12px;
+	left:          12px;
+	z-index:       2;
+	font-size:     .68rem;
+	font-weight:   800;
+	padding:       3px 9px;
+	border-radius: 100px;
+	background:    rgba(1,22,39,.85);
+	color:         #fff;
+	backdrop-filter: blur(6px);
+}
+
+/* ════════════════════════════════════════════════════════
+   ★ NEW FEATURE 5 — FLOATING ACTION BUTTON (WhatsApp)
+   ════════════════════════════════════════════════════════ */
+.ha-pro-fab {
+	position:        fixed;
+	bottom:          24px;
+	left:            24px;
+	z-index:         9990;
+	width:           58px;
+	height:          58px;
+	border-radius:   50%;
+	background:      linear-gradient(135deg, #25d366 0%, #128c7e 100%) !important;
+	color:           #fff !important;
+	display:         flex !important;
+	align-items:     center;
+	justify-content: center;
+	font-size:       1.6rem;
+	box-shadow:      0 10px 30px rgba(37,211,102,.4);
+	cursor:          pointer;
+	transition:      transform .25s ease, box-shadow .25s ease;
+	text-decoration: none !important;
+	font-family:     var(--ha-font);
+	border:          0;
+	animation:       ha-fab-pulse 2.5s ease-in-out infinite;
+}
+.ha-pro-fab:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 16px 40px rgba(37,211,102,.55); }
+.ha-pro-fab::after {
+	content: '';
+	position: absolute;
+	inset: -6px;
+	border-radius: 50%;
+	border: 2px solid rgba(37,211,102,.4);
+	animation: ha-fab-ring 2.5s ease-out infinite;
+	pointer-events: none;
+}
+@keyframes ha-fab-pulse {
+	0%,100% { box-shadow: 0 10px 30px rgba(37,211,102,.4); }
+	50%      { box-shadow: 0 14px 36px rgba(37,211,102,.6); }
+}
+@keyframes ha-fab-ring {
+	0%   { transform: scale(.9); opacity: .9; }
+	100% { transform: scale(1.4); opacity: 0; }
+}
+@media (max-width: 640px) { .ha-pro-fab { width: 52px; height: 52px; bottom: 16px; left: 16px; } }
+
+/* ════════════════════════════════════════════════════════
+   ★ NEW FEATURE 6 — STATS / VIEW COUNTER STRIP
+   ════════════════════════════════════════════════════════ */
+.ha-pro-stats {
+	display:        flex;
+	flex-wrap:      wrap;
+	gap:            10px;
+	margin-bottom:  16px;
+}
+.ha-pro-stat {
+	flex:           1;
+	min-width:      140px;
+	background:     #fff;
+	border:         1px solid var(--ha-border);
+	border-radius:  14px;
+	padding:        14px 16px;
+	display:        flex;
+	align-items:    center;
+	gap:            12px;
+	transition:     transform .2s, box-shadow .2s, border-color .2s;
+}
+.ha-pro-stat:hover { transform: translateY(-2px); border-color: var(--ha-accent); box-shadow: 0 8px 20px rgba(46,196,182,.12); }
+.ha-pro-stat-icon {
+	width: 40px; height: 40px;
+	display: flex; align-items: center; justify-content: center;
+	background: var(--ha-soft); color: var(--ha-accent);
+	border-radius: 10px; font-size: 1.2rem;
+}
+.ha-pro-stat-val { display: block; font-size: 1.1rem; font-weight: 800; color: var(--ha-text); line-height: 1.2; }
+.ha-pro-stat-lbl { display: block; font-size: .75rem; color: var(--ha-muted); margin-top: 2px; }
+
+/* ════════════════════════════════════════════════════════
+   ★ NEW FEATURE 7 — KEYBOARD HINT BAR
+   ════════════════════════════════════════════════════════ */
+.ha-pro-kbd-hints {
+	display:    flex;
+	gap:        14px;
+	flex-wrap:  wrap;
+	font-size:  .72rem;
+	color:      var(--ha-muted);
+	margin:     10px 0 -4px;
+	opacity:    .7;
+}
+.ha-pro-kbd-hints span { display: inline-flex; align-items: center; gap: 4px; }
+.ha-pro-kbd-hints kbd {
+	display: inline-block;
+	background: #fff;
+	border: 1px solid var(--ha-border);
+	border-bottom-width: 2px;
+	border-radius: 4px;
+	padding: 1px 6px;
+	font-size: .68rem;
+	font-family: ui-monospace, monospace;
+	color: var(--ha-text);
+	font-weight: 700;
+}
+
+/* ════════════════════════════════════════════════════════
+   ★ NEW FEATURE 8 — CARD QUICK-VIEW BUTTON (image overlay)
+   ════════════════════════════════════════════════════════ */
+.ha-pro-thumb .ha-pro-quick-view {
+	position: absolute;
+	inset: auto auto 12px 50%;
+	transform: translate(-50%, 8px);
+	z-index: 3;
+	padding: 8px 16px;
+	background: rgba(255,255,255,.95);
+	color: var(--ha-primary) !important;
+	border-radius: 100px;
+	font-size: .78rem !important;
+	font-weight: 800;
+	box-shadow: 0 6px 18px rgba(0,0,0,.18);
+	opacity: 0;
+	transition: opacity .25s ease, transform .25s ease;
+	backdrop-filter: blur(6px);
+	cursor: pointer;
+	white-space: nowrap;
+}
+.ha-pro-card:hover .ha-pro-quick-view { opacity: 1; transform: translate(-50%, 0); }
+.ha-pro-quick-view:hover { background: var(--ha-accent) !important; color: #fff !important; }
+
+/* ════════════════════════════════════════════════════════
+   ★ NEW FEATURE 9 — THEME COLOR SWATCHES (live recolor)
+   ════════════════════════════════════════════════════════ */
+.ha-pro-theme-swatches {
+	display:    flex;
+	gap:        6px;
+	align-items: center;
+	flex-shrink: 0;
+}
+.ha-pro-theme-swatches small { font-size: .72rem; color: var(--ha-muted); margin-left: 4px; }
+.ha-pro-swatch {
+	width: 22px !important;
+	height: 22px !important;
+	padding: 0 !important;
+	min-height: 0 !important;
+	border-radius: 50% !important;
+	cursor: pointer !important;
+	box-shadow: 0 0 0 2px transparent, inset 0 0 0 2px rgba(255,255,255,.4) !important;
+	transition: transform .2s, box-shadow .2s !important;
+}
+.ha-pro-swatch:hover  { transform: scale(1.15) !important; }
+.ha-pro-swatch.is-active { box-shadow: 0 0 0 2px var(--ha-text), inset 0 0 0 2px rgba(255,255,255,.4) !important; }
+
+/* ════════════════════════════════════════════════════════
+   ★ NEW FEATURE 10 — IMAGE LIGHTBOX & VIEW MODE TOGGLE
+   ════════════════════════════════════════════════════════ */
+.ha-pro-progress {
+	position: fixed;
+	top: 0; left: 0; right: 0;
+	height: 3px;
+	background: linear-gradient(90deg, transparent 0%, var(--ha-accent) 50%, transparent 100%);
+	z-index: 2147483647;
+	transform: translateX(-100%);
+	animation: ha-progress 1s linear infinite;
+	pointer-events: none;
+}
+@keyframes ha-progress { to { transform: translateX(100%); } }

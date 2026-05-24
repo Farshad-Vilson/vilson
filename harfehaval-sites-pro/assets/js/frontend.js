@@ -146,6 +146,9 @@
 		this.bind();
 		this.renderStatuses();
 		this.loadFilters();
+		this._bindKeyboard();
+		this._bindSwatches();
+		this._renderStats();
 		this.load(true);
 
 		/* Infinite scroll setup */
@@ -165,8 +168,34 @@
 		}
 	};
 
+	App.prototype._modalContains = function (node) {
+		return this.refs.modal && this.refs.modal.contains(node);
+	};
+
 	App.prototype.bind = function () {
 		var self = this;
+
+		/* Modal/share/device/tab clicks — modal is portaled to body so listen on it directly */
+		if (this.refs.modal) {
+			this.refs.modal.addEventListener('click', function (e) {
+				var t = e.target, b;
+				if ((b = t.closest('[data-ha-modal-close]'))) { self.closeModal(); return; }
+				if ((b = t.closest('[data-ha-device]')))     { self.setDevice(b.getAttribute('data-ha-device')); return; }
+				if ((b = t.closest('[data-ha-preview-info-toggle]'))) { self._toggleInfo(); return; }
+				if ((b = t.closest('[data-ha-side-tab]')))   { self._activateSideTab(b.getAttribute('data-ha-side-tab')); return; }
+
+				var shareToggle = t.closest('[data-ha-share-toggle]');
+				if (shareToggle) { var wrap = shareToggle.closest('.ha-pro-share'); if (wrap) wrap.classList.toggle('is-open'); e.stopPropagation(); return; }
+				var shareItem = t.closest('.ha-pro-share-item');
+				if (shareItem) {
+					var copyVal = shareItem.getAttribute('data-copy');
+					if (copyVal) copyText(copyVal).then(function (ok) { toast(ok ? 'لینک کپی شد' : 'کپی نشد', ok ? 'success' : 'error', ok ? '📋' : '⚠️'); });
+					else { var url = shareItem.getAttribute('data-share-url'); if (url) window.open(url, '_blank', 'noopener'); }
+					var open = shareItem.closest('.ha-pro-share'); if (open) open.classList.remove('is-open');
+					return;
+				}
+			});
+		}
 
 		if (this.refs.search) {
 			this.refs.search.addEventListener('input', debounce(function () {
@@ -209,6 +238,41 @@
 				e.preventDefault();
 				var ph = (settings.whatsapp || '').replace(/\D/g, '');
 				if (ph) window.open('https://wa.me/' + ph, '_blank', 'noopener');
+				return;
+			}
+
+			/* Share dropdown handling (modal lives at body level after portal) */
+			var shareToggle = t.closest('[data-ha-share-toggle]');
+			if (shareToggle) {
+				var wrap = shareToggle.closest('.ha-pro-share');
+				if (wrap) wrap.classList.toggle('is-open');
+				e.stopPropagation();
+				return;
+			}
+			var shareItem = t.closest('.ha-pro-share-item');
+			if (shareItem) {
+				var copyVal = shareItem.getAttribute('data-copy');
+				if (copyVal) {
+					copyText(copyVal).then(function (ok) {
+						toast(ok ? 'لینک کپی شد' : 'کپی نشد', ok ? 'success' : 'error', ok ? '📋' : '⚠️');
+					});
+				} else {
+					var url = shareItem.getAttribute('data-share-url');
+					if (url) window.open(url, '_blank', 'noopener');
+				}
+				var open = shareItem.closest('.ha-pro-share');
+				if (open) open.classList.remove('is-open');
+				return;
+			}
+
+			var qv = t.closest('[data-ha-quick-view]');
+			if (qv) { e.preventDefault(); e.stopPropagation(); self.openPreview(qv.getAttribute('data-ha-quick-view')); return; }
+		});
+
+		/* Close share dropdown on outside click */
+		document.addEventListener('click', function (e) {
+			if (!e.target.closest('.ha-pro-share')) {
+				qsa(document, '.ha-pro-share.is-open').forEach(function (s) { s.classList.remove('is-open'); });
 			}
 		});
 
@@ -362,9 +426,13 @@
 			var thumbHtml = item.thumb
 				? '<img src="' + esc(item.thumb) + '" alt="' + esc(item.thumb_alt || item.title) + '" loading="lazy" decoding="async">'
 				: '<div class="ha-pro-no-thumb">⌁</div>';
+			var quickView = (cfg.show_preview_button && item.demo_url)
+				? '<button type="button" class="ha-pro-quick-view" data-ha-quick-view="' + esc(item.id) + '">👁 پیش‌نمایش سریع</button>'
+				: '';
 			img = '<div class="ha-pro-thumb">' +
 				(badge ? '<span class="ha-pro-badge ha-pro-badge-' + esc(item.status) + '">' + esc(badge) + '</span>' : '') +
 				thumbHtml +
+				quickView +
 			'</div>';
 		}
 
@@ -437,6 +505,7 @@
 		if (this.refs.loadMore) this.refs.loadMore.hidden = !(this.state.page <= this.state.totalPages) || this.cfg.pagination_type === 'infinite';
 		this._syncFilters();
 		this.renderStatuses();
+		this._renderStats();
 	};
 
 	App.prototype._syncFilters = function () {
@@ -452,22 +521,27 @@
 	App.prototype._toggleFavorite = function (id) {
 		id = String(id);
 		var list = this.state.favorites;
-		if (list.indexOf(id) >= 0) list = list.filter(function (x) { return x !== id; });
+		var was = list.indexOf(id) >= 0;
+		if (was) list = list.filter(function (x) { return x !== id; });
 		else list.push(id);
 		this.state.favorites = list;
 		storageSet('ha_fav_' + (this.el.id || 'all'), list);
 		this._refreshCards();
+		this._renderStats();
+		toast(was ? 'از علاقه‌مندی‌ها حذف شد' : 'به علاقه‌مندی‌ها افزوده شد', was ? 'info' : 'success', was ? '🤍' : '❤️');
 	};
 
 	App.prototype._toggleCompare = function (id) {
 		id = String(id);
 		var list = this.state.compare.slice();
 		var idx  = list.indexOf(id);
-		if (idx >= 0) list.splice(idx, 1);
-		else { if (list.length >= 3) list.shift(); list.push(id); }
+		var was  = idx >= 0;
+		if (was) list.splice(idx, 1);
+		else { if (list.length >= 3) { list.shift(); toast('قدیمی‌ترین آیتم حذف شد (حداکثر ۳)', 'info', '⚠️'); } list.push(id); }
 		this.state.compare = list;
 		this._updateCompare();
 		this._refreshCards();
+		if (!was && list.length) toast('به مقایسه افزوده شد', 'success', '⇄');
 	};
 
 	App.prototype._refreshCards = function () {
@@ -476,6 +550,7 @@
 			var id = String(card.getAttribute('data-ha-card'));
 			card.classList.toggle('is-favorite', self.state.favorites.indexOf(id) >= 0);
 			card.classList.toggle('is-compared',  self.state.compare.indexOf(id) >= 0);
+			card.classList.toggle('is-recent',    self._isRecent(id));
 			var fav = qs(card, '[data-ha-favorite]');
 			if (fav) fav.innerHTML = self.state.favorites.indexOf(id) >= 0 ? '♥' : '♡';
 			var cmp = qs(card, '[data-ha-compare]');
@@ -508,6 +583,17 @@
 		if (!this.refs.modal || !this.refs.frame) return;
 		var self = this;
 		var wrap = this.refs.frame.closest('.ha-pro-frame-wrap');
+
+		/* Portal: move modal to <body> on first open to escape ALL parent
+		   stacking contexts (theme headers/footers, Elementor sections, etc.) */
+		if (!this._modalPortaled) {
+			this._modalParent = this.refs.modal.parentNode;
+			document.body.appendChild(this.refs.modal);
+			this._modalPortaled = true;
+		}
+
+		/* Track recently viewed */
+		this._addRecent(item.id);
 
 		/* Clear previous error state */
 		if (wrap) wrap.classList.remove('is-blocked', 'is-loading');
@@ -544,6 +630,17 @@
 		if (this.refs.previewDomain) this.refs.previewDomain.textContent = domainOf(item.demo_url) || (item.demo_url || '');
 		if (this.refs.previewOpen)   this.refs.previewOpen.href = item.demo_url;
 		if (this.refs.modalInfo)     this.refs.modalInfo.innerHTML = this._sideHtml(item);
+
+		/* Inject share dropdown into header actions */
+		var actions = qs(this.refs.modal, '.ha-pro-preview-actions');
+		if (actions) {
+			var oldShare = qs(actions, '.ha-pro-share');
+			if (oldShare) oldShare.remove();
+			var holder = document.createElement('span');
+			holder.innerHTML = this._buildShareMenu(item);
+			actions.insertBefore(holder.firstChild, actions.firstChild);
+		}
+
 		this.refs.modal.hidden = false;
 		this.refs.modal.setAttribute('aria-hidden', 'false');
 		document.documentElement.classList.add('ha-pro-modal-open');
@@ -584,6 +681,7 @@
 		'<div class="ha-pro-side-tabs"><div class="ha-pro-side-tabs-nav">' + nav + '</div><div class="ha-pro-side-tabs-content">' + panels + '</div></div>' +
 		(feats ? '<div class="ha-pro-side-section-title">ویژگی‌های کلیدی</div><div class="ha-pro-card-features" style="padding:8px 20px 0">' + feats + '</div>' : '') +
 		(facts ? '<ul class="ha-pro-side-facts">' + facts + '</ul>' : '') +
+		(item.demo_url ? this._qrHtml(item.demo_url) : '') +
 		(this.cfg.show_price ? '<div class="ha-pro-side-price"><strong>' + esc(money(item.price)) + '</strong>' + (item.old_price ? '<del>' + esc(money(item.old_price)) + '</del>' : '') + '</div>' : '') +
 		'<div class="ha-pro-actions" style="padding:12px 20px 20px;flex-direction:column">' +
 			'<a class="ha-pro-btn ha-pro-btn-secondary" href="' + esc(item.demo_url) + '" target="_blank" rel="noopener noreferrer" style="flex:none">' + esc(self.label('new_tab_label', 'مشاهده کامل')) + '</a>' +
@@ -618,6 +716,135 @@
 	App.prototype._activateSideTab = function (key) {
 		qsa(this.el, '[data-ha-side-tab]').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-ha-side-tab') === key); });
 		qsa(this.el, '[data-ha-side-tab-panel]').forEach(function (p) { p.classList.toggle('is-active', p.getAttribute('data-ha-side-tab-panel') === key); });
+	};
+
+	/* ══════════════════════════════════════════════════════
+	   ★ v3.1 NEW FEATURES
+	   ══════════════════════════════════════════════════════ */
+
+	/* Recently viewed */
+	App.prototype._recentKey = function () { return 'ha_recent_' + (this.el.id || 'all'); };
+	App.prototype._addRecent = function (id) {
+		var list = storageGet(this._recentKey());
+		list = list.filter(function (x) { return String(x) !== String(id); });
+		list.unshift(String(id));
+		list = list.slice(0, 12);
+		storageSet(this._recentKey(), list);
+		this._refreshCards();
+	};
+	App.prototype._isRecent = function (id) {
+		return storageGet(this._recentKey()).indexOf(String(id)) >= 0;
+	};
+
+	/* QR code via public service (no extra script) */
+	App.prototype._qrHtml = function (url) {
+		var src = 'https://api.qrserver.com/v1/create-qr-code/?size=176x176&margin=0&data=' + encodeURIComponent(url);
+		return '<div class="ha-pro-qr">' +
+				'<img src="' + esc(src) + '" alt="QR" loading="lazy" decoding="async">' +
+				'<div class="ha-pro-qr-text"><b>📱 پیش‌نمایش روی موبایل</b><span>کد را با دوربین موبایل اسکن کنید تا دمو روی گوشی باز شود.</span></div>' +
+			'</div>';
+	};
+
+	/* Toast notifications */
+	function toastWrap() {
+		var w = document.getElementById('ha-pro-toast-wrap');
+		if (w) return w;
+		w = document.createElement('div');
+		w.id = 'ha-pro-toast-wrap';
+		w.className = 'ha-pro-toast-wrap';
+		document.body.appendChild(w);
+		return w;
+	}
+	function toast(msg, type, icon) {
+		var w = toastWrap();
+		var el = document.createElement('div');
+		el.className = 'ha-pro-toast is-' + (type || 'info');
+		el.innerHTML = '<span class="ha-pro-toast-icon">' + (icon || (type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️')) + '</span><span class="ha-pro-toast-text">' + esc(msg) + '</span>';
+		w.appendChild(el);
+		setTimeout(function () { el.classList.add('is-leaving'); setTimeout(function () { el.remove(); }, 250); }, 2800);
+	}
+	window.HaSitesProToast = toast;
+
+	/* Copy to clipboard */
+	function copyText(text) {
+		if (navigator.clipboard && navigator.clipboard.writeText) {
+			return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return false; });
+		}
+		try {
+			var ta = document.createElement('textarea');
+			ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+			document.body.appendChild(ta); ta.select();
+			var ok = document.execCommand('copy');
+			document.body.removeChild(ta);
+			return Promise.resolve(ok);
+		} catch (e) { return Promise.resolve(false); }
+	}
+
+	/* Share — opens dropdown or performs action */
+	App.prototype._buildShareMenu = function (item) {
+		var url = item.demo_url || '';
+		var title = item.title || '';
+		var encUrl = encodeURIComponent(url);
+		var encMsg = encodeURIComponent(title + ' — ' + url);
+		return '<div class="ha-pro-share">' +
+			'<button type="button" class="ha-pro-share-btn" data-ha-share-toggle>🔗 اشتراک‌گذاری</button>' +
+			'<div class="ha-pro-share-menu">' +
+				'<button type="button" class="ha-pro-share-item" data-share="whatsapp" data-share-url="https://wa.me/?text=' + encMsg + '"><span class="ha-pro-share-item-icon">💬</span>واتساپ</button>' +
+				'<button type="button" class="ha-pro-share-item" data-share="telegram" data-share-url="https://t.me/share/url?url=' + encUrl + '&text=' + encodeURIComponent(title) + '"><span class="ha-pro-share-item-icon">✈️</span>تلگرام</button>' +
+				'<button type="button" class="ha-pro-share-item" data-share="x" data-share-url="https://twitter.com/intent/tweet?url=' + encUrl + '&text=' + encodeURIComponent(title) + '"><span class="ha-pro-share-item-icon">𝕏</span>توییتر / X</button>' +
+				'<button type="button" class="ha-pro-share-item" data-share="copy" data-copy="' + esc(url) + '"><span class="ha-pro-share-item-icon">📋</span>کپی لینک</button>' +
+			'</div></div>';
+	};
+
+	/* Keyboard shortcuts */
+	App.prototype._bindKeyboard = function () {
+		var self = this;
+		document.addEventListener('keydown', function (e) {
+			if (e.target && /input|textarea|select/i.test(e.target.tagName)) return;
+			if (self.refs.modal && !self.refs.modal.hidden) return; // modal owns keys
+			var k = e.key.toLowerCase();
+			if (k === '/') { e.preventDefault(); if (self.refs.search) self.refs.search.focus(); }
+			else if (k === 'r') { self.resetFilters(); toast('فیلترها پاک شدند', 'info', '🔄'); }
+		});
+	};
+
+	/* Stats strip HTML */
+	App.prototype._renderStats = function () {
+		var host = qs(this.el, '[data-ha-stats]');
+		if (!host) return;
+		var fav = this.state.favorites.length;
+		var rec = storageGet(this._recentKey()).length;
+		var total = this.state.total || 0;
+		host.innerHTML =
+			'<div class="ha-pro-stat"><div class="ha-pro-stat-icon">🗂</div><div><span class="ha-pro-stat-val">' + Number(total).toLocaleString('fa-IR') + '</span><span class="ha-pro-stat-lbl">قالب در دسترس</span></div></div>' +
+			'<div class="ha-pro-stat"><div class="ha-pro-stat-icon">❤️</div><div><span class="ha-pro-stat-val">' + Number(fav).toLocaleString('fa-IR') + '</span><span class="ha-pro-stat-lbl">علاقه‌مندی شما</span></div></div>' +
+			'<div class="ha-pro-stat"><div class="ha-pro-stat-icon">👁</div><div><span class="ha-pro-stat-val">' + Number(rec).toLocaleString('fa-IR') + '</span><span class="ha-pro-stat-lbl">اخیراً دیده‌شده</span></div></div>' +
+			'<div class="ha-pro-stat"><div class="ha-pro-stat-icon">⚡</div><div><span class="ha-pro-stat-val">فعال</span><span class="ha-pro-stat-lbl">پشتیبانی زنده</span></div></div>';
+	};
+
+	/* Theme color swatches */
+	App.prototype._bindSwatches = function () {
+		var self = this;
+		qsa(this.el, '[data-ha-swatch]').forEach(function (b) {
+			b.addEventListener('click', function () {
+				var color = b.getAttribute('data-ha-swatch');
+				var dark  = b.getAttribute('data-ha-swatch-dark') || color;
+				self.el.style.setProperty('--ha-accent', color);
+				self.el.style.setProperty('--ha-accent-2', dark);
+				self.el.style.setProperty('--ha-soft', color + '22');
+				self.el.style.setProperty('--ha-glow', '0 0 0 3px ' + color + '40');
+				qsa(self.el, '[data-ha-swatch]').forEach(function (x) { x.classList.toggle('is-active', x === b); });
+				try { localStorage.setItem('ha_theme_' + (self.el.id || 'all'), color + '|' + dark); } catch(e){}
+			});
+		});
+		try {
+			var saved = localStorage.getItem('ha_theme_' + (this.el.id || 'all'));
+			if (saved) {
+				var parts = saved.split('|');
+				var match = qs(this.el, '[data-ha-swatch="' + parts[0] + '"]');
+				if (match) match.click();
+			}
+		} catch(e){}
 	};
 
 	/* ══════════════════════════════════════════════════════
