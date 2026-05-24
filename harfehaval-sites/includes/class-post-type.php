@@ -9,23 +9,44 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Class HA_Post_Type
+ *
+ * Registers the ha_site CPT and associated taxonomies,
+ * and handles the meta box for site details.
+ */
 class HA_Post_Type {
 
 	/**
+	 * Meta box nonce action.
+	 */
+	const NONCE_ACTION = 'ha_save_site_meta';
+
+	/**
+	 * Meta box nonce field name.
+	 */
+	const NONCE_FIELD = 'ha_site_meta_nonce';
+
+	/**
 	 * Register all CPTs, taxonomies, and hooks.
+	 *
+	 * @return void
 	 */
 	public static function register_all() {
-		add_action( 'init', [ __CLASS__, 'register_post_type' ] );
-		add_action( 'init', [ __CLASS__, 'register_taxonomies' ] );
-		add_action( 'add_meta_boxes', [ __CLASS__, 'add_meta_boxes' ] );
-		add_action( 'save_post_ha_site', [ __CLASS__, 'save_meta_box' ], 10, 2 );
+		add_action( 'init', array( __CLASS__, 'register_post_type' ) );
+		add_action( 'init', array( __CLASS__, 'register_taxonomy_category' ) );
+		add_action( 'init', array( __CLASS__, 'register_taxonomy_feature' ) );
+		add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_boxes' ) );
+		add_action( 'save_post_ha_site', array( __CLASS__, 'save_meta_box' ), 10, 2 );
 	}
 
 	/**
-	 * Register ha_site Custom Post Type.
+	 * Register the ha_site custom post type.
+	 *
+	 * @return void
 	 */
 	public static function register_post_type() {
-		$labels = [
+		$labels = array(
 			'name'                  => _x( 'سایت‌ها', 'Post type general name', 'harfehaval-sites' ),
 			'singular_name'         => _x( 'سایت', 'Post type singular name', 'harfehaval-sites' ),
 			'menu_name'             => _x( 'سایت‌های حرف اول', 'Admin Menu text', 'harfehaval-sites' ),
@@ -37,15 +58,20 @@ class HA_Post_Type {
 			'view_item'             => __( 'مشاهده سایت', 'harfehaval-sites' ),
 			'all_items'             => __( 'همه سایت‌ها', 'harfehaval-sites' ),
 			'search_items'          => __( 'جستجوی سایت‌ها', 'harfehaval-sites' ),
+			'parent_item_colon'     => __( 'سایت والد:', 'harfehaval-sites' ),
 			'not_found'             => __( 'سایتی یافت نشد.', 'harfehaval-sites' ),
 			'not_found_in_trash'    => __( 'سایتی در سطل آشغال یافت نشد.', 'harfehaval-sites' ),
-			'featured_image'        => __( 'تصویر شاخص سایت', 'harfehaval-sites' ),
-			'set_featured_image'    => __( 'تنظیم تصویر شاخص', 'harfehaval-sites' ),
-			'remove_featured_image' => __( 'حذف تصویر شاخص', 'harfehaval-sites' ),
-			'use_featured_image'    => __( 'استفاده به عنوان تصویر شاخص', 'harfehaval-sites' ),
-		];
+			'featured_image'        => _x( 'تصویر شاخص سایت', 'Overrides the "Featured Image" phrase', 'harfehaval-sites' ),
+			'set_featured_image'    => _x( 'تنظیم تصویر شاخص', 'Overrides the "Set featured image" phrase', 'harfehaval-sites' ),
+			'remove_featured_image' => _x( 'حذف تصویر شاخص', 'Overrides the "Remove featured image" phrase', 'harfehaval-sites' ),
+			'use_featured_image'    => _x( 'استفاده به عنوان تصویر شاخص', 'Overrides the "Use as featured image" phrase', 'harfehaval-sites' ),
+			'archives'              => _x( 'آرشیو سایت‌ها', 'The post type archive label', 'harfehaval-sites' ),
+			'filter_items_list'     => _x( 'فیلتر فهرست سایت‌ها', 'Screen reader text', 'harfehaval-sites' ),
+			'items_list_navigation' => _x( 'ناوبری فهرست سایت‌ها', 'Screen reader text', 'harfehaval-sites' ),
+			'items_list'            => _x( 'فهرست سایت‌ها', 'Screen reader text', 'harfehaval-sites' ),
+		);
 
-		$args = [
+		$args = array(
 			'labels'             => $labels,
 			'public'             => false,
 			'publicly_queryable' => false,
@@ -58,20 +84,21 @@ class HA_Post_Type {
 			'hierarchical'       => false,
 			'menu_position'      => 20,
 			'menu_icon'          => 'dashicons-layout',
-			'supports'           => [ 'title', 'thumbnail', 'excerpt' ],
+			'supports'           => array( 'title', 'thumbnail', 'excerpt' ),
 			'show_in_rest'       => true,
 			'rest_base'          => 'ha_sites',
-		];
+		);
 
 		register_post_type( 'ha_site', $args );
 	}
 
 	/**
-	 * Register ha_category and ha_feature taxonomies.
+	 * Register the ha_category taxonomy (hierarchical).
+	 *
+	 * @return void
 	 */
-	public static function register_taxonomies() {
-		// Category taxonomy (hierarchical)
-		$cat_labels = [
+	public static function register_taxonomy_category() {
+		$labels = array(
 			'name'              => _x( 'دسته‌بندی‌ها', 'taxonomy general name', 'harfehaval-sites' ),
 			'singular_name'     => _x( 'دسته‌بندی', 'taxonomy singular name', 'harfehaval-sites' ),
 			'search_items'      => __( 'جستجوی دسته‌بندی‌ها', 'harfehaval-sites' ),
@@ -79,60 +106,76 @@ class HA_Post_Type {
 			'parent_item'       => __( 'دسته‌بندی والد', 'harfehaval-sites' ),
 			'parent_item_colon' => __( 'دسته‌بندی والد:', 'harfehaval-sites' ),
 			'edit_item'         => __( 'ویرایش دسته‌بندی', 'harfehaval-sites' ),
-			'update_item'       => __( 'بروزرسانی دسته‌بندی', 'harfehaval-sites' ),
+			'update_item'       => __( 'به‌روزرسانی دسته‌بندی', 'harfehaval-sites' ),
 			'add_new_item'      => __( 'افزودن دسته‌بندی جدید', 'harfehaval-sites' ),
 			'new_item_name'     => __( 'نام دسته‌بندی جدید', 'harfehaval-sites' ),
 			'menu_name'         => __( 'دسته‌بندی‌ها', 'harfehaval-sites' ),
-		];
+			'not_found'         => __( 'دسته‌بندی یافت نشد.', 'harfehaval-sites' ),
+		);
 
-		register_taxonomy( 'ha_category', 'ha_site', [
+		$args = array(
 			'hierarchical'      => true,
-			'labels'            => $cat_labels,
+			'labels'            => $labels,
 			'show_ui'           => true,
 			'show_admin_column' => true,
+			'show_in_rest'      => true,
+			'rest_base'         => 'ha_categories',
 			'query_var'         => false,
 			'rewrite'           => false,
-			'show_in_rest'      => true,
-			'rest_base'         => 'ha_category',
-		] );
+		);
 
-		// Feature taxonomy (non-hierarchical / tag-like)
-		$feat_labels = [
-			'name'                       => _x( 'ویژگی‌ها', 'taxonomy general name', 'harfehaval-sites' ),
-			'singular_name'              => _x( 'ویژگی', 'taxonomy singular name', 'harfehaval-sites' ),
-			'search_items'               => __( 'جستجوی ویژگی‌ها', 'harfehaval-sites' ),
-			'popular_items'              => __( 'ویژگی‌های محبوب', 'harfehaval-sites' ),
-			'all_items'                  => __( 'همه ویژگی‌ها', 'harfehaval-sites' ),
-			'edit_item'                  => __( 'ویرایش ویژگی', 'harfehaval-sites' ),
-			'update_item'                => __( 'بروزرسانی ویژگی', 'harfehaval-sites' ),
-			'add_new_item'               => __( 'افزودن ویژگی جدید', 'harfehaval-sites' ),
-			'new_item_name'              => __( 'نام ویژگی جدید', 'harfehaval-sites' ),
-			'separate_items_with_commas' => __( 'با کاما جدا کنید', 'harfehaval-sites' ),
-			'add_or_remove_items'        => __( 'افزودن یا حذف ویژگی‌ها', 'harfehaval-sites' ),
-			'choose_from_most_used'      => __( 'انتخاب از پرکاربردها', 'harfehaval-sites' ),
-			'menu_name'                  => __( 'ویژگی‌ها', 'harfehaval-sites' ),
-		];
-
-		register_taxonomy( 'ha_feature', 'ha_site', [
-			'hierarchical'      => false,
-			'labels'            => $feat_labels,
-			'show_ui'           => true,
-			'show_admin_column' => true,
-			'query_var'         => false,
-			'rewrite'           => false,
-			'show_in_rest'      => true,
-			'rest_base'         => 'ha_feature',
-		] );
+		register_taxonomy( 'ha_category', array( 'ha_site' ), $args );
 	}
 
 	/**
-	 * Add meta box for site details.
+	 * Register the ha_feature taxonomy (non-hierarchical / tag-like).
+	 *
+	 * @return void
+	 */
+	public static function register_taxonomy_feature() {
+		$labels = array(
+			'name'                       => _x( 'ویژگی‌ها', 'taxonomy general name', 'harfehaval-sites' ),
+			'singular_name'              => _x( 'ویژگی', 'taxonomy singular name', 'harfehaval-sites' ),
+			'search_items'               => __( 'جستجوی ویژگی‌ها', 'harfehaval-sites' ),
+			'popular_items'              => __( 'ویژگی‌های پرکاربرد', 'harfehaval-sites' ),
+			'all_items'                  => __( 'همه ویژگی‌ها', 'harfehaval-sites' ),
+			'parent_item'                => null,
+			'parent_item_colon'          => null,
+			'edit_item'                  => __( 'ویرایش ویژگی', 'harfehaval-sites' ),
+			'update_item'                => __( 'به‌روزرسانی ویژگی', 'harfehaval-sites' ),
+			'add_new_item'               => __( 'افزودن ویژگی جدید', 'harfehaval-sites' ),
+			'new_item_name'              => __( 'نام ویژگی جدید', 'harfehaval-sites' ),
+			'separate_items_with_commas' => __( 'ویژگی‌ها را با کاما جدا کنید', 'harfehaval-sites' ),
+			'add_or_remove_items'        => __( 'افزودن یا حذف ویژگی‌ها', 'harfehaval-sites' ),
+			'choose_from_most_used'      => __( 'انتخاب از پرکاربردترین ویژگی‌ها', 'harfehaval-sites' ),
+			'not_found'                  => __( 'ویژگی یافت نشد.', 'harfehaval-sites' ),
+			'menu_name'                  => __( 'ویژگی‌ها', 'harfehaval-sites' ),
+		);
+
+		$args = array(
+			'hierarchical'      => false,
+			'labels'            => $labels,
+			'show_ui'           => true,
+			'show_admin_column' => true,
+			'show_in_rest'      => true,
+			'rest_base'         => 'ha_features',
+			'query_var'         => false,
+			'rewrite'           => false,
+		);
+
+		register_taxonomy( 'ha_feature', array( 'ha_site' ), $args );
+	}
+
+	/**
+	 * Add the site details meta box.
+	 *
+	 * @return void
 	 */
 	public static function add_meta_boxes() {
 		add_meta_box(
 			'ha_site_details',
 			__( 'جزئیات سایت', 'harfehaval-sites' ),
-			[ __CLASS__, 'render_meta_box' ],
+			array( __CLASS__, 'render_meta_box' ),
 			'ha_site',
 			'normal',
 			'high'
@@ -140,12 +183,13 @@ class HA_Post_Type {
 	}
 
 	/**
-	 * Render meta box HTML.
+	 * Render the site details meta box.
 	 *
 	 * @param WP_Post $post Current post object.
+	 * @return void
 	 */
 	public static function render_meta_box( $post ) {
-		wp_nonce_field( 'ha_save_site_meta', 'ha_site_meta_nonce' );
+		wp_nonce_field( self::NONCE_ACTION, self::NONCE_FIELD );
 
 		$price      = get_post_meta( $post->ID, '_ha_price', true );
 		$demo_url   = get_post_meta( $post->ID, '_ha_demo_url', true );
@@ -181,12 +225,12 @@ class HA_Post_Type {
 						placeholder="https://demo.example.com"
 						class="regular-text"
 					>
-					<p class="description"><?php esc_html_e( 'آدرس کامل پیش‌نمایش سایت.', 'harfehaval-sites' ); ?></p>
+					<p class="description"><?php esc_html_e( 'آدرس کامل پیش‌نمایش سایت (با https://).', 'harfehaval-sites' ); ?></p>
 				</div>
 			</div>
 
 			<div class="ha-meta-row">
-				<label for="ha_status"><?php esc_html_e( 'وضعیت', 'harfehaval-sites' ); ?></label>
+				<label for="ha_status"><?php esc_html_e( 'وضعیت نشان', 'harfehaval-sites' ); ?></label>
 				<div>
 					<select id="ha_status" name="ha_status">
 						<option value="" <?php selected( $status, '' ); ?>><?php esc_html_e( '— عادی —', 'harfehaval-sites' ); ?></option>
@@ -205,7 +249,7 @@ class HA_Post_Type {
 						type="number"
 						id="ha_sort_order"
 						name="ha_sort_order"
-						value="<?php echo esc_attr( $sort_order ); ?>"
+						value="<?php echo esc_attr( ( '' !== $sort_order ) ? $sort_order : '0' ); ?>"
 						min="0"
 						step="1"
 						placeholder="0"
@@ -219,57 +263,62 @@ class HA_Post_Type {
 	}
 
 	/**
-	 * Save meta box data.
+	 * Save meta box data with nonce verification.
 	 *
 	 * @param int     $post_id Post ID.
 	 * @param WP_Post $post    Post object.
+	 * @return void
 	 */
 	public static function save_meta_box( $post_id, $post ) {
-		// Nonce check
+		// Nonce check.
 		if (
-			! isset( $_POST['ha_site_meta_nonce'] ) ||
-			! wp_verify_nonce( sanitize_key( $_POST['ha_site_meta_nonce'] ), 'ha_save_site_meta' )
+			! isset( $_POST[ self::NONCE_FIELD ] ) ||
+			! wp_verify_nonce( sanitize_key( wp_unslash( $_POST[ self::NONCE_FIELD ] ) ), self::NONCE_ACTION )
 		) {
 			return;
 		}
 
-		// Auto-save check
+		// Autosave check.
 		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
 			return;
 		}
 
-		// Permissions check
+		// Capability check.
 		if ( ! current_user_can( 'edit_post', $post_id ) ) {
 			return;
 		}
 
-		// Price
-		if ( isset( $_POST['ha_price'] ) && $_POST['ha_price'] !== '' ) {
-			$price = absint( $_POST['ha_price'] );
-			update_post_meta( $post_id, '_ha_price', $price );
+		// Save _ha_price.
+		if ( isset( $_POST['ha_price'] ) && '' !== $_POST['ha_price'] ) {
+			update_post_meta( $post_id, '_ha_price', absint( $_POST['ha_price'] ) );
 		} else {
 			delete_post_meta( $post_id, '_ha_price' );
 		}
 
-		// Demo URL
+		// Save _ha_demo_url.
 		if ( isset( $_POST['ha_demo_url'] ) ) {
-			$demo_url = esc_url_raw( trim( $_POST['ha_demo_url'] ) );
-			if ( $demo_url ) {
+			$demo_url = esc_url_raw( trim( wp_unslash( $_POST['ha_demo_url'] ) ) );
+			if ( ! empty( $demo_url ) ) {
 				update_post_meta( $post_id, '_ha_demo_url', $demo_url );
 			} else {
 				delete_post_meta( $post_id, '_ha_demo_url' );
 			}
 		}
 
-		// Status
-		$allowed_statuses = [ '', 'new', 'popular', 'featured' ];
+		// Save _ha_status.
+		$allowed_statuses = array( '', 'new', 'popular', 'featured' );
 		if ( isset( $_POST['ha_status'] ) && in_array( $_POST['ha_status'], $allowed_statuses, true ) ) {
-			update_post_meta( $post_id, '_ha_status', sanitize_key( $_POST['ha_status'] ) );
+			$status_val = sanitize_key( wp_unslash( $_POST['ha_status'] ) );
+			if ( '' === $status_val ) {
+				delete_post_meta( $post_id, '_ha_status' );
+			} else {
+				update_post_meta( $post_id, '_ha_status', $status_val );
+			}
 		}
 
-		// Sort order
-		if ( isset( $_POST['ha_sort_order'] ) && $_POST['ha_sort_order'] !== '' ) {
-			update_post_meta( $post_id, '_ha_sort_order', absint( $_POST['ha_sort_order'] ) );
+		// Save _ha_sort_order.
+		if ( isset( $_POST['ha_sort_order'] ) ) {
+			update_post_meta( $post_id, '_ha_sort_order', absint( wp_unslash( $_POST['ha_sort_order'] ) ) );
 		} else {
 			update_post_meta( $post_id, '_ha_sort_order', 0 );
 		}

@@ -1,0 +1,166 @@
+/*
+ * Harfehaval Sites — Admin CSS
+ * Plugin: سایت‌های حرف اول
+ * Author: فرشاد معتمدی
+ */
+
+/* =========================================================
+   Meta box grid layout
+   ========================================================= */
+.ha-meta-box {
+	display: grid;
+	grid-template-columns: 180px 1fr;
+	gap: 16px 20px;
+	align-items: start;
+	padding: 6px 0;
+}
+
+.ha-meta-row {
+	display: contents;
+}
+
+.ha-meta-row label {
+	font-weight: 600;
+	padding: 8px 0;
+	align-self: center;
+	color: #1d2327;
+	font-size: 13px;
+}
+
+.ha-meta-row > div {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+/* Form elements inside meta box */
+.ha-meta-box input[type="number"],
+.ha-meta-box input[type="url"],
+.ha-meta-box input[type="text"],
+.ha-meta-box select {
+	width: 100%;
+	max-width: 420px;
+	padding: 7px 10px;
+	border: 1px solid #8c8f94;
+	border-radius: 4px;
+	font-size: 13px;
+	line-height: 1.5;
+	color: #2c3338;
+	background: #fff;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ha-meta-box input[type="number"] {
+	max-width: 180px;
+}
+
+.ha-meta-box input.small-text {
+	max-width: 80px;
+}
+
+.ha-meta-box input:focus,
+.ha-meta-box select:focus {
+	border-color: #2271b1;
+	box-shadow: 0 0 0 1px #2271b1;
+	outline: none;
+}
+
+.ha-meta-box .description {
+	font-size: 12px;
+	color: #646970;
+	line-height: 1.5;
+	margin: 0;
+}
+
+/* =========================================================
+   Settings page
+   ========================================================= */
+.ha-settings {
+	max-width: 800px;
+}
+
+.ha-settings h1 {
+	margin-bottom: 20px;
+}
+
+.ha-settings h2 {
+	font-size: 1.1rem;
+	margin-top: 32px;
+	margin-bottom: 12px;
+	color: #1d2327;
+}
+
+.ha-settings .form-table th {
+	width: 220px;
+	padding: 16px 10px 16px 0;
+	font-weight: 600;
+	vertical-align: top;
+}
+
+.ha-settings .form-table td {
+	padding: 12px 0;
+}
+
+.ha-settings .form-table input[type="text"],
+.ha-settings .form-table input[type="number"],
+.ha-settings .form-table textarea {
+	max-width: 440px;
+}
+
+.ha-settings .form-table input[type="color"] {
+	height: 38px;
+	padding: 2px;
+	border: 1px solid #8c8f94;
+	border-radius: 4px;
+	cursor: pointer;
+	width: 60px;
+}
+
+.ha-settings .description {
+	color: #646970;
+	font-size: 12px;
+	margin-top: 6px;
+}
+
+/* =========================================================
+   Admin list table custom columns
+   ========================================================= */
+.column-ha_price,
+.column-ha_status,
+.column-ha_demo {
+	width: 120px;
+}
+
+.column-ha_feature {
+	width: 200px;
+}
+
+/* =========================================================
+   Notices
+   ========================================================= */
+.ha-settings .notice {
+	max-width: 800px;
+}
+
+/* =========================================================
+   Quick-edit area
+   ========================================================= */
+.ha-quick-edit-status {
+	margin-top: 8px;
+}
+
+/* =========================================================
+   Usage table
+   ========================================================= */
+.ha-settings .widefat code {
+	background: #f0f0f1;
+	padding: 2px 6px;
+	border-radius: 3px;
+	font-size: 12px;
+}
+
+.ha-settings .widefat td,
+.ha-settings .widefat th {
+	padding: 10px 14px;
+	vertical-align: top;
+}
