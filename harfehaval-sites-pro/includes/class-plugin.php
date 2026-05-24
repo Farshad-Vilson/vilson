@@ -35,7 +35,7 @@ class HA_Sites_Pro_Plugin {
 		add_action( 'init',             [ $this, 'load_textdomain' ] );
 		add_action( 'init',             [ HA_Sites_Pro_Post_Type::class, 'register' ] );
 		add_action( 'rest_api_init',    [ HA_Sites_Pro_REST::class, 'register_routes' ] );
-		add_action( 'admin_init',       [ HA_Sites_Pro_Settings::class, 'register_settings' ] );
+		add_action( 'admin_init',       [ HA_Sites_Pro_Settings::class, 'register' ] );
 		add_action( 'admin_menu',       [ HA_Sites_Pro_Settings::class, 'add_menu' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'admin_assets' ] );
 		add_shortcode( 'ha_sites_pro', [ HA_Sites_Pro_Renderer::class, 'shortcode' ] );
