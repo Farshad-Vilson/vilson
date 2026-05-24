@@ -10,12 +10,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Class HA_Admin
+ * Class HA_Sites_Admin
  *
  * Handles the admin settings page, custom list table columns,
  * and quick-edit support for the ha_site CPT.
  */
-class HA_Admin {
+class HA_Sites_Admin {
 
 	/**
 	 * Register all admin hooks.

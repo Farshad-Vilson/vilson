@@ -10,13 +10,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Class HA_Rest_API
+ * Class HA_Sites_REST_API
  *
  * Provides REST API routes under the ha-sites/v1 namespace:
  *   GET /ha-sites/v1/sites   — paginated, filterable, sortable list of sites
  *   GET /ha-sites/v1/filters — available category and feature terms
  */
-class HA_Rest_API {
+class HA_Sites_REST_API {
 
 	/**
 	 * API namespace.

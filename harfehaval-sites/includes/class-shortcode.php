@@ -10,11 +10,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Class HA_Shortcode
+ * Class HA_Sites_Shortcode
  *
  * Registers and renders the [ha_sites] shortcode.
  */
-class HA_Shortcode {
+class HA_Sites_Shortcode {
 
 	/**
 	 * Register the shortcode.

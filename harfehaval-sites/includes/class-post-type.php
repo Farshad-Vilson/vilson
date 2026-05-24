@@ -10,12 +10,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Class HA_Post_Type
+ * Class HA_Sites_Post_Type
  *
  * Registers the ha_site CPT and associated taxonomies,
  * and handles the meta box for site details.
  */
-class HA_Post_Type {
+class HA_Sites_Post_Type {
 
 	/**
 	 * Meta box nonce action.

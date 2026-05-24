@@ -33,6 +33,7 @@ final class HA_Sites_Plugin {
 
     private function __construct() {
         $this->includes();
+        $this->register_components();
         $this->hooks();
     }
 
@@ -41,6 +42,13 @@ final class HA_Sites_Plugin {
         require_once HA_SITES_DIR . 'includes/class-admin.php';
         require_once HA_SITES_DIR . 'includes/class-rest-api.php';
         require_once HA_SITES_DIR . 'includes/class-shortcode.php';
+    }
+
+    private function register_components(): void {
+        HA_Sites_Post_Type::register_all();
+        HA_Sites_Admin::register();
+        HA_Sites_REST_API::register();
+        HA_Sites_Shortcode::register();
     }
 
     private function hooks(): void {
