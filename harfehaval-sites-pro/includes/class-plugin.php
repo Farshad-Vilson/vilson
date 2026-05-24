@@ -70,17 +70,15 @@ class HA_Sites_Pro_Plugin {
 			true
 		);
 
-		$settings = HA_Sites_Pro_Settings::all();
-
 		wp_localize_script( 'ha-sites-pro-frontend', 'haSitesPro', [
 			'apiBase'     => rest_url( 'ha-sites-pro/v1/' ),
 			'nonce'       => wp_create_nonce( 'wp_rest' ),
 			'previewBase' => home_url( '/ha-preview/' ),
 			'settings'    => [
-				'whatsapp'       => sanitize_text_field( $settings['whatsapp'] ?? '' ),
-				'whatsapp_text'  => $settings['whatsapp_text'] ?? 'سلام، می‌خواهم سایت «%s» را سفارش بدهم',
-				'currency'       => $settings['currency'] ?? 'تومان',
-				'per_page'       => (int) ( $settings['per_page'] ?? 12 ),
+				'whatsapp'       => sanitize_text_field( HA_Sites_Pro_Settings::get( 'whatsapp' ) ),
+				'whatsapp_text'  => HA_Sites_Pro_Settings::get( 'whatsapp_text' ),
+				'currency'       => HA_Sites_Pro_Settings::get( 'currency' ),
+				'per_page'       => (int) HA_Sites_Pro_Settings::get( 'per_page' ),
 			],
 			'i18n' => [
 				'loading'      => 'در حال بارگذاری...',
