@@ -323,25 +323,138 @@ function ha_sites_pro_inline_styles( $id ) {
 }
 {$m} .ha-pro-side-tab.is-active { color: #2ec4b6 !important; border-bottom-color: #2ec4b6 !important; }
 
-/* Side handle inside modal */
+/* Side handle inside modal (panel on left, handle at panel's right edge) */
 {$m} .ha-pro-side-handle {
     display: flex !important; align-items: center !important; justify-content: center !important;
     width: 22px !important; height: 72px !important; padding: 0 !important;
     background: rgba(255,255,255,.97) !important; border: 1px solid #dbe5ef !important;
-    border-right: 0 !important; border-radius: 10px 0 0 10px !important;
+    border-left: 0 !important; border-radius: 0 10px 10px 0 !important;
     cursor: pointer !important; -webkit-appearance: none !important; appearance: none !important;
     box-sizing: border-box !important; margin: 0 !important; outline: 0 !important;
-    flex: none !important; min-height: 0 !important; box-shadow: -4px 0 16px rgba(1,22,39,.09) !important;
+    flex: none !important; min-height: 0 !important; box-shadow: 4px 0 16px rgba(1,22,39,.09) !important;
     color: #94a3b8 !important; font-size: .65rem !important;
-    transition: right .3s ease, background .2s !important;
+    transition: left .3s ease, background .2s !important;
     line-height: 1 !important; position: absolute !important; top: 50% !important;
-    right: var(--ha-side-w, 260px) !important; transform: translateY(-50%) !important;
+    left: 300px !important; right: auto !important; transform: translateY(-50%) !important;
     z-index: 20 !important;
 }
 {$m} .ha-pro-side-handle:hover { background: #f8fafc !important; color: #2ec4b6 !important; }
-{$m} .ha-pro-frame-stage.is-info-hidden .ha-pro-side-handle { right: 0 !important; }
-{$m} .ha-pro-side-handle::before { content: '❮' !important; font-family: system-ui !important; transition: transform .3s !important; display: block !important; }
+{$m} .ha-pro-frame-stage.is-info-hidden .ha-pro-side-handle { left: 0 !important; }
+{$m} .ha-pro-side-handle::before { content: '\\276F' !important; font-family: system-ui !important; transition: transform .3s !important; display: block !important; }
 {$m} .ha-pro-frame-stage.is-info-hidden .ha-pro-side-handle::before { transform: rotate(180deg) !important; }
+
+/* Sidebar panel itself — force width & overlay layout */
+{$m} .ha-pro-preview-side {
+    position: absolute !important;
+    top: 0 !important; bottom: 0 !important; left: 0 !important; right: auto !important;
+    width: 300px !important; max-width: 28vw !important; min-width: 260px !important;
+    background: rgba(255,255,255,.97) !important;
+    border-right: 1.5px solid #dbe5ef !important; border-left: 0 !important;
+    overflow-y: auto !important; overflow-x: hidden !important;
+    display: flex !important; flex-direction: column !important;
+    z-index: 10 !important; box-shadow: 6px 0 32px rgba(1,22,39,.12) !important;
+    transition: transform .3s ease, opacity .3s ease !important;
+    box-sizing: border-box !important;
+}
+{$m} .ha-pro-frame-stage { position: relative !important; display: flex !important; flex: 1 !important; overflow: hidden !important; }
+{$m} .ha-pro-frame-wrap { flex: 1 !important; width: 100% !important; }
+{$m} .ha-pro-frame-stage.is-info-hidden .ha-pro-preview-side {
+    transform: translateX(-100%) !important; opacity: 0 !important; pointer-events: none !important;
+}
+
+/* Sidebar inner content — clean RTL list */
+{$m} .ha-pro-side-head { padding: 20px 20px 0 !important; flex-shrink: 0 !important; }
+{$m} .ha-pro-side-head h3 { font-size: 1rem !important; font-weight: 800 !important; color: #011627 !important; margin: 0 0 6px !important; line-height: 1.5 !important; }
+{$m} .ha-pro-side-head p  { font-size: .85rem !important; color: #64748b !important; margin: 0 !important; line-height: 1.7 !important; }
+
+{$m} .ha-pro-side-tabs { padding: 16px 20px 0 !important; }
+{$m} .ha-pro-side-tabs-nav { display: flex !important; gap: 4px !important; border-bottom: 2px solid #dbe5ef !important; margin-bottom: 12px !important; }
+{$m} .ha-pro-side-tab-panel { display: none !important; }
+{$m} .ha-pro-side-tab-panel.is-active { display: block !important; }
+{$m} .ha-pro-side-tab-body { font-size: .85rem !important; color: #011627 !important; line-height: 1.8 !important; }
+{$m} .ha-pro-side-tab-body p { margin: 0 0 10px !important; }
+
+{$m} .ha-pro-side-section-title {
+    padding: 16px 20px 6px !important; font-size: .78rem !important; font-weight: 800 !important;
+    color: #64748b !important; text-transform: none !important; letter-spacing: .02em !important;
+}
+
+{$m} .ha-pro-side-facts {
+    list-style: none !important; padding: 0 20px !important; margin: 8px 0 !important;
+}
+{$m} .ha-pro-side-facts li {
+    display: flex !important; justify-content: space-between !important; align-items: center !important;
+    padding: 9px 0 !important; border-bottom: 1px dashed #dbe5ef !important;
+    font-size: .85rem !important; line-height: 1.5 !important; gap: 12px !important;
+}
+{$m} .ha-pro-side-facts li:last-child { border-bottom: 0 !important; }
+{$m} .ha-pro-side-facts b    { color: #64748b !important; font-weight: 600 !important; flex: none !important; }
+{$m} .ha-pro-side-facts span { color: #011627 !important; font-weight: 700 !important; text-align: left !important; flex: 1 !important; }
+
+{$m} .ha-pro-side-price {
+    display: flex !important; align-items: baseline !important; gap: 10px !important;
+    padding: 14px 20px !important; border-top: 1px solid #dbe5ef !important; margin-top: 8px !important;
+}
+{$m} .ha-pro-side-price strong { font-size: 1.15rem !important; font-weight: 900 !important; color: #2ec4b6 !important; }
+{$m} .ha-pro-side-price del    { font-size: .85rem !important; color: #94a3b8 !important; text-decoration: line-through !important; }
+
+{$m} .ha-pro-side-highlight {
+    margin: 12px 20px 0 !important; padding: 10px 14px !important;
+    background: linear-gradient(90deg, #fef3c7, #dbeafe) !important;
+    border-radius: 8px !important; font-size: .82rem !important; font-weight: 700 !important;
+    color: #1e3a5f !important; line-height: 1.6 !important;
+}
+
+/* QR block */
+{$m} .ha-pro-qr {
+    display: flex !important; align-items: center !important; gap: 14px !important;
+    padding: 16px 20px !important; border-top: 1px solid #dbe5ef !important; margin-top: 8px !important;
+}
+{$m} .ha-pro-qr img {
+    width: 96px !important; height: 96px !important; border: 6px solid #fff !important;
+    border-radius: 10px !important; box-shadow: 0 4px 14px rgba(1,22,39,.1) !important;
+    background: #fff !important; flex: none !important; display: block !important;
+}
+{$m} .ha-pro-qr-text { flex: 1 !important; font-size: .8rem !important; line-height: 1.7 !important; }
+{$m} .ha-pro-qr-text b    { display: block !important; color: #011627 !important; font-weight: 800 !important; margin-bottom: 4px !important; }
+{$m} .ha-pro-qr-text span { display: block !important; color: #64748b !important; font-size: .75rem !important; }
+
+/* Action area in sidebar */
+{$m} .ha-pro-preview-side .ha-pro-actions {
+    padding: 14px 20px 20px !important; display: flex !important; flex-direction: column !important; gap: 10px !important;
+    border-top: 1px solid #dbe5ef !important; margin-top: 4px !important;
+}
+{$m} .ha-pro-preview-side .ha-pro-actions .ha-pro-btn { width: 100% !important; flex: none !important; }
+
+/* Code badge inside sidebar */
+{$m} .ha-pro-code-badge {
+    display: inline-flex !important; align-items: center !important; gap: 4px !important;
+    font-size: .72rem !important; font-weight: 900 !important; padding: 4px 10px !important;
+    background: #011627 !important; color: #fff !important; border-radius: 6px !important;
+    font-family: ui-monospace, 'Courier New', monospace !important; letter-spacing: .06em !important;
+    position: static !important;
+}
+
+/* Loading spinner */
+{$m} .ha-pro-frame-wrap { position: relative !important; background: #e8ecf0 !important; padding: 16px !important; }
+{$m} .ha-pro-frame-wrap iframe { width: 100% !important; height: 100% !important; border: 0 !important; border-radius: 10px !important; background: #fff !important; box-shadow: 0 4px 40px rgba(0,0,0,.2) !important; display: block !important; }
+{$m} .ha-pro-frame-wrap.is-tablet iframe { width: 768px !important; max-width: 100% !important; margin: 0 auto !important; }
+{$m} .ha-pro-frame-wrap.is-mobile iframe { width: 390px !important; max-width: 100% !important; margin: 0 auto !important; }
+{$m} .ha-pro-frame-wrap.is-loading::before {
+    content: '' !important; position: absolute !important; top: 50% !important; left: 50% !important;
+    width: 48px !important; height: 48px !important; margin: -24px 0 0 -24px !important;
+    border: 4px solid rgba(46,196,182,.15) !important; border-top-color: #2ec4b6 !important;
+    border-radius: 50% !important; animation: ha-spin .8s linear infinite !important; z-index: 2 !important;
+}
+
+/* Modal title text */
+{$m} .ha-pro-preview-title { flex: 1 !important; min-width: 0 !important; }
+{$m} .ha-pro-preview-title strong { display: block !important; font-size: .925rem !important; color: #fff !important; font-weight: 700 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+{$m} .ha-pro-preview-title span   { display: block !important; font-size: .75rem !important; color: rgba(255,255,255,.55) !important; }
+
+/* Modal preview wrapper */
+{$m} .ha-pro-preview { position: relative !important; z-index: 1 !important; display: flex !important; flex-direction: column !important; width: 100% !important; background: #f0f4f8 !important; overflow: hidden !important; }
+{$m} .ha-pro-modal-backdrop { position: absolute !important; inset: 0 !important; background: rgba(1,22,39,.7) !important; backdrop-filter: blur(4px) !important; cursor: pointer !important; }
 
 /* Modal header buttons (kept for backward compat) */
 

@@ -702,7 +702,8 @@
 		if (!wrap) return;
 		wrap.classList.toggle('is-tablet', device === 'tablet');
 		wrap.classList.toggle('is-mobile', device === 'mobile');
-		qsa(this.el, '[data-ha-device]').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-ha-device') === device); });
+		var scope = this.refs.modal || this.el;
+		qsa(scope, '[data-ha-device]').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-ha-device') === device); });
 	};
 
 	App.prototype._toggleInfo = function () {
@@ -711,8 +712,9 @@
 	};
 
 	App.prototype._activateSideTab = function (key) {
-		qsa(this.el, '[data-ha-side-tab]').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-ha-side-tab') === key); });
-		qsa(this.el, '[data-ha-side-tab-panel]').forEach(function (p) { p.classList.toggle('is-active', p.getAttribute('data-ha-side-tab-panel') === key); });
+		var scope = this.refs.modal || this.el;
+		qsa(scope, '[data-ha-side-tab]').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-ha-side-tab') === key); });
+		qsa(scope, '[data-ha-side-tab-panel]').forEach(function (p) { p.classList.toggle('is-active', p.getAttribute('data-ha-side-tab-panel') === key); });
 	};
 
 	/* ══════════════════════════════════════════════════════
@@ -733,12 +735,15 @@
 		return storageGet(this._recentKey()).indexOf(String(id)) >= 0;
 	};
 
-	/* QR code via public service (no extra script) */
+	/* QR code via public service, with auto-fallback if blocked */
 	App.prototype._qrHtml = function (url) {
-		var src = 'https://api.qrserver.com/v1/create-qr-code/?size=176x176&margin=0&data=' + encodeURIComponent(url);
+		var enc = encodeURIComponent(url);
+		var primary  = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=0&qzone=1&data=' + enc;
+		var fallback = 'https://quickchart.io/qr?size=160&margin=1&text=' + enc;
+		var onerr = "this.onerror=null;this.src='" + fallback + "'";
 		return '<div class="ha-pro-qr">' +
-				'<img src="' + esc(src) + '" alt="QR" loading="lazy" decoding="async">' +
-				'<div class="ha-pro-qr-text"><b>📱 پیش‌نمایش روی موبایل</b><span>کد را با دوربین موبایل اسکن کنید تا دمو روی گوشی باز شود.</span></div>' +
+				'<img src="' + esc(primary) + '" onerror="' + onerr + '" alt="QR" width="160" height="160" loading="lazy" decoding="async">' +
+				'<div class="ha-pro-qr-text"><b>📱 پیش‌نمایش روی موبایل</b><span>با دوربین موبایل اسکن کنید تا دمو روی گوشی باز شود.</span></div>' +
 			'</div>';
 	};
 

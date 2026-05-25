@@ -1198,7 +1198,19 @@ html.ha-pro-modal-open { overflow: hidden !important; }
 	border-radius: 16px;
 }
 
-/* Side Panel — floats over iframe as overlay, ~25% width */
+/* Modal-level CSS vars (so portaled modal keeps them) */
+.ha-pro-modal {
+	--ha-side-w: 300px;
+	--ha-topbar: 56px;
+	--ha-border: #dbe5ef;
+	--ha-soft:   #f8fafc;
+	--ha-muted:  #64748b;
+	--ha-text:   #011627;
+	--ha-accent: #2ec4b6;
+	--ha-primary: #011627;
+}
+
+/* Side Panel — floats over iframe as overlay (left side in RTL) */
 .ha-pro-frame-stage {
 	position: relative;
 }
@@ -1206,21 +1218,24 @@ html.ha-pro-modal-open { overflow: hidden !important; }
 	position:   absolute;
 	top:        0;
 	bottom:     0;
-	right:      0;
-	width:      var(--ha-side-w);
+	left:       0;
+	width:      300px;
+	max-width:  28vw;
+	min-width:  260px;
 	background: rgba(255,255,255,.97);
-	border-left: 1.5px solid var(--ha-border);
+	border-right: 1.5px solid #dbe5ef;
 	overflow-y: auto;
+	overflow-x: hidden;
 	display:    flex;
 	flex-direction: column;
 	transition: transform .3s ease, opacity .3s ease;
 	z-index:    10;
-	box-shadow: -6px 0 32px rgba(1,22,39,.12);
+	box-shadow: 6px 0 32px rgba(1,22,39,.12);
 	backdrop-filter: blur(2px);
 }
 
 .ha-pro-frame-stage.is-info-hidden .ha-pro-preview-side {
-	transform: translateX(100%);
+	transform: translateX(-100%);
 	opacity:   0;
 	pointer-events: none;
 }
@@ -1491,42 +1506,42 @@ html body .ha-sites-pro .ha-pro-btn::after {
 }
 html body .ha-sites-pro .ha-pro-btn:active::after { opacity: 1; transition: opacity 0s; }
 
-/* ── Elegant sidebar pull-handle — lives at the left edge of the overlay panel ── */
+/* ── Pull-handle — sits at the right edge of the (left-side) overlay panel ── */
 .ha-pro-side-handle {
 	position:        absolute;
 	top:             50%;
-	right:           var(--ha-side-w);
+	left:            300px;
 	transform:       translateY(-50%);
 	z-index:         20;
 	width:           22px;
 	height:          72px;
 	background:      rgba(255,255,255,.97);
-	border:          1px solid var(--ha-border);
-	border-right:    none;
-	border-radius:   10px 0 0 10px;
+	border:          1px solid #dbe5ef;
+	border-left:     none;
+	border-radius:   0 10px 10px 0;
 	display:         flex;
 	align-items:     center;
 	justify-content: center;
 	cursor:          pointer;
-	box-shadow:      -4px 0 16px rgba(1,22,39,.09);
-	transition:      right .3s ease, background .2s;
+	box-shadow:      4px 0 16px rgba(1,22,39,.09);
+	transition:      left .3s ease, background .2s;
 	font-size:       .65rem;
-	color:           var(--ha-muted);
+	color:           #64748b;
 	padding:         0;
 	outline:         none;
 }
 .ha-pro-side-handle::before {
-	content:     '❮';
+	content:     '❯';
 	transition:  transform .3s ease;
 	font-family: system-ui, sans-serif;
 }
 .ha-pro-frame-stage.is-info-hidden .ha-pro-side-handle {
-	right: 0;
+	left: 0;
 }
 .ha-pro-frame-stage.is-info-hidden .ha-pro-side-handle::before {
 	transform: rotate(180deg);
 }
-.ha-pro-side-handle:hover { background: var(--ha-soft); }
+.ha-pro-side-handle:hover { background: #f8fafc; color: #2ec4b6; }
 
 /* ── Template code badge (on card thumbnail) ── */
 .ha-pro-code-badge {
