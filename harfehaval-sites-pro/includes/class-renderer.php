@@ -29,10 +29,10 @@ class HA_Sites_Pro_Renderer {
 			'show_sort'            => 'yes',
 			'show_layout_switcher' => 'yes',
 			'show_counter'         => 'yes',
-			'show_stats'           => 'yes',
-			'show_swatches'        => 'yes',
-			'show_fab'             => 'yes',
-			'show_keyboard_hints'  => 'yes',
+			'show_stats'           => 'no',
+			'show_swatches'        => 'no',
+			'show_fab'             => 'no',
+			'show_keyboard_hints'  => 'no',
 			'show_image'           => 'yes',
 			'show_badge'           => 'yes',
 			'show_excerpt'         => 'yes',
@@ -252,7 +252,7 @@ class HA_Sites_Pro_Renderer {
 					</header>
 				<?php endif; ?>
 
-				<?php if ( $config['show_search'] || $config['show_sort'] || $config['show_layout_switcher'] || $config['show_swatches'] ) : ?>
+				<?php if ( $config['show_search'] || $config['show_sort'] || $config['show_layout_switcher'] ) : ?>
 					<div class="ha-pro-toolbar" data-ha-toolbar>
 						<?php if ( $config['show_search'] ) : ?>
 							<label class="ha-pro-search" aria-label="<?php echo esc_attr( $config['search_placeholder'] ); ?>">
@@ -263,22 +263,6 @@ class HA_Sites_Pro_Renderer {
 							</label>
 						<?php endif; ?>
 						<div class="ha-pro-toolbar-actions">
-							<?php if ( $config['show_swatches'] ) :
-								$swatches = array(
-									array( 'main' => '#2ec4b6', 'dark' => '#20a49a' ),
-									array( 'main' => '#3b82f6', 'dark' => '#1d4ed8' ),
-									array( 'main' => '#8b5cf6', 'dark' => '#6b21a8' ),
-									array( 'main' => '#ef4444', 'dark' => '#b91c1c' ),
-									array( 'main' => '#f59e0b', 'dark' => '#d97706' ),
-								);
-							?>
-								<div class="ha-pro-theme-swatches" role="group" aria-label="<?php esc_attr_e( 'تغییر رنگ', 'harfehaval-sites-pro' ); ?>">
-									<small>🎨</small>
-									<?php foreach ( $swatches as $i => $s ) : ?>
-										<button type="button" class="ha-pro-swatch <?php echo 0 === $i ? 'is-active' : ''; ?>" data-ha-swatch="<?php echo esc_attr( $s['main'] ); ?>" data-ha-swatch-dark="<?php echo esc_attr( $s['dark'] ); ?>" style="background:<?php echo esc_attr( $s['main'] ); ?>" aria-label="رنگ"></button>
-									<?php endforeach; ?>
-								</div>
-							<?php endif; ?>
 							<?php if ( $config['show_sort'] ) : ?>
 								<label class="ha-pro-sort-wrap">
 									<span><?php echo esc_html( $config['sort_label'] ); ?></span>
@@ -391,6 +375,10 @@ class HA_Sites_Pro_Renderer {
 			?>
 				<a href="<?php echo esc_url( 'https://wa.me/' . $wa ); ?>" class="ha-pro-fab" target="_blank" rel="noopener noreferrer" aria-label="<?php esc_attr_e( 'تماس واتساپ', 'harfehaval-sites-pro' ); ?>" title="<?php esc_attr_e( 'پیام در واتساپ', 'harfehaval-sites-pro' ); ?>">💬</a>
 			<?php endif; endif; ?>
+			<?php
+			require_once HA_SITES_PRO_DIR . 'includes/inline-styles.php';
+			echo '<style>' . ha_sites_pro_inline_styles( $instance ) . '</style>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			?>
 		</section>
 		<?php
 		return ob_get_clean();

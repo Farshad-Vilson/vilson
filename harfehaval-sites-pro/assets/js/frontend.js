@@ -146,9 +146,6 @@
 		this.bind();
 		this.renderStatuses();
 		this.loadFilters();
-		this._bindKeyboard();
-		this._bindSwatches();
-		this._renderStats();
 		this.load(true);
 
 		/* Infinite scroll setup */
@@ -518,7 +515,6 @@
 		if (this.refs.loadMore) this.refs.loadMore.hidden = !(this.state.page <= this.state.totalPages) || this.cfg.pagination_type === 'infinite';
 		this._syncFilters();
 		this.renderStatuses();
-		this._renderStats();
 	};
 
 	App.prototype._syncFilters = function () {
@@ -540,7 +536,6 @@
 		this.state.favorites = list;
 		storageSet('ha_fav_' + (this.el.id || 'all'), list);
 		this._refreshCards();
-		this._renderStats();
 		toast(was ? 'از علاقه‌مندی‌ها حذف شد' : 'به علاقه‌مندی‌ها افزوده شد', was ? 'info' : 'success', was ? '🤍' : '❤️');
 	};
 
@@ -563,7 +558,6 @@
 			var id = String(card.getAttribute('data-ha-card'));
 			card.classList.toggle('is-favorite', self.state.favorites.indexOf(id) >= 0);
 			card.classList.toggle('is-compared',  self.state.compare.indexOf(id) >= 0);
-			card.classList.toggle('is-recent',    self._isRecent(id));
 			var fav = qs(card, '[data-ha-favorite]');
 			if (fav) fav.innerHTML = self.state.favorites.indexOf(id) >= 0 ? '♥' : '♡';
 			var cmp = qs(card, '[data-ha-compare]');
@@ -621,22 +615,11 @@
 		this._frameTimer = setTimeout(function () {
 			if (!loaded && wrap) {
 				wrap.classList.remove('is-loading');
-				wrap.classList.add('is-blocked');
-				var fb = document.createElement('div');
-				fb.className = 'ha-pro-frame-fallback';
-				fb.innerHTML =
-					'<div class="ha-pro-frame-fallback-box">' +
-						'<div class="ha-pro-frame-fallback-icon">🛡️</div>' +
-						'<h3>این سایت پیش‌نمایش داخل صفحه را مسدود کرده</h3>' +
-						'<p>برخی سایت‌ها به دلایل امنیتی اجازه نمایش در iframe را نمی‌دهند. می‌توانید آن را در تب جدید باز کنید.</p>' +
-						'<div class="ha-pro-frame-fallback-actions">' +
-							'<a class="ha-pro-btn ha-pro-btn-primary" href="' + esc(item.demo_url) + '" target="_blank" rel="noopener noreferrer">باز کردن در تب جدید ↗</a>' +
-							(previewBase ? '<a class="ha-pro-btn ha-pro-btn-secondary" href="' + previewBase + '?browser_url=' + encodeURIComponent(item.demo_url) + '" target="_blank" rel="noopener noreferrer">صفحه پیش‌نمایش اختصاصی</a>' : '') +
-						'</div>' +
-					'</div>';
-				wrap.appendChild(fb);
+				window.open(item.demo_url, '_blank', 'noopener,noreferrer');
+				self.closeModal();
+				toast('پیش‌نمایش در تب جدید باز شد', 'info', '↗');
 			}
-		}, 4500);
+		}, 5000);
 
 		this.refs.frame.src = item.demo_url;
 		if (this.refs.previewTitle)  this.refs.previewTitle.textContent  = item.title || '';
@@ -775,7 +758,7 @@
 		el.className = 'ha-pro-toast is-' + (type || 'info');
 		el.innerHTML = '<span class="ha-pro-toast-icon">' + (icon || (type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️')) + '</span><span class="ha-pro-toast-text">' + esc(msg) + '</span>';
 		w.appendChild(el);
-		setTimeout(function () { el.classList.add('is-leaving'); setTimeout(function () { el.remove(); }, 250); }, 2800);
+		setTimeout(function () { el.classList.add('is-leaving'); setTimeout(function () { el.remove(); }, 250); }, 2000);
 	}
 	window.HaSitesProToast = toast;
 
@@ -797,17 +780,7 @@
 	/* Share — opens dropdown or performs action */
 	App.prototype._buildShareMenu = function (item) {
 		var url = item.demo_url || '';
-		var title = item.title || '';
-		var encUrl = encodeURIComponent(url);
-		var encMsg = encodeURIComponent(title + ' — ' + url);
-		return '<div class="ha-pro-share">' +
-			'<button type="button" class="ha-pro-share-btn" data-ha-share-toggle>🔗 اشتراک‌گذاری</button>' +
-			'<div class="ha-pro-share-menu">' +
-				'<button type="button" class="ha-pro-share-item" data-share="whatsapp" data-share-url="https://wa.me/?text=' + encMsg + '"><span class="ha-pro-share-item-icon">💬</span>واتساپ</button>' +
-				'<button type="button" class="ha-pro-share-item" data-share="telegram" data-share-url="https://t.me/share/url?url=' + encUrl + '&text=' + encodeURIComponent(title) + '"><span class="ha-pro-share-item-icon">✈️</span>تلگرام</button>' +
-				'<button type="button" class="ha-pro-share-item" data-share="x" data-share-url="https://twitter.com/intent/tweet?url=' + encUrl + '&text=' + encodeURIComponent(title) + '"><span class="ha-pro-share-item-icon">𝕏</span>توییتر / X</button>' +
-				'<button type="button" class="ha-pro-share-item" data-share="copy" data-copy="' + esc(url) + '"><span class="ha-pro-share-item-icon">📋</span>کپی لینک</button>' +
-			'</div></div>';
+		return '<button type="button" class="ha-pro-share-btn ha-pro-share-item" data-share="copy" data-copy="' + esc(url) + '">📋 کپی لینک</button>';
 	};
 
 	/* Keyboard shortcuts */
