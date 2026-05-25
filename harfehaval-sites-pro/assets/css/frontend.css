@@ -1145,6 +1145,27 @@ html.ha-pro-modal-open { overflow: hidden !important; }
 @keyframes ha-spin { to { transform: rotate(360deg); } }
 
 /* Iframe-blocked fallback overlay */
+/* Progress bar — at very top of iframe wrap */
+.ha-pro-progress-bar {
+	position:   absolute;
+	top:        0;
+	left:       0;
+	right:      0;
+	height:     3px;
+	background: rgba(255,255,255,.2);
+	z-index:    10;
+	overflow:   hidden;
+	border-radius: 0 0 2px 2px;
+}
+.ha-pro-progress-fill {
+	height:     100%;
+	width:      0%;
+	background: linear-gradient(90deg, #2ec4b6, #7dd3fc);
+	transition: width .4s ease;
+	box-shadow: 0 0 8px rgba(46,196,182,.6);
+}
+
+/* Blocked fallback */
 .ha-pro-frame-wrap.is-blocked iframe { visibility: hidden; }
 
 .ha-pro-frame-fallback {
@@ -1155,35 +1176,51 @@ html.ha-pro-modal-open { overflow: hidden !important; }
 	justify-content: center;
 	padding:         24px;
 	z-index:         3;
+	background:      rgba(240,244,248,.85);
+	backdrop-filter: blur(6px);
+	animation:       ha-modal-in .3s ease;
 }
 .ha-pro-frame-fallback-box {
-	max-width:    480px;
+	max-width:    360px;
 	background:   #fff;
-	border:       1px solid var(--ha-border);
-	border-radius: 18px;
+	border:       1px solid #dbe5ef;
+	border-radius: 20px;
 	padding:      32px 28px;
 	text-align:   center;
-	box-shadow:   0 20px 60px rgba(1,22,39,.18);
+	box-shadow:   0 24px 64px rgba(1,22,39,.16);
 }
-.ha-pro-frame-fallback-icon { font-size: 3rem; margin-bottom: 12px; }
+.ha-pro-fallback-icon { font-size: 2.5rem; margin-bottom: 14px; line-height: 1; }
 .ha-pro-frame-fallback h3 {
-	font-size:   1.1rem;
+	font-size:   1rem;
 	font-weight: 800;
-	color:       var(--ha-text);
-	margin:      0 0 10px;
+	color:       #011627;
+	margin:      0 0 8px;
+	line-height: 1.5;
 }
 .ha-pro-frame-fallback p {
-	font-size:   .9rem;
-	color:       var(--ha-muted);
-	line-height: 1.8;
+	font-size:   .875rem;
+	color:       #64748b;
+	line-height: 1.7;
 	margin:      0 0 20px;
 }
-.ha-pro-frame-fallback-actions {
-	display:        flex;
-	flex-direction: column;
-	gap:            10px;
+.ha-pro-fallback-open {
+	display:       inline-flex !important;
+	align-items:   center !important;
+	justify-content: center !important;
+	gap:           8px !important;
+	padding:       12px 24px !important;
+	background:    linear-gradient(135deg,#2ec4b6,#20a49a) !important;
+	color:         #fff !important;
+	border:        0 !important;
+	border-radius: 12px !important;
+	font-weight:   800 !important;
+	font-size:     .95rem !important;
+	text-decoration: none !important;
+	transition:    all .2s !important;
+	box-shadow:    0 6px 20px rgba(46,196,182,.3) !important;
+	width:         100% !important;
 }
-.ha-pro-frame-fallback-actions .ha-pro-btn { width: 100%; }
+.ha-pro-fallback-open:hover { transform: translateY(-2px) !important; color: #fff !important; }
 
 .ha-pro-frame-wrap.is-tablet iframe {
 	width:      768px;

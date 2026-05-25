@@ -274,6 +274,29 @@
 		});
 
 		document.addEventListener('keydown', function (e) { if (e.key === 'Escape') self.closeModal(); });
+
+		/* Preload iframe on card hover for instant open */
+		this.el.addEventListener('mouseover', function (e) {
+			var btn = e.target.closest('[data-ha-quick-view],[data-ha-preview]');
+			if (!btn) return;
+			var id = btn.getAttribute('data-ha-quick-view') || btn.getAttribute('data-ha-preview');
+			var item = id && self.state.items[id];
+			if (!item || !item.demo_url || !self.refs.frame) return;
+			if (self._preloadUrl === item.demo_url) return; // already preloading this
+			clearTimeout(self._preloadTimer);
+			self._preloadTimer = setTimeout(function () {
+				if (self.refs.modal && self.refs.modal.hidden !== false) {
+					/* Pre-warm the iframe while modal is still closed */
+					self._preloadUrl = item.demo_url;
+					self.refs.frame.src = item.demo_url;
+				}
+			}, 200);
+		});
+		this.el.addEventListener('mouseout', function (e) {
+			var btn = e.target.closest('[data-ha-quick-view],[data-ha-preview]');
+			if (!btn) return;
+			clearTimeout(self._preloadTimer);
+		});
 	};
 
 	App.prototype._toggleFeature = function (slug) {
@@ -606,22 +629,71 @@
 		if (wrap) wrap.classList.remove('is-blocked', 'is-loading');
 		var oldErr = wrap ? wrap.querySelector('.ha-pro-frame-fallback') : null;
 		if (oldErr) oldErr.remove();
+		if (wrap) { var oldBar = wrap.querySelector('.ha-pro-progress-bar'); if (oldBar) oldBar.remove(); }
 
-		/* Loading state + iframe blocked detection (X-Frame-Options / CSP) */
+		/* Animated progress bar (fake 0→85% while loading, 100% on load) */
+		var progressBar = null;
+		if (wrap) {
+			progressBar = document.createElement('div');
+			progressBar.className = 'ha-pro-progress-bar';
+			progressBar.innerHTML = '<div class="ha-pro-progress-fill"></div>';
+			wrap.appendChild(progressBar);
+		}
+		var fill = progressBar ? progressBar.querySelector('.ha-pro-progress-fill') : null;
+		var progress = 0;
+		function advanceProgress() {
+			if (progress < 85) {
+				progress += (85 - progress) * 0.08;
+				if (fill) fill.style.width = progress.toFixed(1) + '%';
+				self._progressTimer = setTimeout(advanceProgress, 300);
+			}
+		}
+		clearTimeout(self._progressTimer);
+		advanceProgress();
+
+		/* Loading state + iframe blocked detection */
 		if (wrap) wrap.classList.add('is-loading');
 		clearTimeout(this._frameTimer);
 		var loaded = false;
-		this.refs.frame.onload = function () { loaded = true; if (wrap) wrap.classList.remove('is-loading'); };
+
+		function onFrameLoaded() {
+			loaded = true;
+			clearTimeout(self._frameTimer);
+			clearTimeout(self._progressTimer);
+			if (wrap) wrap.classList.remove('is-loading');
+			/* Complete progress bar then fade out */
+			if (fill) fill.style.width = '100%';
+			setTimeout(function () { if (progressBar && progressBar.parentNode) progressBar.remove(); }, 500);
+		}
+
+		this.refs.frame.onload = onFrameLoaded;
 		this._frameTimer = setTimeout(function () {
 			if (!loaded && wrap) {
+				clearTimeout(self._progressTimer);
 				wrap.classList.remove('is-loading');
-				window.open(item.demo_url, '_blank', 'noopener,noreferrer');
-				self.closeModal();
-				toast('پیش‌نمایش در تب جدید باز شد', 'info', '↗');
+				if (progressBar && progressBar.parentNode) progressBar.remove();
+				/* Show fallback overlay — keep modal OPEN, let user choose */
+				wrap.classList.add('is-blocked');
+				var fb = document.createElement('div');
+				fb.className = 'ha-pro-frame-fallback';
+				fb.innerHTML =
+					'<div class="ha-pro-frame-fallback-box">' +
+					'<div class="ha-pro-fallback-icon">🔒</div>' +
+					'<h3>پیش‌نمایش مستقیم در دسترس نیست</h3>' +
+					'<p>این سایت اجازه نمایش در قاب را نمی‌دهد.</p>' +
+					'<a class="ha-pro-btn ha-pro-btn-primary ha-pro-fallback-open" href="' + esc(item.demo_url) + '" target="_blank" rel="noopener noreferrer">باز کردن سایت ↗</a>' +
+					'</div>';
+				wrap.appendChild(fb);
 			}
-		}, 5000);
+		}, 6000);
 
-		this.refs.frame.src = item.demo_url;
+		/* If hover-preload already started for this URL, iframe is already loading — reuse it */
+		if (this._preloadUrl !== item.demo_url) {
+			this.refs.frame.src = item.demo_url;
+		}
+		this._preloadUrl = null; // consumed
+		clearTimeout(this._preloadTimer);
+
 		if (this.refs.previewTitle)  this.refs.previewTitle.textContent  = item.title || '';
 		if (this.refs.previewDomain) this.refs.previewDomain.textContent = domainOf(item.demo_url) || (item.demo_url || '');
 		if (this.refs.previewOpen)   this.refs.previewOpen.href = item.demo_url;

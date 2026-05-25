@@ -446,6 +446,42 @@ function ha_sites_pro_inline_styles( $id ) {
     border: 4px solid rgba(46,196,182,.15) !important; border-top-color: #2ec4b6 !important;
     border-radius: 50% !important; animation: ha-spin .8s linear infinite !important; z-index: 2 !important;
 }
+/* Progress bar */
+{$m} .ha-pro-progress-bar {
+    position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important;
+    height: 3px !important; background: rgba(255,255,255,.15) !important;
+    z-index: 10 !important; overflow: hidden !important;
+}
+{$m} .ha-pro-progress-fill {
+    height: 100% !important; width: 0% !important;
+    background: linear-gradient(90deg, #2ec4b6, #7dd3fc) !important;
+    transition: width .4s ease !important; box-shadow: 0 0 8px rgba(46,196,182,.6) !important;
+}
+/* Fallback overlay inside iframe */
+{$m} .ha-pro-frame-fallback {
+    position: absolute !important; inset: 0 !important; display: flex !important;
+    align-items: center !important; justify-content: center !important; padding: 24px !important;
+    z-index: 3 !important; background: rgba(240,244,248,.85) !important; backdrop-filter: blur(6px) !important;
+}
+{$m} .ha-pro-frame-fallback-box {
+    max-width: 360px !important; background: #fff !important; border: 1px solid #dbe5ef !important;
+    border-radius: 20px !important; padding: 32px 28px !important; text-align: center !important;
+    box-shadow: 0 24px 64px rgba(1,22,39,.16) !important; box-sizing: border-box !important;
+}
+{$m} .ha-pro-fallback-icon { font-size: 2.5rem !important; margin-bottom: 14px !important; line-height: 1 !important; display: block !important; }
+{$m} .ha-pro-frame-fallback h3 { font-size: 1rem !important; font-weight: 800 !important; color: #011627 !important; margin: 0 0 8px !important; line-height: 1.5 !important; }
+{$m} .ha-pro-frame-fallback p  { font-size: .875rem !important; color: #64748b !important; line-height: 1.7 !important; margin: 0 0 20px !important; }
+{$m} .ha-pro-fallback-open {
+    display: inline-flex !important; align-items: center !important; justify-content: center !important;
+    gap: 8px !important; padding: 12px 24px !important;
+    background: linear-gradient(135deg,#2ec4b6,#20a49a) !important; color: #fff !important;
+    border: 0 !important; border-radius: 12px !important; font-weight: 800 !important;
+    font-size: .95rem !important; text-decoration: none !important; transition: all .2s !important;
+    box-shadow: 0 6px 20px rgba(46,196,182,.3) !important; width: 100% !important; box-sizing: border-box !important;
+    -webkit-appearance: none !important; appearance: none !important; cursor: pointer !important;
+    font-family: IRANYekan, Vazirmatn, Tahoma, system-ui, sans-serif !important;
+}
+{$m} .ha-pro-fallback-open:hover { transform: translateY(-2px) !important; color: #fff !important; }
 
 /* Modal title text */
 {$m} .ha-pro-preview-title { flex: 1 !important; min-width: 0 !important; }
