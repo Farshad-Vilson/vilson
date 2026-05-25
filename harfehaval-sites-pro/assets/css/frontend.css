@@ -2673,42 +2673,42 @@ html body .ha-sites-pro .ha-pro-btn-secondary .ha-pro-btn-arrow,
 html body .ha-sites-pro .ha-pro-btn-secondary:hover,
 .ha-sites-pro .ha-pro-btn-secondary:hover{border-color:#011627!important;background:#fff!important;color:#011627!important;transform:translateY(-2px)!important}
 html body .ha-sites-pro .ha-pro-btn-secondary:hover .ha-pro-btn-arrow,
-.ha-sites-pro .ha-pro-btn-secondary:hover .ha-pro-btn-arrow{animation:ha-arrow-fly .45s cubic-bezier(.4,0,.2,1) forwards!important;box-shadow:0 8px 16px rgba(1,22,39,.22)!important}
+.ha-sites-pro .ha-pro-btn-secondary:hover .ha-pro-btn-arrow{animation:ha-arrow-fly .55s cubic-bezier(.4,0,.2,1) forwards!important;box-shadow:0 8px 16px rgba(1,22,39,.22)!important}
 @keyframes ha-arrow-fly{
-  0%   { transform:translateY(-50%) translateX(0);     opacity:1; }
-  40%  { transform:translateY(-50%) translateX(-140%); opacity:0; }
-  41%  { transform:translateY(-50%) translateX(140%);  opacity:0; }
-  100% { transform:translateY(-50%) translateX(0);     opacity:1; }
+  0%   { transform:translateY(-50%) translateX(0);      opacity:1; }
+  35%  { transform:translateY(-50%) translateX(-160%);  opacity:0; }
+  36%  { transform:translateY(-50%) translateX(160%);   opacity:0; }
+  100% { transform:translateY(-50%) translateX(0);      opacity:1; }
 }
 
 @media (max-width:768px){
   html body .ha-pro-modal .ha-pro-preview-header,
   .ha-pro-modal .ha-pro-preview-header{
-    height:auto!important;
-    min-height:108px!important;
-    padding:8px 10px!important;
-    display:grid!important;
-    grid-template-columns:1fr auto!important;
-    grid-template-areas:"title close" "devices actions"!important;
+    height:52px!important;
+    min-height:52px!important;
+    max-height:52px!important;
+    padding:0 10px!important;
+    display:flex!important;
+    flex-direction:row!important;
     align-items:center!important;
-    gap:8px!important;
+    gap:6px!important;
   }
   html body .ha-pro-modal .ha-pro-preview-title,
-  .ha-pro-modal .ha-pro-preview-title{grid-area:title!important;min-width:0!important}
+  .ha-pro-modal .ha-pro-preview-title{flex:1 1 0!important;min-width:0!important;display:flex!important;flex-direction:column!important;justify-content:center!important}
   html body .ha-pro-modal .ha-pro-preview-title strong,
-  .ha-pro-modal .ha-pro-preview-title strong{font-size:12px!important;line-height:1.5!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  .ha-pro-modal .ha-pro-preview-title strong{font-size:12px!important;line-height:1.3!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;color:#fff!important}
   html body .ha-pro-modal .ha-pro-preview-title span,
-  .ha-pro-modal .ha-pro-preview-title span{font-size:10.5px!important;line-height:1.55!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;color:rgba(255,255,255,.72)!important;max-width:100%!important}
+  .ha-pro-modal .ha-pro-preview-title span{font-size:10px!important;line-height:1.3!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;color:rgba(255,255,255,.7)!important;max-width:100%!important}
   html body .ha-pro-modal .ha-pro-preview-devices,
-  .ha-pro-modal .ha-pro-preview-devices{grid-area:devices!important;width:100%!important;min-width:0!important;overflow-x:auto!important;border-radius:10px!important}
+  .ha-pro-modal .ha-pro-preview-devices{flex-shrink:0!important;width:auto!important;min-width:0!important;overflow-x:visible!important;border-radius:8px!important}
   html body .ha-pro-modal .ha-pro-preview-devices button,
-  .ha-pro-modal .ha-pro-preview-devices button{font-size:11px!important;padding:8px 10px!important;white-space:nowrap!important;min-width:max-content!important}
+  .ha-pro-modal .ha-pro-preview-devices button{font-size:10px!important;padding:5px 8px!important;white-space:nowrap!important;min-width:max-content!important}
   html body .ha-pro-modal .ha-pro-preview-actions,
-  .ha-pro-modal .ha-pro-preview-actions{grid-area:actions!important;display:flex!important;gap:6px!important;justify-content:flex-end!important}
+  .ha-pro-modal .ha-pro-preview-actions{flex-shrink:0!important;display:flex!important;gap:4px!important;align-items:center!important}
   html body .ha-pro-modal .ha-pro-preview-open,
-  .ha-pro-modal .ha-pro-preview-open{font-size:11px!important;padding:8px 10px!important;white-space:nowrap!important;border-radius:10px!important}
+  .ha-pro-modal .ha-pro-preview-open{font-size:10px!important;padding:6px 8px!important;white-space:nowrap!important;border-radius:8px!important;color:#fff!important}
   html body .ha-pro-modal .ha-pro-preview-close,
-  .ha-pro-modal .ha-pro-preview-close{grid-area:close!important;width:36px!important;height:36px!important;border-radius:12px!important;background:rgba(239,68,68,.9)!important;color:#fff!important;font-size:22px!important}
+  .ha-pro-modal .ha-pro-preview-close{flex-shrink:0!important;width:32px!important;height:32px!important;border-radius:10px!important;background:rgba(239,68,68,.9)!important;color:#fff!important;font-size:20px!important}
   html body .ha-pro-modal .ha-pro-frame-stage,
   .ha-pro-modal .ha-pro-frame-stage{position:relative!important;display:block!important;overflow:hidden!important;min-height:0!important}
   html body .ha-pro-modal .ha-pro-frame-wrap,
@@ -2734,6 +2734,8 @@ html body .ha-sites-pro .ha-pro-btn-secondary:hover .ha-pro-btn-arrow,
     overflow-y:auto!important;
     -webkit-overflow-scrolling:touch!important;
     padding-bottom:82px!important;
+    direction:rtl!important;
+    text-align:right!important;
   }
   html body .ha-pro-modal .ha-pro-frame-stage.is-info-hidden .ha-pro-preview-side,
   .ha-pro-modal .ha-pro-frame-stage.is-info-hidden .ha-pro-preview-side{
@@ -2786,19 +2788,6 @@ html body .ha-sites-pro .ha-pro-btn-secondary:hover .ha-pro-btn-arrow,
 /* ═══════════════════════════════════════════════════════════════════════
    v3.4.0 FIXES
    ═══════════════════════════════════════════════════════════════════════ */
-
-/* Fix 1: Arrow swipe animation for preview button */
-@keyframes ha-arrow-swipe {
-  0%   { transform: translateY(-50%) translateX(0);    opacity: 1; }
-  40%  { transform: translateY(-50%) translateX(-120%); opacity: 0; }
-  41%  { transform: translateY(-50%) translateX(120%);  opacity: 0; }
-  100% { transform: translateY(-50%) translateX(0);    opacity: 1; }
-}
-html body .ha-sites-pro .ha-pro-btn-secondary:hover .ha-pro-btn-arrow,
-.ha-sites-pro .ha-pro-btn-secondary:hover .ha-pro-btn-arrow {
-  animation: ha-arrow-swipe 0.55s ease forwards !important;
-  transform: translateY(-50%) translateX(0) !important;
-}
 
 /* Fix 3: Desktop sidebar bigger — 340px */
 .ha-pro-preview-side {

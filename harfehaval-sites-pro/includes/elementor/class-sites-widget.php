@@ -822,20 +822,20 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$this->add_control( 'feat_color', [
 			'label'     => __( 'رنگ متن', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-card-features span' => 'color: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-card-features span' => 'color: {{VALUE}} !important;' ],
 		] );
 
 		$this->add_control( 'feat_bg', [
 			'label'     => __( 'رنگ پس‌زمینه', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-card-features span' => 'background-color: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-card-features span' => 'background-color: {{VALUE}} !important;' ],
 		] );
 
 		$this->add_control( 'feat_radius', [
 			'label'      => __( 'گردی', 'harfehaval-sites-pro' ),
 			'type'       => Controls_Manager::SLIDER,
 			'size_units' => [ 'px', 'rem' ],
-			'selectors'  => [ '{{WRAPPER}} .ha-pro-card-features span' => 'border-radius: {{SIZE}}{{UNIT}};' ],
+			'selectors'  => [ '{{WRAPPER}} .ha-pro-card-features span' => 'border-radius: {{SIZE}}{{UNIT}} !important;' ],
 		] );
 
 		$this->end_controls_section();
@@ -855,13 +855,13 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$this->add_control( 'price_color', [
 			'label'     => __( 'رنگ قیمت', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-price' => 'color: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-price' => 'color: {{VALUE}} !important;' ],
 		] );
 
 		$this->add_control( 'price_contact_color', [
 			'label'     => __( 'رنگ "تماس بگیرید"', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-price.is-free' => 'color: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-price.is-free' => 'color: {{VALUE}} !important;' ],
 		] );
 
 		$this->add_group_control( Group_Control_Typography::get_type(), [
@@ -873,7 +873,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$this->add_control( 'old_price_color', [
 			'label'     => __( 'رنگ قیمت قدیم', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-old-price' => 'color: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-old-price' => 'color: {{VALUE}} !important;' ],
 		] );
 
 		$this->end_controls_section();
@@ -896,7 +896,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$this->add_control( 'btn1_color', [
 			'label'     => __( 'رنگ متن', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-btn-primary' => 'color: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-btn-primary' => 'color: {{VALUE}} !important;' ],
 		] );
 		$this->add_group_control( Group_Control_Background::get_type(), [
 			'name'     => 'btn1_bg',
@@ -914,7 +914,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$this->add_control( 'btn1_color_hover', [
 			'label'     => __( 'رنگ متن (hover)', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-btn-primary:hover' => 'color: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-btn-primary:hover' => 'color: {{VALUE}} !important;' ],
 		] );
 		$this->add_group_control( Group_Control_Background::get_type(), [
 			'name'     => 'btn1_bg_hover',
@@ -929,7 +929,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'label'      => __( 'گردی', 'harfehaval-sites-pro' ),
 			'type'       => Controls_Manager::SLIDER,
 			'size_units' => [ 'px', 'rem', '%' ],
-			'selectors'  => [ '{{WRAPPER}}' => '--ha-btn1-radius: {{SIZE}}{{UNIT}};', '{{WRAPPER}} .ha-pro-btn-primary' => 'border-radius: {{SIZE}}{{UNIT}};' ],
+			'selectors'  => [ '{{WRAPPER}}' => '--ha-btn1-radius: {{SIZE}}{{UNIT}};' ],
 		] );
 
 		$this->add_responsive_control( 'btn1_padding', [
@@ -959,7 +959,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$this->add_control( 'btn2_color', [
 			'label'     => __( 'رنگ متن', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-btn-secondary' => 'color: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-btn-secondary' => 'color: {{VALUE}} !important;' ],
 		] );
 		$this->add_group_control( Group_Control_Background::get_type(), [
 			'name'     => 'btn2_bg',
@@ -972,7 +972,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$this->add_control( 'btn2_color_hover', [
 			'label'     => __( 'رنگ متن (hover)', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-btn-secondary:hover' => 'color: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-btn-secondary:hover' => 'color: {{VALUE}} !important;' ],
 		] );
 		$this->add_group_control( Group_Control_Background::get_type(), [
 			'name'     => 'btn2_bg_hover',
@@ -986,7 +986,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'label'      => __( 'گردی', 'harfehaval-sites-pro' ),
 			'type'       => Controls_Manager::SLIDER,
 			'size_units' => [ 'px', 'rem', '%' ],
-			'selectors'  => [ '{{WRAPPER}}' => '--ha-btn2-radius: {{SIZE}}{{UNIT}};', '{{WRAPPER}} .ha-pro-btn-secondary' => 'border-radius: {{SIZE}}{{UNIT}};' ],
+			'selectors'  => [ '{{WRAPPER}}' => '--ha-btn2-radius: {{SIZE}}{{UNIT}};' ],
 		] );
 
 		$this->add_responsive_control( 'btn2_padding', [
@@ -1020,7 +1020,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'label'      => __( 'گردی', 'harfehaval-sites-pro' ),
 			'type'       => Controls_Manager::SLIDER,
 			'size_units' => [ 'px', 'rem' ],
-			'selectors'  => [ '{{WRAPPER}} .ha-pro-toolbar' => 'border-radius: {{SIZE}}{{UNIT}};' ],
+			'selectors'  => [ '{{WRAPPER}} .ha-pro-toolbar' => 'border-radius: {{SIZE}}{{UNIT}} !important;' ],
 		] );
 
 		$this->add_responsive_control( 'toolbar_padding', [
@@ -1047,25 +1047,25 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$this->add_control( 'search_text_color', [
 			'label'     => __( 'رنگ متن', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-search-input' => 'color: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-search-input' => 'color: {{VALUE}} !important;' ],
 		] );
 
 		$this->add_control( 'search_placeholder_color', [
 			'label'     => __( 'رنگ placeholder', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-search-input::placeholder' => 'color: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-search-input::placeholder' => 'color: {{VALUE}} !important;' ],
 		] );
 
 		$this->add_control( 'search_bg', [
 			'label'     => __( 'رنگ پس‌زمینه', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-search' => 'background: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-search' => 'background: {{VALUE}} !important;' ],
 		] );
 
 		$this->add_control( 'search_icon_color', [
 			'label'     => __( 'رنگ آیکون جستجو', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-search-icon' => 'color: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-search-icon' => 'color: {{VALUE}} !important;' ],
 		] );
 
 		$this->add_group_control( Group_Control_Border::get_type(), [
@@ -1076,14 +1076,14 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$this->add_control( 'search_border_focus', [
 			'label'     => __( 'رنگ بوردر (focus)', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-search:focus-within' => 'border-color: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-search:focus-within' => 'border-color: {{VALUE}} !important;' ],
 		] );
 
 		$this->add_control( 'search_radius', [
 			'label'      => __( 'گردی', 'harfehaval-sites-pro' ),
 			'type'       => Controls_Manager::SLIDER,
 			'size_units' => [ 'px', 'rem' ],
-			'selectors'  => [ '{{WRAPPER}} .ha-pro-search' => 'border-radius: {{SIZE}}{{UNIT}};' ],
+			'selectors'  => [ '{{WRAPPER}} .ha-pro-search' => 'border-radius: {{SIZE}}{{UNIT}} !important;' ],
 		] );
 
 		$this->end_controls_section();
@@ -1106,12 +1106,12 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$this->add_control( 'chip_color', [
 			'label'     => __( 'رنگ متن', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-chip:not(.is-active)' => 'color: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-chip:not(.is-active)' => 'color: {{VALUE}} !important;' ],
 		] );
 		$this->add_control( 'chip_bg', [
 			'label'     => __( 'رنگ پس‌زمینه', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-chip:not(.is-active)' => 'background: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-chip:not(.is-active)' => 'background: {{VALUE}} !important;' ],
 		] );
 		$this->add_group_control( Group_Control_Border::get_type(), [
 			'name'     => 'chip_border',
@@ -1123,12 +1123,12 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$this->add_control( 'chip_active_color', [
 			'label'     => __( 'رنگ متن (فعال)', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-chip.is-active' => 'color: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-chip.is-active' => 'color: {{VALUE}} !important;' ],
 		] );
 		$this->add_control( 'chip_active_bg', [
 			'label'     => __( 'رنگ پس‌زمینه (فعال)', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-chip.is-active' => 'background: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-chip.is-active' => 'background: {{VALUE}} !important;' ],
 		] );
 		$this->end_controls_tab();
 		$this->end_controls_tabs();
@@ -1137,7 +1137,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'label'      => __( 'گردی', 'harfehaval-sites-pro' ),
 			'type'       => Controls_Manager::SLIDER,
 			'size_units' => [ 'px', 'rem', '%' ],
-			'selectors'  => [ '{{WRAPPER}} .ha-pro-chip' => 'border-radius: {{SIZE}}{{UNIT}};' ],
+			'selectors'  => [ '{{WRAPPER}} .ha-pro-chip' => 'border-radius: {{SIZE}}{{UNIT}} !important;' ],
 		] );
 
 		$this->add_responsive_control( 'chip_padding', [
@@ -1192,7 +1192,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$this->add_control( 'hero_title_color', [
 			'label'     => __( 'رنگ عنوان', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-hero h2' => 'color: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-hero h2' => 'color: {{VALUE}} !important;' ],
 		] );
 
 		$this->add_group_control( Group_Control_Typography::get_type(), [
@@ -1204,7 +1204,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$this->add_control( 'hero_subtitle_color', [
 			'label'     => __( 'رنگ زیرعنوان', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-hero p' => 'color: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-hero p' => 'color: {{VALUE}} !important;' ],
 		] );
 
 		$this->add_responsive_control( 'hero_text_align', [
