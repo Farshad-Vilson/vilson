@@ -200,6 +200,7 @@ class HA_Sites_Pro_REST {
 			'excerpt'     => $excerpt,
 			'thumb'       => $thumb,
 			'thumb_alt'   => $thumb_alt,
+			'code'        => (string) get_post_meta( $post_id, '_ha_code', true ),
 			'price'       => self::meta_int_or_null( $post_id, '_ha_price' ),
 			'old_price'   => self::meta_int_or_null( $post_id, '_ha_old_price' ),
 			'demo_url'    => esc_url_raw( get_post_meta( $post_id, '_ha_demo_url', true ) ),

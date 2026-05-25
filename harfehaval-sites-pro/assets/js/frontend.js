@@ -429,10 +429,14 @@
 			var quickView = (cfg.show_preview_button && item.demo_url)
 				? '<button type="button" class="ha-pro-quick-view" data-ha-quick-view="' + esc(item.id) + '">👁 پیش‌نمایش سریع</button>'
 				: '';
+			var codeBadge = item.code
+				? '<span class="ha-pro-code-badge">' + esc(item.code) + '</span>'
+				: '';
 			img = '<div class="ha-pro-thumb">' +
 				(badge ? '<span class="ha-pro-badge ha-pro-badge-' + esc(item.status) + '">' + esc(badge) + '</span>' : '') +
 				thumbHtml +
 				quickView +
+				codeBadge +
 			'</div>';
 		}
 
@@ -490,8 +494,17 @@
 		if (item.order_url) return item.order_url;
 		var ph = (settings.whatsapp || '').replace(/\D/g, '');
 		if (!ph) return '';
-		var tpl = settings.whatsapp_text || 'سلام، می‌خواهم سایت «%s» را سفارش بدهم';
-		return 'https://wa.me/' + ph + '?text=' + encodeURIComponent(tpl.replace('%s', item.title || ''));
+		var title = item.title || '';
+		var code  = item.code  || '';
+		var msg;
+		if (code) {
+			msg = 'سلام، می‌خواهم قالب «' + title + '» با کد «' + code + '» را سفارش دهم. مشخصات: ';
+		} else {
+			msg = settings.whatsapp_text
+				? settings.whatsapp_text.replace('%s', title)
+				: 'سلام، می‌خواهم سایت «' + title + '» را سفارش بدهم';
+		}
+		return 'https://wa.me/' + ph + '?text=' + encodeURIComponent(msg);
 	};
 
 	App.prototype._updateUi = function () {
@@ -673,6 +686,7 @@
 		});
 
 		return '<div class="ha-pro-side-head">' +
+			(item.code ? '<div style="margin-bottom:10px"><span class="ha-pro-code-badge" style="position:static;display:inline-flex">' + esc(item.code) + '</span></div>' : '') +
 			(statusLabel(item.status) ? '<div class="ha-pro-badge ha-pro-badge-' + esc(item.status) + '" style="position:static;margin-bottom:8px">' + esc(statusLabel(item.status)) + '</div>' : '') +
 			'<h3>' + esc(item.title) + '</h3>' +
 			(item.excerpt ? '<p>' + esc(item.excerpt) + '</p>' : '') +

@@ -121,6 +121,7 @@ class HA_Sites_Pro_Post_Type {
 
 	public static function meta_schema() {
 		return array(
+			'_ha_code'        => array( 'label' => 'کد قالب', 'type' => 'text', 'sanitize' => 'sanitize_text_field', 'placeholder' => 'مثلاً k005 یا s023' ),
 			'_ha_price'       => array( 'label' => 'قیمت', 'type' => 'number', 'sanitize' => 'absint', 'placeholder' => 'مثلاً 8900000' ),
 			'_ha_old_price'   => array( 'label' => 'قیمت قبل از تخفیف', 'type' => 'number', 'sanitize' => 'absint', 'placeholder' => 'اختیاری' ),
 			'_ha_demo_url'    => array( 'label' => 'آدرس دمو', 'type' => 'url', 'sanitize' => 'esc_url_raw', 'placeholder' => 'https://demo.example.com' ),
@@ -148,7 +149,7 @@ class HA_Sites_Pro_Post_Type {
 			<div class="ha-pro-meta-grid">
 				<?php foreach ( $schema as $key => $field ) : ?>
 					<?php $value = get_post_meta( $post->ID, $key, true ); ?>
-					<label class="ha-pro-meta-field" for="<?php echo esc_attr( $key ); ?>">
+					<label class="ha-pro-meta-field<?php echo '_ha_code' === $key ? ' ha-pro-meta-field--code' : ''; ?>" for="<?php echo esc_attr( $key ); ?>" style="<?php echo '_ha_code' === $key ? 'grid-column:1/-1;background:linear-gradient(90deg,#011627 0%,#06314f 100%);border-radius:8px;padding:12px 16px;color:#fff;' : ''; ?>">
 						<span><?php echo esc_html( $field['label'] ); ?></span>
 						<?php if ( '_ha_status' === $key ) : ?>
 							<select id="<?php echo esc_attr( $key ); ?>" name="<?php echo esc_attr( $key ); ?>">
@@ -351,9 +352,10 @@ class HA_Sites_Pro_Post_Type {
 		foreach ( $columns as $key => $label ) {
 			$new[ $key ] = $label;
 			if ( 'title' === $key ) {
-				$new['ha_price'] = __( 'قیمت', 'harfehaval-sites-pro' );
+				$new['ha_code']   = __( 'کد قالب', 'harfehaval-sites-pro' );
+				$new['ha_price']  = __( 'قیمت', 'harfehaval-sites-pro' );
 				$new['ha_status'] = __( 'وضعیت', 'harfehaval-sites-pro' );
-				$new['ha_demo'] = __( 'دمو', 'harfehaval-sites-pro' );
+				$new['ha_demo']   = __( 'دمو', 'harfehaval-sites-pro' );
 			}
 		}
 		return $new;
@@ -361,6 +363,10 @@ class HA_Sites_Pro_Post_Type {
 
 	public static function column_content( $column, $post_id ) {
 		switch ( $column ) {
+			case 'ha_code':
+				$code = get_post_meta( $post_id, '_ha_code', true );
+				echo $code ? '<code style="background:#011627;color:#fff;padding:2px 8px;border-radius:5px;font-family:monospace;font-weight:700;font-size:12px;">' . esc_html( $code ) . '</code>' : '<span class="ha-muted">—</span>';
+				break;
 			case 'ha_price':
 				$price = get_post_meta( $post_id, '_ha_price', true );
 				echo $price ? '<strong>' . esc_html( number_format_i18n( (int) $price ) ) . '</strong>' : '<span class="ha-muted">تماس</span>';

@@ -3,7 +3,7 @@
  * Plugin Name: سایت‌های حرف اول Pro
  * Plugin URI:  https://harfehaval.ir
  * Description: نمایش پیشرفته نمونه‌سایت‌ها با ویجت المنتور کامل — فیلتر، جستجو، اسکرول hover روی تصویر، مودال پیش‌نمایش، مقایسه، علاقه‌مندی، استایل ایزوله و صدها تنظیم المنتوری.
- * Version:     3.1.0
+ * Version:     3.2.0
  * Author:      فرشاد معتمدی
  * Author URI:  https://harfehaval.ir
  * Text Domain: harfehaval-sites-pro
@@ -17,7 +17,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'HA_SITES_PRO_VERSION',  '3.1.0' );
+define( 'HA_SITES_PRO_VERSION',  '3.2.0' );
 define( 'HA_SITES_PRO_FILE',     __FILE__ );
 define( 'HA_SITES_PRO_DIR',      plugin_dir_path( __FILE__ ) );
 define( 'HA_SITES_PRO_URL',      plugin_dir_url( __FILE__ ) );

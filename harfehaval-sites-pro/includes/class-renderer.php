@@ -373,12 +373,12 @@ class HA_Sites_Pro_Renderer {
 							</div>
 							<div class="ha-pro-preview-actions">
 								<a class="ha-pro-preview-open" data-ha-preview-open target="_blank" rel="noopener noreferrer" href="#"><?php echo esc_html( $config['new_tab_label'] ); ?> ↗</a>
-								<button class="ha-pro-preview-info-toggle" data-ha-preview-info-toggle type="button"><?php esc_html_e( 'جزئیات', 'harfehaval-sites-pro' ); ?></button>
 								<button class="ha-pro-preview-close" data-ha-modal-close type="button" aria-label="<?php esc_attr_e( 'بستن', 'harfehaval-sites-pro' ); ?>">×</button>
 							</div>
 						</header>
 						<div class="ha-pro-frame-stage">
 							<div class="ha-pro-frame-wrap"><iframe data-ha-frame title="<?php esc_attr_e( 'پیش‌نمایش سایت', 'harfehaval-sites-pro' ); ?>" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe></div>
+							<button class="ha-pro-side-handle" data-ha-preview-info-toggle type="button" aria-label="<?php esc_attr_e( 'تغییر نمایش جزئیات', 'harfehaval-sites-pro' ); ?>"></button>
 							<aside class="ha-pro-preview-side" data-ha-modal-info></aside>
 						</div>
 					</div>

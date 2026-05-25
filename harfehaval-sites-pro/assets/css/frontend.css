@@ -31,7 +31,7 @@
 	--ha-scroll-speed:  6s;
 	--ha-gap:           24px;
 	--ha-topbar:        68px;
-	--ha-side-w:        340px;
+	--ha-side-w:        260px;
 	direction:          rtl !important;
 	font-family:        var(--ha-font) !important;
 	color:              var(--ha-text) !important;
@@ -1364,52 +1364,100 @@ html.ha-pro-modal-open .site-header.is-sticky,
 html.ha-pro-modal-open header[class*="sticky"],
 html.ha-pro-modal-open header[class*="fixed"] { z-index: 1 !important; }
 
-/* ── Bulletproof buttons: html body prefix beats virtually any theme ── */
+/* ── MAXIMUM SPECIFICITY BUTTONS — overrides any theme or Elementor style ── */
 html body .ha-sites-pro .ha-pro-btn,
-html body .ha-sites-pro a.ha-pro-btn,
-html body .ha-sites-pro button.ha-pro-btn {
-	display:         inline-flex !important;
-	align-items:     center !important;
-	justify-content: center !important;
-	gap:             8px !important;
-	padding:         12px 20px !important;
-	border:          0 !important;
-	border-radius:   12px !important;
-	font-family:     var(--ha-font) !important;
-	font-size:       .9rem !important;
-	font-weight:     800 !important;
-	line-height:     1 !important;
-	letter-spacing:  .01em !important;
-	text-decoration: none !important;
-	text-transform:  none !important;
-	white-space:     nowrap !important;
-	min-height:      44px !important;
-	cursor:          pointer !important;
-	transition:      transform .15s ease, box-shadow .2s ease, background .2s ease, color .2s ease, border-color .2s ease !important;
-	position:        relative !important;
-	overflow:        hidden !important;
-	box-shadow:      none;
+html body .ha-sites-pro button.ha-pro-btn,
+html body .ha-sites-pro a.ha-pro-btn {
+	display:            inline-flex !important;
+	align-items:        center !important;
+	justify-content:    center !important;
+	gap:                8px !important;
+	padding:            12px 20px !important;
+	border:             0 !important;
+	outline:            0 !important;
+	border-radius:      12px !important;
+	font-family:        var(--ha-font) !important;
+	font-size:          .9rem !important;
+	font-weight:        800 !important;
+	line-height:        1 !important;
+	letter-spacing:     .01em !important;
+	text-decoration:    none !important;
+	text-transform:     none !important;
+	white-space:        nowrap !important;
+	min-height:         44px !important;
+	cursor:             pointer !important;
+	transition:         transform .15s ease, box-shadow .2s ease, background .2s ease, color .2s ease !important;
+	position:           relative !important;
+	overflow:           hidden !important;
+	flex:               1 !important;
+	text-align:         center !important;
+	vertical-align:     middle !important;
+	-webkit-appearance: none !important;
+	appearance:         none !important;
+	box-sizing:         border-box !important;
 }
+
+/* Primary button */
 html body .ha-sites-pro .ha-pro-btn-primary {
 	background: linear-gradient(135deg, var(--ha-accent) 0%, var(--ha-accent-2) 100%) !important;
 	color:      #fff !important;
 	box-shadow: 0 4px 14px rgba(46,196,182,.35), inset 0 1px 0 rgba(255,255,255,.2) !important;
 }
-html body .ha-sites-pro .ha-pro-btn-primary:hover {
+html body .ha-sites-pro .ha-pro-btn-primary:hover,
+html body .ha-sites-pro .ha-pro-btn-primary:focus {
 	transform:  translateY(-2px) !important;
 	box-shadow: 0 10px 28px rgba(46,196,182,.5), inset 0 1px 0 rgba(255,255,255,.3) !important;
 	color:      #fff !important;
+	background: linear-gradient(135deg, var(--ha-accent) 0%, var(--ha-accent-2) 100%) !important;
 }
+
+/* Secondary button */
 html body .ha-sites-pro .ha-pro-btn-secondary {
-	background: #fff !important;
+	background: #ffffff !important;
 	color:      var(--ha-primary) !important;
-	box-shadow: inset 0 0 0 1.5px var(--ha-border), 0 1px 3px rgba(1,22,39,.04) !important;
+	border:     1.5px solid var(--ha-border) !important;
+	box-shadow: 0 1px 3px rgba(1,22,39,.04) !important;
 }
-html body .ha-sites-pro .ha-pro-btn-secondary:hover {
-	transform:  translateY(-2px) !important;
-	color:      var(--ha-accent) !important;
-	box-shadow: inset 0 0 0 1.5px var(--ha-accent), 0 8px 22px rgba(46,196,182,.18) !important;
+html body .ha-sites-pro .ha-pro-btn-secondary:hover,
+html body .ha-sites-pro .ha-pro-btn-secondary:focus {
+	transform:    translateY(-2px) !important;
+	color:        var(--ha-accent) !important;
+	border-color: var(--ha-accent) !important;
+	box-shadow:   0 6px 18px rgba(46,196,182,.18) !important;
+	background:   #ffffff !important;
 }
+
+/* Search input — nuclear reset */
+html body .ha-sites-pro .ha-pro-search-input {
+	all:         unset !important;
+	display:     block !important;
+	flex:        1 !important;
+	padding:     11px 0 !important;
+	font-size:   .925rem !important;
+	color:       var(--ha-text) !important;
+	background:  transparent !important;
+	border:      none !important;
+	outline:     none !important;
+	box-shadow:  none !important;
+	font-family: var(--ha-font) !important;
+	direction:   rtl !important;
+}
+
+/* Sort select — nuclear reset */
+html body .ha-sites-pro .ha-pro-sort {
+	all:            unset !important;
+	display:        block !important;
+	padding:        8px 12px !important;
+	border:         1.5px solid var(--ha-border) !important;
+	border-radius:  8px !important;
+	font-size:      .875rem !important;
+	color:          var(--ha-text) !important;
+	background:     #fff !important;
+	cursor:         pointer !important;
+	font-family:    var(--ha-font) !important;
+	direction:      rtl !important;
+}
+
 /* Ripple effect on click */
 html body .ha-sites-pro .ha-pro-btn::after {
 	content: ''; position: absolute; inset: 0;
@@ -1417,6 +1465,65 @@ html body .ha-sites-pro .ha-pro-btn::after {
 	opacity: 0; transition: opacity .4s ease; pointer-events: none;
 }
 html body .ha-sites-pro .ha-pro-btn:active::after { opacity: 1; transition: opacity 0s; }
+
+/* ── Elegant sidebar pull-handle ── */
+.ha-pro-side-handle {
+	position:        absolute;
+	top:             50%;
+	right:           var(--ha-side-w);
+	transform:       translateY(-50%);
+	z-index:         20;
+	width:           22px;
+	height:          72px;
+	background:      #fff;
+	border:          1px solid var(--ha-border);
+	border-right:    none;
+	border-radius:   10px 0 0 10px;
+	display:         flex;
+	align-items:     center;
+	justify-content: center;
+	cursor:          pointer;
+	box-shadow:      -4px 0 16px rgba(1,22,39,.09);
+	transition:      right .3s ease, background .2s;
+	font-size:       .65rem;
+	color:           var(--ha-muted);
+	padding:         0;
+	outline:         none;
+}
+.ha-pro-side-handle::before {
+	content:     '❮';
+	transition:  transform .3s ease;
+	font-family: system-ui, sans-serif;
+}
+.ha-pro-frame-stage.is-info-hidden .ha-pro-side-handle {
+	right:         0;
+	border-radius: 10px 0 0 10px;
+}
+.ha-pro-frame-stage.is-info-hidden .ha-pro-side-handle::before {
+	transform: rotate(180deg);
+}
+.ha-pro-side-handle:hover { background: var(--ha-soft); }
+
+/* ── Template code badge (on card thumbnail) ── */
+.ha-pro-code-badge {
+	display:        inline-flex;
+	align-items:    center;
+	gap:            4px;
+	font-size:      .7rem;
+	font-weight:    900;
+	padding:        3px 8px;
+	background:     var(--ha-primary);
+	color:          #fff;
+	border-radius:  6px;
+	font-family:    ui-monospace, 'Courier New', monospace;
+	letter-spacing: .06em;
+	position:       absolute;
+	bottom:         10px;
+	right:          10px;
+	z-index:        3;
+	opacity:        .88;
+	backdrop-filter: blur(4px);
+}
 
 /* ════════════════════════════════════════════════════════
    ★ NEW FEATURE 1 — TOAST NOTIFICATIONS
