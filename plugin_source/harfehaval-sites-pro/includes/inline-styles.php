@@ -432,7 +432,7 @@ function ha_sites_pro_inline_styles( $id ) {
     padding: 14px 20px 24px !important; border-top: 1px solid #e2e8f0 !important; margin-top: 4px !important;
 }
 
-/* "مشاهده کامل" button — white, pill, dark border, 1.5px */
+/* مشاهده کامل button — white, pill, dark border, 1.5px */
 {$m} .ha-pro-side-view-btn {
     display: flex !important; align-items: center !important; justify-content: center !important;
     gap: 8px !important; width: 100% !important; padding: 12px 20px !important;

@@ -552,10 +552,13 @@
 			var ratingBadge = (cfg.show_rating && item.rating)
 				? '<span class="ha-pro-rating-badge">⭐ ' + esc(Number(item.rating).toLocaleString('fa-IR')) + '</span>'
 				: '';
+			var viewBadge = (cfg.show_view_count && item.view_count)
+				? '<span class="ha-pro-view-count">👁 ' + esc(Number(item.view_count).toLocaleString('fa-IR')) + '</span>'
+				: '';
 
 			img = '<div class="ha-pro-thumb">' +
 				(badge ? '<span class="ha-pro-badge ha-pro-badge-' + esc(item.status) + '">' + esc(badge) + '</span>' : '') +
-				thumbHtml + quickView + codeBadge + ratingBadge +
+				thumbHtml + quickView + codeBadge + ratingBadge + viewBadge +
 				'</div>';
 		}
 
@@ -729,6 +732,14 @@
 
 		this._addRecent(item.id);
 
+		/* Track view — fire and forget */
+		(function(id, state) {
+			fetch(buildUrl('/sites/' + id + '/view', {}), { method: 'POST' })
+				.then(function(r) { return r.ok ? r.json() : null; })
+				.then(function(d) { if (d && d.view_count !== undefined && state[id]) state[id].view_count = d.view_count; })
+				.catch(function() {});
+		})(item.id, this.state.items);
+
 		/* Clear previous state */
 		if (wrap) wrap.classList.remove('is-blocked', 'is-loading');
 		var oldErr = wrap ? wrap.querySelector('.ha-pro-frame-fallback') : null;
@@ -889,6 +900,7 @@
 			(statusLabel(item.status) ? '<div class="ha-pro-badge ha-pro-badge-' + esc(item.status) + '" style="position:static;margin-bottom:8px">' + esc(statusLabel(item.status)) + '</div>' : '') +
 			'<h3>' + esc(item.title) + '</h3>' +
 			(item.excerpt ? '<p>' + esc(item.excerpt) + '</p>' : '') +
+			(item.view_count ? '<div class="ha-pro-side-view-count"><span>👁</span> ' + esc(Number(item.view_count).toLocaleString('fa-IR')) + ' بازدید</div>' : '') +
 			'</div>' +
 			(item.highlight ? '<div class="ha-pro-side-highlight">' + esc(item.highlight) + '</div>' : '') +
 			'<div class="ha-pro-side-tabs"><div class="ha-pro-side-tabs-nav">' + nav + '</div><div class="ha-pro-side-tabs-content">' + panels + '</div></div>' +

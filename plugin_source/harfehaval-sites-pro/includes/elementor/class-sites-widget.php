@@ -101,7 +101,8 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 				'rating'     => __( 'بالاترین امتیاز', 'harfehaval-sites-pro' ),
 				'price_asc'  => __( 'ارزان‌ترین', 'harfehaval-sites-pro' ),
 				'price_desc' => __( 'گران‌ترین', 'harfehaval-sites-pro' ),
-				'oldest'     => __( 'قدیمی‌ترین', 'harfehaval-sites-pro' ),
+				'oldest'       => __( 'قدیمی‌ترین', 'harfehaval-sites-pro' ),
+				'most_viewed'  => __( 'پربازدیدترین', 'harfehaval-sites-pro' ),
 			],
 			'default' => 'newest',
 		] );
@@ -339,6 +340,14 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'type'         => Controls_Manager::SWITCHER,
 			'return_value' => 'yes',
 			'default'      => '',
+		] );
+
+		$this->add_control( 'show_view_count', [
+			'label'        => __( 'نمایش آمار بازدید روی کارت', 'harfehaval-sites-pro' ),
+			'type'         => Controls_Manager::SWITCHER,
+			'return_value' => 'yes',
+			'default'      => '',
+			'description'  => __( 'تعداد بازدید هر پروژه را روی تصویر کارت نمایش می‌دهد.', 'harfehaval-sites-pro' ),
 		] );
 
 		$this->add_control( 'modal', [
@@ -1506,6 +1515,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'show_pages_count'     => $s['show_pages_count'] ?? '',
 			'show_support'         => $s['show_support'] ?? '',
 			'show_tech_stack'      => $s['show_tech_stack'] ?? '',
+			'show_view_count'      => $s['show_view_count'] ?? '',
 			'container_mode'       => $s['container_mode'] ?? 'full',
 			'container_max_width'  => $s['container_max_width'] ?? 1220,
 			'image_height'         => ( isset( $s['image_height']['size'] ) && '' !== $s['image_height']['size'] ) ? $s['image_height']['size'] : 260,

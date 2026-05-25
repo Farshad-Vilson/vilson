@@ -91,6 +91,7 @@ class HA_Sites_Pro_Renderer {
 			'show_pages_count'     => 'no',
 			'show_support'         => 'no',
 			'show_tech_stack'      => 'no',
+			'show_view_count'      => 'no',
 			'class'                => '',
 		);
 	}
@@ -148,7 +149,7 @@ class HA_Sites_Pro_Renderer {
 		$tablet     = self::choice( $atts['tablet_columns'], array( '1', '2', '3', '4' ), '2' );
 		$mobile     = self::choice( $atts['mobile_columns'], array( '1', '2', '3', '4' ), '1' );
 		$layout     = self::choice( $atts['layout'], array( 'grid', 'list', 'compact' ), 'grid' );
-		$sort       = self::choice( $atts['sort'], array( 'newest', 'oldest', 'price_asc', 'price_desc', 'popular', 'rating' ), 'newest' );
+		$sort       = self::choice( $atts['sort'], array( 'newest', 'oldest', 'price_asc', 'price_desc', 'popular', 'rating', 'most_viewed' ), 'newest' );
 		$hover      = self::choice( $atts['hover_effect'], array( 'scroll', 'zoom', 'none' ), 'scroll' );
 		$pagination = self::choice( $atts['pagination_type'], array( 'load_more', 'infinite' ), 'load_more' );
 
@@ -228,6 +229,7 @@ class HA_Sites_Pro_Renderer {
 			'show_pages_count'     => self::bool_attr( $atts['show_pages_count'] ),
 			'show_support'         => self::bool_attr( $atts['show_support'] ),
 			'show_tech_stack'      => self::bool_attr( $atts['show_tech_stack'] ),
+			'show_view_count'      => self::bool_attr( $atts['show_view_count'] ),
 			'class'                => sanitize_html_class( $atts['class'] ),
 		);
 	}
@@ -294,6 +296,7 @@ class HA_Sites_Pro_Renderer {
 										<option value="price_asc"><?php esc_html_e( 'ارزان‌ترین', 'harfehaval-sites-pro' ); ?></option>
 										<option value="price_desc"><?php esc_html_e( 'گران‌ترین', 'harfehaval-sites-pro' ); ?></option>
 										<option value="oldest"><?php esc_html_e( 'قدیمی‌ترین', 'harfehaval-sites-pro' ); ?></option>
+										<option value="most_viewed"><?php esc_html_e( 'پربازدیدترین', 'harfehaval-sites-pro' ); ?></option>
 									</select>
 								</label>
 							<?php endif; ?>

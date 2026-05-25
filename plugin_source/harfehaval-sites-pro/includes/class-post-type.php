@@ -356,6 +356,7 @@ class HA_Sites_Pro_Post_Type {
 				$new['ha_price']  = __( 'قیمت', 'harfehaval-sites-pro' );
 				$new['ha_status'] = __( 'وضعیت', 'harfehaval-sites-pro' );
 				$new['ha_demo']   = __( 'دمو', 'harfehaval-sites-pro' );
+				$new['ha_views']  = __( 'بازدید', 'harfehaval-sites-pro' );
 			}
 		}
 		return $new;
@@ -379,11 +380,16 @@ class HA_Sites_Pro_Post_Type {
 				$url = get_post_meta( $post_id, '_ha_demo_url', true );
 				echo $url ? '<a href="' . esc_url( $url ) . '" target="_blank" rel="noopener">مشاهده ↗</a>' : '<span class="ha-muted">—</span>';
 				break;
+			case 'ha_views':
+				$views = (int) get_post_meta( $post_id, '_ha_view_count', true );
+				echo $views ? '<strong style="color:#2ec4b6">' . esc_html( number_format_i18n( $views ) ) . ' 👁</strong>' : '<span class="ha-muted">—</span>';
+				break;
 		}
 	}
 
 	public static function sortable_columns( $columns ) {
 		$columns['ha_price'] = 'ha_price';
+		$columns['ha_views'] = 'ha_views';
 		return $columns;
 	}
 }

@@ -3490,3 +3490,38 @@ html body .ha-sites-pro .ha-pro-actions .ha-pro-btn-secondary:hover .ha-pro-btn-
 }
 .ha-pro-share-copy-btn:hover { background: rgba(255,255,255,.2) !important; }
 .ha-pro-share-copy-btn .ha-pro-copy-icon { font-size: .85rem; }
+
+/* ── 8. View count badge (on card thumbnail) ── */
+.ha-pro-view-count {
+  position:      absolute;
+  bottom:        10px;
+  left:          10px;
+  display:       inline-flex;
+  align-items:   center;
+  gap:           4px;
+  padding:       3px 9px;
+  background:    rgba(1,22,39,.72);
+  color:         #fff;
+  font-size:     11px;
+  font-weight:   700;
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: none;
+  line-height:   1.4;
+}
+
+/* ── 9. View count in modal side panel ── */
+.ha-pro-side-view-count {
+  display:     inline-flex;
+  align-items: center;
+  gap:         5px;
+  margin-top:  6px;
+  padding:     3px 10px;
+  background:  rgba(46,196,182,.10);
+  color:       #2ec4b6;
+  font-size:   .78rem;
+  font-weight: 700;
+  border-radius: 999px;
+  border:      1px solid rgba(46,196,182,.25);
+}

@@ -25,6 +25,19 @@ class HA_Sites_Pro_REST {
 
 		register_rest_route(
 			self::NAMESPACE,
+			'/sites/(?P<id>\d+)/view',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'callback'            => array( __CLASS__, 'track_view' ),
+				'permission_callback' => '__return_true',
+				'args'                => array(
+					'id' => array( 'sanitize_callback' => 'absint' ),
+				),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
 			'/filters',
 			array(
 				'methods'             => WP_REST_Server::READABLE,
@@ -46,6 +59,18 @@ class HA_Sites_Pro_REST {
 		);
 	}
 
+	public static function track_view( WP_REST_Request $request ) {
+		$post_id = absint( $request->get_param( 'id' ) );
+		$post    = get_post( $post_id );
+		if ( ! $post || HA_Sites_Pro_Post_Type::POST_TYPE !== $post->post_type || 'publish' !== $post->post_status ) {
+			return new WP_Error( 'not_found', 'Post not found', array( 'status' => 404 ) );
+		}
+		$count = (int) get_post_meta( $post_id, '_ha_view_count', true );
+		$count++;
+		update_post_meta( $post_id, '_ha_view_count', $count );
+		return rest_ensure_response( array( 'view_count' => $count ) );
+	}
+
 	public static function sanitize_per_page( $value ) {
 		return max( 1, min( 60, absint( $value ) ) );
 	}
@@ -58,6 +83,8 @@ class HA_Sites_Pro_REST {
 		$features = (string) $request->get_param( 'features' );
 		$status   = (string) $request->get_param( 'status' );
 		$sort     = (string) $request->get_param( 'sort' );
+		$allowed_sorts = array( 'newest', 'oldest', 'price_asc', 'price_desc', 'popular', 'rating', 'most_viewed' );
+		if ( ! in_array( $sort, $allowed_sorts, true ) ) { $sort = 'newest'; }
 
 		$args = array(
 			'post_type'      => HA_Sites_Pro_Post_Type::POST_TYPE,
@@ -131,6 +158,11 @@ class HA_Sites_Pro_REST {
 				break;
 			case 'rating':
 				$args['meta_key'] = '_ha_rating'; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				$args['orderby'] = 'meta_value_num';
+				$args['order'] = 'DESC';
+				break;
+			case 'most_viewed':
+				$args['meta_key'] = '_ha_view_count'; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 				$args['orderby'] = 'meta_value_num';
 				$args['order'] = 'DESC';
 				break;
@@ -230,6 +262,7 @@ class HA_Sites_Pro_REST {
 			'tabs'         => self::format_tabs( $post_id, $post ),
 			'categories'   => $cats,
 			'features'    => $features,
+			'view_count'   => (int) get_post_meta( $post_id, '_ha_view_count', true ),
 		);
 	}
 
