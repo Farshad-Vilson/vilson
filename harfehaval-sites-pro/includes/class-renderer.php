@@ -342,7 +342,7 @@ class HA_Sites_Pro_Renderer {
 			<?php endif; ?>
 
 			<?php if ( $config['modal'] ) : ?>
-				<div class="ha-pro-modal" data-ha-modal hidden aria-hidden="true">
+				<div class="ha-pro-modal" id="<?php echo esc_attr( $instance ); ?>-modal" data-ha-modal hidden aria-hidden="true">
 					<div class="ha-pro-modal-backdrop" data-ha-modal-close></div>
 					<div class="ha-pro-preview" role="dialog" aria-modal="true" aria-label="<?php esc_attr_e( 'پیش‌نمایش سایت', 'harfehaval-sites-pro' ); ?>">
 						<header class="ha-pro-preview-header">
