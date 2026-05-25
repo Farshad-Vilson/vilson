@@ -487,6 +487,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 	/* ──────────────────── STYLE TAB ──────────────────── */
 
 	private function tab_style(): void {
+		$this->style_global_colors();
 		$this->style_layout();
 		$this->style_card();
 		$this->style_image();
@@ -502,6 +503,61 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$this->style_filter_chips();
 		$this->style_hero();
 		$this->style_modal();
+		$this->style_loadmore();
+	}
+
+	private function style_global_colors(): void {
+		$this->start_controls_section( 'sty_global', [
+			'label' => __( '🎨 رنگ‌های کلی (Global)', 'harfehaval-sites-pro' ),
+			'tab'   => Controls_Manager::TAB_STYLE,
+		] );
+
+		$this->add_control( 'global_accent', [
+			'label'       => __( 'رنگ accent (سبز-فیروزه‌ای)', 'harfehaval-sites-pro' ),
+			'type'        => Controls_Manager::COLOR,
+			'description' => __( 'رنگ اصلی فیلترها، دکمه‌های فعال، و لودینگ', 'harfehaval-sites-pro' ),
+			'selectors'   => [ '{{WRAPPER}} .ha-sites-pro' => '--ha-accent: {{VALUE}}; --ha-pro-accent: {{VALUE}};' ],
+		] );
+
+		$this->add_control( 'global_primary', [
+			'label'       => __( 'رنگ primary (تیره)', 'harfehaval-sites-pro' ),
+			'type'        => Controls_Manager::COLOR,
+			'description' => __( 'رنگ دکمه‌های تیره، هدر و متن اصلی', 'harfehaval-sites-pro' ),
+			'selectors'   => [ '{{WRAPPER}} .ha-sites-pro' => '--ha-primary: {{VALUE}}; --ha-pro-primary: {{VALUE}};' ],
+		] );
+
+		$this->add_control( 'global_bg', [
+			'label'     => __( 'رنگ پس‌زمینه کل ویجت', 'harfehaval-sites-pro' ),
+			'type'      => Controls_Manager::COLOR,
+			'selectors' => [ '{{WRAPPER}} .ha-sites-pro' => '--ha-bg: {{VALUE}}; --ha-pro-bg: {{VALUE}};' ],
+		] );
+
+		$this->add_control( 'global_card_bg', [
+			'label'     => __( 'رنگ پس‌زمینه کارت‌ها', 'harfehaval-sites-pro' ),
+			'type'      => Controls_Manager::COLOR,
+			'selectors' => [ '{{WRAPPER}} .ha-sites-pro' => '--ha-card: {{VALUE}}; --ha-pro-card: {{VALUE}};' ],
+		] );
+
+		$this->add_control( 'global_text', [
+			'label'     => __( 'رنگ متن کلی', 'harfehaval-sites-pro' ),
+			'type'      => Controls_Manager::COLOR,
+			'selectors' => [ '{{WRAPPER}} .ha-sites-pro' => '--ha-text: {{VALUE}}; --ha-pro-text: {{VALUE}};' ],
+		] );
+
+		$this->add_control( 'global_border', [
+			'label'     => __( 'رنگ حاشیه‌ها', 'harfehaval-sites-pro' ),
+			'type'      => Controls_Manager::COLOR,
+			'selectors' => [ '{{WRAPPER}} .ha-sites-pro' => '--ha-border: {{VALUE}}; --ha-pro-border: {{VALUE}};' ],
+		] );
+
+		$this->add_group_control( Group_Control_Typography::get_type(), [
+			'name'        => 'global_font',
+			'label'       => __( 'فونت کلی ویجت', 'harfehaval-sites-pro' ),
+			'description' => __( 'فونت پایه که تمام متون از آن ارث می‌برند', 'harfehaval-sites-pro' ),
+			'selector'    => '{{WRAPPER}} .ha-sites-pro',
+		] );
+
+		$this->end_controls_section();
 	}
 
 	private function style_layout(): void {
@@ -1273,6 +1329,100 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'label'    => __( 'حاشیه قاب پیش‌نمایش', 'harfehaval-sites-pro' ),
 			'selector' => '{{WRAPPER}} .ha-pro-frame-wrap iframe',
 		] );
+
+		$this->add_control( 'modal_whatsapp_heading', [
+			'label'     => __( '💬 دکمه واتساپ در پنل', 'harfehaval-sites-pro' ),
+			'type'      => Controls_Manager::HEADING,
+			'separator' => 'before',
+		] );
+
+		$this->add_control( 'modal_whatsapp_color', [
+			'label'     => __( 'رنگ پس‌زمینه دکمه واتساپ', 'harfehaval-sites-pro' ),
+			'type'      => Controls_Manager::COLOR,
+			'default'   => '#25d366',
+			'selectors' => [ '{{WRAPPER}} .ha-pro-btn-whatsapp, body .ha-pro-btn-whatsapp' => 'background: {{VALUE}} !important;' ],
+		] );
+
+		$this->add_control( 'modal_view_btn_heading', [
+			'label'     => __( '🔗 دکمه مشاهده کامل', 'harfehaval-sites-pro' ),
+			'type'      => Controls_Manager::HEADING,
+			'separator' => 'before',
+		] );
+
+		$this->add_control( 'modal_view_btn_color', [
+			'label'     => __( 'رنگ متن دکمه مشاهده کامل', 'harfehaval-sites-pro' ),
+			'type'      => Controls_Manager::COLOR,
+			'selectors' => [ '{{WRAPPER}} .ha-pro-side-view-btn, body .ha-pro-side-view-btn' => 'color: {{VALUE}} !important;' ],
+		] );
+
+		$this->add_control( 'modal_view_btn_border', [
+			'label'     => __( 'رنگ حاشیه دکمه مشاهده کامل', 'harfehaval-sites-pro' ),
+			'type'      => Controls_Manager::COLOR,
+			'selectors' => [ '{{WRAPPER}} .ha-pro-side-view-btn, body .ha-pro-side-view-btn' => 'border-color: {{VALUE}} !important;' ],
+		] );
+
+		$this->end_controls_section();
+	}
+
+	private function style_loadmore(): void {
+		$this->start_controls_section( 'sty_loadmore', [
+			'label' => __( '➕ دکمه نمایش بیشتر', 'harfehaval-sites-pro' ),
+			'tab'   => Controls_Manager::TAB_STYLE,
+		] );
+
+		$this->add_group_control( Group_Control_Typography::get_type(), [
+			'name'     => 'loadmore_typo',
+			'selector' => '{{WRAPPER}} .ha-pro-loadmore',
+		] );
+
+		$this->start_controls_tabs( 'tabs_loadmore' );
+
+		$this->start_controls_tab( 'tab_lm_normal', [ 'label' => __( 'عادی', 'harfehaval-sites-pro' ) ] );
+		$this->add_control( 'loadmore_color', [
+			'label'     => __( 'رنگ متن', 'harfehaval-sites-pro' ),
+			'type'      => Controls_Manager::COLOR,
+			'selectors' => [ '{{WRAPPER}} .ha-pro-loadmore' => 'color: {{VALUE}} !important;' ],
+		] );
+		$this->add_control( 'loadmore_bg', [
+			'label'     => __( 'رنگ پس‌زمینه', 'harfehaval-sites-pro' ),
+			'type'      => Controls_Manager::COLOR,
+			'selectors' => [ '{{WRAPPER}} .ha-pro-loadmore' => 'background: {{VALUE}} !important;' ],
+		] );
+		$this->add_control( 'loadmore_border_color', [
+			'label'     => __( 'رنگ حاشیه', 'harfehaval-sites-pro' ),
+			'type'      => Controls_Manager::COLOR,
+			'selectors' => [ '{{WRAPPER}} .ha-pro-loadmore' => 'border-color: {{VALUE}} !important;' ],
+		] );
+		$this->end_controls_tab();
+
+		$this->start_controls_tab( 'tab_lm_hover', [ 'label' => __( 'hover', 'harfehaval-sites-pro' ) ] );
+		$this->add_control( 'loadmore_color_hover', [
+			'label'     => __( 'رنگ متن (hover)', 'harfehaval-sites-pro' ),
+			'type'      => Controls_Manager::COLOR,
+			'selectors' => [ '{{WRAPPER}} .ha-pro-loadmore:hover' => 'color: {{VALUE}} !important;' ],
+		] );
+		$this->add_control( 'loadmore_bg_hover', [
+			'label'     => __( 'رنگ پس‌زمینه (hover)', 'harfehaval-sites-pro' ),
+			'type'      => Controls_Manager::COLOR,
+			'selectors' => [ '{{WRAPPER}} .ha-pro-loadmore:hover' => 'background: {{VALUE}} !important;' ],
+		] );
+		$this->end_controls_tab();
+		$this->end_controls_tabs();
+
+		$this->add_control( 'loadmore_radius', [
+			'label'      => __( 'گردی دکمه', 'harfehaval-sites-pro' ),
+			'type'       => Controls_Manager::SLIDER,
+			'size_units' => [ 'px', 'rem', '%' ],
+			'selectors'  => [ '{{WRAPPER}} .ha-pro-loadmore' => 'border-radius: {{SIZE}}{{UNIT}} !important;' ],
+		] );
+
+		$this->add_responsive_control( 'loadmore_padding', [
+			'label'      => __( 'پدینگ', 'harfehaval-sites-pro' ),
+			'type'       => Controls_Manager::DIMENSIONS,
+			'size_units' => [ 'px', 'rem' ],
+			'selectors'  => [ '{{WRAPPER}} .ha-pro-loadmore' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;' ],
+		] );
+
 		$this->end_controls_section();
 	}
 

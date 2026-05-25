@@ -426,6 +426,44 @@ function ha_sites_pro_inline_styles( $id ) {
 }
 {$m} .ha-pro-preview-side .ha-pro-actions .ha-pro-btn { width: 100% !important; flex: none !important; }
 
+/* Side panel action group — new button layout */
+{$m} .ha-pro-side-action-group {
+    display: flex !important; flex-direction: column !important; gap: 10px !important;
+    padding: 14px 20px 24px !important; border-top: 1px solid #e2e8f0 !important; margin-top: 4px !important;
+}
+
+/* "مشاهده کامل" button — white, pill, dark border, 1.5px */
+{$m} .ha-pro-side-view-btn {
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    gap: 8px !important; width: 100% !important; padding: 12px 20px !important;
+    background: #ffffff !important; color: #011627 !important;
+    border: 1.5px solid #011627 !important; border-radius: 999px !important;
+    font-size: .88rem !important; font-weight: 800 !important;
+    text-decoration: none !important; cursor: pointer !important;
+    transition: background .2s ease, color .2s ease !important;
+    box-sizing: border-box !important; font-family: inherit !important;
+    line-height: 1 !important; min-height: 44px !important;
+}
+{$m} .ha-pro-side-view-btn:hover { background: #011627 !important; color: #fff !important; }
+
+/* WhatsApp order button */
+{$m} .ha-pro-btn-whatsapp {
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    gap: 8px !important; width: 100% !important; padding: 12px 20px !important;
+    background: #25d366 !important; color: #fff !important;
+    border: none !important; border-radius: 999px !important;
+    font-size: .88rem !important; font-weight: 800 !important;
+    text-decoration: none !important; cursor: pointer !important;
+    transition: background .2s ease, transform .2s ease !important;
+    box-sizing: border-box !important; font-family: inherit !important;
+    line-height: 1 !important; min-height: 44px !important;
+    box-shadow: 0 4px 14px rgba(37,211,102,.3) !important;
+}
+{$m} .ha-pro-btn-whatsapp:hover { background: #1da851 !important; transform: translateY(-2px) !important; color: #fff !important; }
+
+/* Icon inside side panel buttons */
+{$m} .ha-pro-side-btn-icon { font-size: 1rem !important; line-height: 1 !important; flex-shrink: 0 !important; }
+
 /* Code badge inside sidebar */
 {$m} .ha-pro-code-badge {
     display: inline-flex !important; align-items: center !important; gap: 4px !important;

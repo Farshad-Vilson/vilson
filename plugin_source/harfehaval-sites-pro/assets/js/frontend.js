@@ -737,7 +737,7 @@
 		if (oldLdr) oldLdr.remove();
 
 		/* ── Beautiful circular loading overlay ── */
-		var TIMEOUT_MS   = 10000;
+		var TIMEOUT_MS   = 30000; /* 30 seconds — gives slow servers time to respond */
 		var circumference = 263.9; /* 2 * π * 42 */
 		var loadingEl    = null;
 		var fillEl       = null;
@@ -809,8 +809,8 @@
 					'<div class="ha-pro-frame-fallback-box">' +
 					'<div class="ha-pro-fallback-icon">🔒</div>' +
 					'<h3>پیش‌نمایش مستقیم در دسترس نیست</h3>' +
-					'<p>این سایت اجازه نمایش در این قاب را نمی‌دهد. روی دکمه زیر کلیک کنید.</p>' +
-					'<a class="ha-pro-btn ha-pro-btn-primary ha-pro-fallback-open" href="' + esc(item.demo_url) + '" target="_blank" rel="noopener noreferrer">مشاهده کامل ↗</a>' +
+					'<p>به دلایل فنی یا امنیتی، این سایت اجازه نمایش داخل قاب را نمی‌دهد.<br>برای مشاهده سایت اصلی، دکمه زیر را بزنید:</p>' +
+					'<a class="ha-pro-btn ha-pro-btn-primary ha-pro-fallback-open" href="' + esc(item.demo_url) + '" target="_blank" rel="noopener noreferrer">مشاهده کامل سایت ↗</a>' +
 					'</div>';
 				wrap.appendChild(fb);
 			}
@@ -896,9 +896,13 @@
 			(facts ? '<ul class="ha-pro-side-facts">' + facts + '</ul>' : '') +
 			(item.demo_url ? this._qrHtml(item.demo_url) : '') +
 			(this.cfg.show_price ? '<div class="ha-pro-side-price"><strong>' + esc(money(item.price)) + '</strong>' + (item.old_price ? '<del>' + esc(money(item.old_price)) + '</del>' : '') + '</div>' : '') +
-			'<div class="ha-pro-actions" style="padding:12px 20px 20px;flex-direction:column">' +
-				'<a class="ha-pro-btn ha-pro-btn-secondary" href="' + esc(item.demo_url) + '" target="_blank" rel="noopener noreferrer" style="flex:none">' + esc(self.label('new_tab_label', 'مشاهده کامل')) + '</a>' +
-				(order ? '<a class="ha-pro-btn ha-pro-btn-primary" href="' + esc(order) + '" target="_blank" rel="noopener noreferrer" style="flex:none">' + esc(self.label('order_label', 'سفارش سایت')) + '</a>' : '') +
+			'<div class="ha-pro-side-action-group">' +
+				'<a class="ha-pro-btn ha-pro-side-view-btn" href="' + esc(item.demo_url) + '" target="_blank" rel="noopener noreferrer">' +
+				'<span class="ha-pro-side-btn-icon">🔗</span>' + esc(self.label('new_tab_label', 'مشاهده کامل')) +
+				'</a>' +
+				(order ? '<a class="ha-pro-btn ha-pro-btn-whatsapp" href="' + esc(order) + '" target="_blank" rel="noopener noreferrer">' +
+				'<span class="ha-pro-side-btn-icon">💬</span>' + esc(self.label('order_label', 'سفارش با واتساپ')) +
+				'</a>' : '') +
 			'</div>';
 	};
 
