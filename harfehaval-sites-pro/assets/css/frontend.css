@@ -10,24 +10,24 @@
 
 /* ── 2. Design tokens ── */
 .ha-sites-pro {
-	--ha-primary:       #011627;
+	--ha-primary:       var(--ha-pro-primary, #011627);
 	--ha-primary-2:     #06314f;
-	--ha-accent:        #2ec4b6;
+	--ha-accent:        var(--ha-pro-accent, #2ec4b6);
 	--ha-accent-2:      #20a49a;
-	--ha-bg:            #f0f4f8;
-	--ha-card:          #ffffff;
-	--ha-text:          #011627;
-	--ha-muted:         #64748b;
-	--ha-border:        #dbe5ef;
+	--ha-bg:            var(--ha-pro-bg, #ffffff);
+	--ha-card:          var(--ha-pro-card, #ffffff);
+	--ha-text:          var(--ha-pro-text, #011627);
+	--ha-muted:         var(--ha-pro-muted, #64748b);
+	--ha-border:        var(--ha-pro-border, #e5e7eb);
 	--ha-soft:          rgba(46,196,182,.12);
-	--ha-radius:        18px;
-	--ha-btn-r:         10px;
+	--ha-radius:        12px;
+	--ha-btn-r:         var(--ha-pro-btn-radius, 999px);
 	--ha-font:          IRANYekan, Kalameh, Vazirmatn, Tahoma, system-ui, -apple-system, "Segoe UI", sans-serif;
 	--ha-shadow:        0 4px 20px rgba(1,22,39,.08);
 	--ha-shadow-md:     0 12px 40px rgba(1,22,39,.12);
 	--ha-shadow-lg:     0 24px 72px rgba(1,22,39,.16);
 	--ha-glow:          0 0 0 3px rgba(46,196,182,.25);
-	--ha-thumb-h:       240px;
+	--ha-thumb-h:       220px;
 	--ha-scroll-speed:  6s;
 	--ha-gap:           24px;
 	--ha-topbar:        68px;
@@ -38,7 +38,7 @@
 	line-height:        1.7 !important;
 	isolation:          isolate;
 	position:           relative;
-	background:         var(--ha-bg);
+	background:         transparent;
 }
 
 /* ── 3. Hard isolation reset — stops theme/Elementor global styles leaking ──
@@ -575,16 +575,16 @@
 .ha-pro-card-title {
 	font-size:   1.05rem;
 	font-weight: 700;
-	color:       var(--ha-text) !important;
+	color:       var(--ha-text);
 	line-height: 1.35;
 	margin:      0;
 	transition:  color .2s;
 }
-.ha-pro-card:hover .ha-pro-card-title { color: var(--ha-accent) !important; }
+.ha-pro-card:hover .ha-pro-card-title { color: var(--ha-accent); }
 
 .ha-pro-card-excerpt {
 	font-size:              .85rem;
-	color:                  var(--ha-muted) !important;
+	color:                  var(--ha-muted);
 	line-height:            1.65;
 	margin:                 0;
 	display:                -webkit-box;
@@ -1237,7 +1237,7 @@ html.ha-pro-modal-open { overflow: hidden !important; }
 
 /* Modal-level CSS vars (so portaled modal keeps them) */
 .ha-pro-modal {
-	--ha-side-w: 300px;
+	--ha-side-w: 340px;
 	--ha-topbar: 56px;
 	--ha-border: #dbe5ef;
 	--ha-soft:   #f8fafc;
@@ -1256,9 +1256,9 @@ html.ha-pro-modal-open { overflow: hidden !important; }
 	top:        0;
 	bottom:     0;
 	left:       0;
-	width:      300px;
-	max-width:  28vw;
-	min-width:  260px;
+	width:      340px;
+	max-width:  30vw;
+	min-width:  280px;
 	background: rgba(255,255,255,.97);
 	border-right: 1.5px solid #dbe5ef;
 	overflow-y: auto;
@@ -1511,7 +1511,7 @@ html body .ha-sites-pro .ha-pro-search-input {
 	flex:        1 !important;
 	padding:     11px 0 !important;
 	font-size:   .925rem !important;
-	color:       var(--ha-text) !important;
+	color:       var(--ha-text);
 	background:  transparent !important;
 	border:      none !important;
 	outline:     none !important;
@@ -1547,7 +1547,7 @@ html body .ha-sites-pro .ha-pro-btn:active::after { opacity: 1; transition: opac
 .ha-pro-side-handle {
 	position:        absolute;
 	top:             50%;
-	left:            300px;
+	left:            340px;
 	transform:       translateY(-50%);
 	z-index:         20;
 	width:           22px;
@@ -1905,3 +1905,971 @@ html body .ha-sites-pro .ha-pro-btn:active::after { opacity: 1; transition: opac
 	pointer-events: none;
 }
 @keyframes ha-progress { to { transform: translateX(100%); } }
+
+
+/* ════════════════════════════════════════════════════════
+   Harfe Aval Home Portfolio Skin — v3.3.4
+   شبیه استایل نمونه‌کارهای صفحه اصلی افزونه قدیمی، اما با امکانات Pro
+   ════════════════════════════════════════════════════════ */
+html body .ha-sites-pro,
+.ha-sites-pro {
+	width: 100vw !important;
+	max-width: 100vw !important;
+	margin-right: calc(50% - 50vw) !important;
+	margin-left: calc(50% - 50vw) !important;
+	padding-right: 0 !important;
+	padding-left: 0 !important;
+	background: transparent !important;
+	overflow-x: clip !important;
+	--ha-bg: #ffffff;
+	--ha-card: #ffffff;
+	--ha-border: #e5e7eb;
+	--ha-muted: #5f6b7a;
+	--ha-radius: 12px;
+	--ha-thumb-h: 220px;
+	--ha-gap: 26px;
+	--ha-card-pad: 12px;
+}
+html body .ha-sites-pro .ha-pro-shell,
+.ha-sites-pro .ha-pro-shell {
+	max-width: 1220px !important;
+	width: 100% !important;
+	margin: 0 auto !important;
+	padding: 0 16px 58px !important;
+}
+
+/* Header مثل اسکرین‌شات: فقط عنوان مرکزی و تمیز */
+html body .ha-sites-pro .ha-pro-hero,
+.ha-sites-pro .ha-pro-hero {
+	display: block !important;
+	background: transparent !important;
+	border: 0 !important;
+	box-shadow: none !important;
+	padding: 0 !important;
+	margin: 0 0 18px !important;
+	border-radius: 0 !important;
+	text-align: center !important;
+	overflow: visible !important;
+}
+html body .ha-sites-pro .ha-pro-hero::before,
+.ha-sites-pro .ha-pro-hero::before { display: none !important; }
+html body .ha-sites-pro .ha-pro-hero-content,
+.ha-sites-pro .ha-pro-hero-content {
+	max-width: 820px !important;
+	margin: 0 auto !important;
+}
+html body .ha-sites-pro .ha-pro-hero-badge,
+html body .ha-sites-pro .ha-pro-hero-card,
+html body .ha-sites-pro .ha-pro-hero-actions,
+.ha-sites-pro .ha-pro-hero-badge,
+.ha-sites-pro .ha-pro-hero-card,
+.ha-sites-pro .ha-pro-hero-actions { display: none !important; }
+html body .ha-sites-pro .ha-pro-hero h2,
+.ha-sites-pro .ha-pro-hero h2 {
+	font-size: clamp(17px, 1.7vw, 22px) !important;
+	font-weight: 900 !important;
+	line-height: 1.65 !important;
+	color: var(--ha-primary) !important;
+	margin: 0 !important;
+}
+html body .ha-sites-pro .ha-pro-hero p,
+.ha-sites-pro .ha-pro-hero p {
+	margin: 8px auto 0 !important;
+	max-width: 720px !important;
+	font-size: 13px !important;
+	line-height: 1.9 !important;
+	color: var(--ha-muted) !important;
+}
+
+/* Toolbar در صورت فعال بودن: باریک و مستقل از قالب */
+html body .ha-sites-pro .ha-pro-toolbar,
+.ha-sites-pro .ha-pro-toolbar {
+	max-width: 960px !important;
+	margin: 0 auto 18px !important;
+	padding: 10px !important;
+	border-radius: 14px !important;
+	border: 1px solid var(--ha-border) !important;
+	background: #ffffff !important;
+	box-shadow: 0 1px 3px rgba(15,23,42,.05) !important;
+}
+html body .ha-sites-pro .ha-pro-search,
+.ha-sites-pro .ha-pro-search {
+	position: relative !important;
+	min-height: 42px !important;
+	border: 1px solid var(--ha-border) !important;
+	background: #f8fafc !important;
+	border-radius: 999px !important;
+	padding: 0 42px 0 16px !important;
+	gap: 0 !important;
+}
+html body .ha-sites-pro .ha-pro-search-icon,
+.ha-sites-pro .ha-pro-search-icon {
+	position: absolute !important;
+	right: 16px !important;
+	top: 50% !important;
+	transform: translateY(-50%) !important;
+	width: 18px !important;
+	height: 18px !important;
+	color: #7b8794 !important;
+}
+html body .ha-sites-pro .ha-pro-search-input,
+.ha-sites-pro .ha-pro-search-input {
+	width: 100% !important;
+	padding: 10px 0 !important;
+	line-height: 1.5 !important;
+	font-size: 13px !important;
+	color: var(--ha-primary) !important;
+	background: transparent !important;
+	border: 0 !important;
+	box-shadow: none !important;
+}
+html body .ha-sites-pro .ha-pro-sort-wrap,
+.ha-sites-pro .ha-pro-sort-wrap { color: var(--ha-muted) !important; font-weight: 700 !important; }
+html body .ha-sites-pro .ha-pro-sort,
+.ha-sites-pro .ha-pro-sort {
+	border-radius: 999px !important;
+	border: 1px solid var(--ha-border) !important;
+	background: #ffffff !important;
+	padding: 9px 14px !important;
+	font-size: 12.5px !important;
+}
+html body .ha-sites-pro .ha-pro-layout-switcher,
+.ha-sites-pro .ha-pro-layout-switcher {
+	border-radius: 999px !important;
+	border: 1px solid var(--ha-border) !important;
+	background: #fff !important;
+	overflow: hidden !important;
+}
+html body .ha-sites-pro .ha-pro-layout-switcher button,
+.ha-sites-pro .ha-pro-layout-switcher button {
+	width: 36px !important;
+	height: 36px !important;
+	border-radius: 0 !important;
+	color: var(--ha-primary) !important;
+}
+html body .ha-sites-pro .ha-pro-layout-switcher button.is-active,
+.ha-sites-pro .ha-pro-layout-switcher button.is-active {
+	background: var(--ha-primary) !important;
+	color: #fff !important;
+}
+
+/* فیلترهای کپسولی مثل افزونه قدیمی */
+html body .ha-sites-pro .ha-pro-filter-panel,
+.ha-sites-pro .ha-pro-filter-panel {
+	background: transparent !important;
+	border: 0 !important;
+	box-shadow: none !important;
+	padding: 0 !important;
+	margin: 0 0 24px !important;
+	gap: 10px !important;
+}
+html body .ha-sites-pro .ha-pro-filter-row,
+.ha-sites-pro .ha-pro-filter-row {
+	justify-content: center !important;
+	gap: 10px !important;
+	padding-top: 0 !important;
+	border-top: 0 !important;
+}
+html body .ha-sites-pro .ha-pro-filter-row + .ha-pro-filter-row,
+.ha-sites-pro .ha-pro-filter-row + .ha-pro-filter-row {
+	margin-top: 0 !important;
+	padding-top: 0 !important;
+	border-top: 0 !important;
+}
+html body .ha-sites-pro .ha-pro-chip,
+.ha-sites-pro .ha-pro-chip {
+	min-height: 40px !important;
+	padding: 8px 22px !important;
+	border-radius: 999px !important;
+	border: 1.5px solid #d8dee8 !important;
+	background: #ffffff !important;
+	color: var(--ha-primary) !important;
+	font-weight: 800 !important;
+	font-size: 13px !important;
+	line-height: 1 !important;
+	box-shadow: 0 2px 8px rgba(15,23,42,.05) !important;
+	transform: none !important;
+}
+html body .ha-sites-pro .ha-pro-chip:hover,
+.ha-sites-pro .ha-pro-chip:hover {
+	background: var(--ha-primary) !important;
+	border-color: var(--ha-primary) !important;
+	color: #ffffff !important;
+	box-shadow: 0 14px 32px rgba(1,22,39,.12) !important;
+	transform: translateY(-2px) !important;
+}
+html body .ha-sites-pro .ha-pro-chip.is-active,
+.ha-sites-pro .ha-pro-chip.is-active,
+html body .ha-sites-pro .ha-pro-status-chip.is-active,
+.ha-sites-pro .ha-pro-status-chip.is-active {
+	background: var(--ha-primary) !important;
+	border-color: var(--ha-primary) !important;
+	color: #ffffff !important;
+	box-shadow: 0 8px 22px rgba(1,22,39,.20) !important;
+	transform: translateY(-1px) !important;
+}
+html body .ha-sites-pro .ha-pro-chip small,
+.ha-sites-pro .ha-pro-chip small { display: none !important; }
+
+/* شبکه و کارت‌ها */
+html body .ha-sites-pro .ha-pro-grid,
+.ha-sites-pro .ha-pro-grid {
+	gap: 26px !important;
+	align-items: stretch !important;
+}
+html body .ha-sites-pro .ha-pro-card,
+.ha-sites-pro .ha-pro-card {
+	background: #ffffff !important;
+	border: 1px solid var(--ha-border) !important;
+	border-radius: 12px !important;
+	box-shadow: 0 1px 3px rgba(15,23,42,.06) !important;
+	padding: 12px !important;
+	overflow: visible !important;
+	min-height: 100% !important;
+	gap: 0 !important;
+	transition: transform .30s cubic-bezier(.34,1.56,.64,1), box-shadow .26s ease, border-color .26s ease !important;
+}
+html body .ha-sites-pro .ha-pro-card:hover,
+.ha-sites-pro .ha-pro-card:hover {
+	transform: translateY(-6px) !important;
+	border-color: var(--ha-primary) !important;
+	box-shadow: 0 14px 34px rgba(1,22,39,.16) !important;
+}
+html body .ha-sites-pro .ha-pro-thumb,
+.ha-sites-pro .ha-pro-thumb {
+	height: var(--ha-thumb-h, 220px) !important;
+	border-radius: 10px !important;
+	border: 1px solid var(--ha-border) !important;
+	background: #f7f9fc !important;
+	overflow: hidden !important;
+	margin: 0 !important;
+}
+html body .ha-sites-pro .ha-pro-thumb::after,
+.ha-sites-pro .ha-pro-thumb::after { background: transparent !important; }
+html body .ha-sites-pro .ha-pro-thumb img,
+.ha-sites-pro .ha-pro-thumb img {
+	width: 100% !important;
+	min-height: 100% !important;
+	object-position: top center !important;
+}
+html body .ha-sites-pro .ha-pro-card-body,
+.ha-sites-pro .ha-pro-card-body {
+	padding: 18px 0 0 !important;
+	gap: 11px !important;
+	text-align: right !important;
+}
+html body .ha-sites-pro .ha-pro-highlight,
+.ha-sites-pro .ha-pro-highlight,
+html body .ha-sites-pro .ha-pro-badge,
+.ha-sites-pro .ha-pro-badge {
+	font-size: 11px !important;
+	font-weight: 900 !important;
+	border-radius: 999px !important;
+	padding: 4px 10px !important;
+}
+html body .ha-sites-pro .ha-pro-card-title,
+.ha-sites-pro .ha-pro-card-title {
+	margin: 0 !important;
+}
+html body .ha-sites-pro .ha-pro-card-excerpt,
+.ha-sites-pro .ha-pro-card-excerpt {
+	-webkit-line-clamp: 3;
+	min-height: 72px;
+}
+html body .ha-sites-pro .ha-pro-facts,
+html body .ha-sites-pro .ha-pro-meta,
+html body .ha-sites-pro .ha-pro-card-features,
+.ha-sites-pro .ha-pro-facts,
+.ha-sites-pro .ha-pro-meta,
+.ha-sites-pro .ha-pro-card-features {
+	justify-content: center !important;
+}
+html body .ha-sites-pro .ha-pro-actions,
+.ha-sites-pro .ha-pro-actions {
+	display: flex !important;
+	flex-direction: row !important;
+	align-items: center !important;
+	gap: 10px !important;
+	margin-top: 4px !important;
+	width: 100% !important;
+	flex-wrap: nowrap !important;
+}
+html body .ha-sites-pro .ha-pro-btn,
+.ha-sites-pro .ha-pro-btn {
+	min-height: 42px !important;
+	font-weight: 900;
+	line-height: 1;
+	flex: 1 1 0 !important;
+	white-space: nowrap !important;
+}
+html body .ha-sites-pro .ha-pro-loadmore,
+.ha-sites-pro .ha-pro-loadmore {
+	min-width: 190px !important;
+	height: 46px !important;
+	padding: 12px 36px !important;
+	border-radius: 999px !important;
+	background: #ffffff !important;
+	color: var(--ha-primary) !important;
+	border: 1.5px solid #cbd2dc !important;
+	font-size: 13px !important;
+	font-weight: 900 !important;
+	box-shadow: 0 4px 12px rgba(1,22,39,.05) !important;
+}
+html body .ha-sites-pro .ha-pro-loadmore:hover,
+.ha-sites-pro .ha-pro-loadmore:hover {
+	background: var(--ha-primary) !important;
+	color: #ffffff !important;
+	border-color: var(--ha-primary) !important;
+	transform: translateY(-2px) !important;
+}
+html body .ha-sites-pro .ha-pro-loadmore-wrap,
+.ha-sites-pro .ha-pro-loadmore-wrap { margin-top: 28px !important; }
+
+/* Tool badges: کوچک و تمیز، خارج از تصویر را خراب نکند */
+html body .ha-sites-pro .ha-pro-card-tools,
+.ha-sites-pro .ha-pro-card-tools { top: 20px !important; left: 20px !important; }
+html body .ha-sites-pro .ha-pro-tool,
+.ha-sites-pro .ha-pro-tool {
+	width: 34px !important;
+	height: 34px !important;
+	background: rgba(255,255,255,.94) !important;
+	border: 1px solid rgba(1,22,39,.08) !important;
+	box-shadow: 0 8px 18px rgba(1,22,39,.10) !important;
+}
+
+/* حالت لیست و فشرده مرتب */
+html body .ha-sites-pro--list .ha-pro-card,
+.ha-sites-pro--list .ha-pro-card {
+	flex-direction: row !important;
+	gap: 16px !important;
+	align-items: stretch !important;
+}
+html body .ha-sites-pro--list .ha-pro-thumb,
+.ha-sites-pro--list .ha-pro-thumb {
+	width: 360px !important;
+	flex: 0 0 360px !important;
+	height: 230px !important;
+}
+html body .ha-sites-pro--list .ha-pro-card-body,
+.ha-sites-pro--list .ha-pro-card-body { padding-top: 4px !important; }
+html body .ha-sites-pro--compact .ha-pro-card,
+.ha-sites-pro--compact .ha-pro-card { padding: 10px !important; }
+html body .ha-sites-pro--compact .ha-pro-thumb,
+.ha-sites-pro--compact .ha-pro-thumb { height: 145px !important; }
+html body .ha-sites-pro--compact .ha-pro-card-excerpt { display: none !important; min-height: 0 !important; }
+html body .ha-sites-pro--compact .ha-pro-card-title { font-size: 13px !important; line-height: 1.6 !important; }
+html body .ha-sites-pro--compact .ha-pro-actions { flex-direction: row !important; }
+
+/* مودال: هدر حرفه‌ای تمام‌صفحه، دستگاه‌ها تمیز و کمتر گرد */
+html body .ha-pro-modal .ha-pro-preview-header,
+.ha-pro-modal .ha-pro-preview-header {
+	height: 58px !important;
+	background: #011627 !important;
+	padding: 10px 18px !important;
+	gap: 12px !important;
+}
+html body .ha-pro-modal .ha-pro-preview-devices,
+.ha-pro-modal .ha-pro-preview-devices {
+	border-radius: 10px !important;
+	background: rgba(255,255,255,.08) !important;
+}
+html body .ha-pro-modal .ha-pro-preview-devices button,
+.ha-pro-modal .ha-pro-preview-devices button {
+	border-radius: 0 !important;
+	font-size: 12px !important;
+	font-weight: 800 !important;
+	padding: 8px 12px !important;
+}
+html body .ha-pro-modal .ha-pro-preview-devices button.is-active,
+.ha-pro-modal .ha-pro-preview-devices button.is-active {
+	background: #2ec4b6 !important;
+	color: #011627 !important;
+}
+html body .ha-pro-modal .ha-pro-frame-wrap,
+.ha-pro-modal .ha-pro-frame-wrap { padding: 12px !important; background: #edf2f7 !important; }
+html body .ha-pro-modal .ha-pro-frame-wrap iframe,
+.ha-pro-modal .ha-pro-frame-wrap iframe { border-radius: 10px !important; box-shadow: 0 8px 40px rgba(1,22,39,.18) !important; }
+
+@media (max-width: 1024px) {
+	html body .ha-sites-pro .ha-pro-shell,
+	.ha-sites-pro .ha-pro-shell { padding-left: 14px !important; padding-right: 14px !important; }
+	html body .ha-sites-pro,
+	.ha-sites-pro { --ha-thumb-h: 205px; --ha-gap: 22px; }
+	html body .ha-sites-pro--list .ha-pro-thumb,
+	.ha-sites-pro--list .ha-pro-thumb { width: 300px !important; flex-basis: 300px !important; }
+}
+@media (max-width: 767px) {
+	html body .ha-sites-pro,
+	.ha-sites-pro { --ha-thumb-h: 260px; --ha-gap: 20px; }
+	html body .ha-sites-pro .ha-pro-shell,
+	.ha-sites-pro .ha-pro-shell { padding-left: 12px !important; padding-right: 12px !important; padding-bottom: 44px !important; }
+	html body .ha-sites-pro .ha-pro-filter-row,
+	.ha-sites-pro .ha-pro-filter-row { justify-content: flex-start !important; overflow-x: auto !important; flex-wrap: nowrap !important; padding-bottom: 4px !important; scrollbar-width: none !important; }
+	html body .ha-sites-pro .ha-pro-filter-row::-webkit-scrollbar,
+	.ha-sites-pro .ha-pro-filter-row::-webkit-scrollbar { display: none !important; }
+	html body .ha-sites-pro .ha-pro-chip,
+	.ha-sites-pro .ha-pro-chip { padding: 7px 16px !important; min-height: 36px !important; font-size: 12px !important; flex: 0 0 auto !important; }
+	html body .ha-sites-pro .ha-pro-card,
+	.ha-sites-pro .ha-pro-card { padding: 12px !important; }
+	html body .ha-sites-pro .ha-pro-actions,
+	.ha-sites-pro .ha-pro-actions { flex-direction: row !important; }
+	html body .ha-sites-pro .ha-pro-btn,
+	.ha-sites-pro .ha-pro-btn { font-size: 12px !important; height: 40px !important; min-height: 40px !important; padding: 9px 12px !important; }
+	html body .ha-sites-pro--list .ha-pro-card,
+	.ha-sites-pro--list .ha-pro-card { flex-direction: column !important; }
+	html body .ha-sites-pro--list .ha-pro-thumb,
+	.ha-sites-pro--list .ha-pro-thumb { width: 100% !important; flex: none !important; height: var(--ha-thumb-h) !important; }
+}
+@media (max-width: 480px) {
+	html body .ha-sites-pro,
+	.ha-sites-pro { --ha-thumb-h: 240px; }
+	html body .ha-sites-pro .ha-pro-actions,
+	.ha-sites-pro .ha-pro-actions { flex-direction: column !important; }
+	html body .ha-sites-pro .ha-pro-btn,
+	.ha-sites-pro .ha-pro-btn { width: 100% !important; }
+}
+
+
+/* v3.3.5 additions */
+.ha-pro-preview-helper{display:flex;align-items:flex-start;gap:10px;background:#eef6ff;border:1px solid #d7e3f2;color:#27405d;padding:12px 16px;border-radius:14px;margin:0 auto 16px;max-width:960px;line-height:1.9;font-size:13px}
+.ha-pro-preview-helper-icon{flex:0 0 auto;font-size:16px;line-height:1.7}
+.ha-pro-preview-helper-text{flex:1}
+.ha-pro-inline-helper{display:flex;gap:10px;align-items:flex-start;margin:16px 20px 0;padding:10px 12px;border-radius:12px;background:#eef6ff;border:1px solid #d7e3f2;color:#27405d;font-size:12.5px;line-height:1.9}
+.ha-pro-inline-helper span{flex:0 0 auto}
+.ha-pro-rating-badge{position:absolute;left:12px;bottom:12px;display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:999px;background:rgba(1,22,39,.88);color:#fff;font-size:12px;font-weight:800;z-index:3;box-shadow:0 8px 18px rgba(1,22,39,.18)}
+.ha-pro-qr.is-failed::after{content:'QR در حال حاضر در دسترس نیست.';display:block;color:#64748b;font-size:12px}
+.ha-pro-frame-wrap iframe{border:1px solid #e5e7eb}
+
+
+/* v3.3.6 fixes */
+.ha-pro-preview-side{overflow-y:scroll!important;overscroll-behavior:contain!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;pointer-events:auto!important}
+.ha-pro-preview-title span{white-space:normal!important;line-height:1.75!important;max-width:680px!important;color:rgba(255,255,255,.78)!important}
+.ha-pro-preview-open{white-space:nowrap!important}
+.ha-pro-thumb img{image-rendering:auto!important;filter:none!important;backface-visibility:hidden!important;transform:translateZ(0)}
+.ha-sites-pro .ha-pro-shell{max-width:var(--ha-shell-max,100%)!important}
+
+
+/* v3.3.7 Elementor compatibility + old button style */
+html body .ha-sites-pro .ha-pro-card-body,
+.ha-sites-pro .ha-pro-card-body { text-align: inherit !important; }
+html body .ha-sites-pro .ha-pro-card-title,
+.ha-sites-pro .ha-pro-card-title {
+	transition: color .2s ease;
+}
+html body .ha-sites-pro .ha-pro-card-excerpt,
+.ha-sites-pro .ha-pro-card-excerpt {
+	text-align-last: auto !important;
+}
+html body .ha-sites-pro .ha-pro-btn-primary,
+.ha-sites-pro .ha-pro-btn-primary {
+	background: #011627;
+	color: #fff;
+	border: 1.5px solid #011627;
+	box-shadow: 0 4px 12px rgba(1,22,39,.10);
+}
+html body .ha-sites-pro .ha-pro-btn-primary:hover,
+.ha-sites-pro .ha-pro-btn-primary:hover {
+	background: #0d2742;
+	border-color: #0d2742;
+	color: #fff;
+	box-shadow: 0 8px 18px rgba(1,22,39,.18);
+}
+html body .ha-sites-pro .ha-pro-btn-secondary,
+.ha-sites-pro .ha-pro-btn-secondary {
+	position: relative;
+	background: #fff;
+	color: #011627;
+	border: 1.5px solid #cbd2dc;
+	box-shadow: 0 4px 12px rgba(1,22,39,.05);
+	padding-inline-start: 50px !important;
+	padding-inline-end: 18px !important;
+}
+html body .ha-sites-pro .ha-pro-btn-secondary::before,
+.ha-sites-pro .ha-pro-btn-secondary::before {
+	content: "90";
+	position: absolute;
+	inset-inline-start: 10px;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 24px;
+	height: 24px;
+	border-radius: 999px;
+	background: #011627;
+	color: #fff;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 12px;
+	line-height: 1;
+	transition: transform .28s ease, inset-inline-start .28s ease, box-shadow .28s ease;
+	box-shadow: 0 4px 10px rgba(1,22,39,.18);
+}
+html body .ha-sites-pro .ha-pro-btn-secondary:hover,
+.ha-sites-pro .ha-pro-btn-secondary:hover {
+	border-color: #011627;
+	color: #011627;
+	background: #fff;
+	transform: translateY(-2px);
+}
+html body .ha-sites-pro .ha-pro-btn-secondary:hover::before,
+.ha-sites-pro .ha-pro-btn-secondary:hover::before {
+	transform: translateY(-50%) translateX(-4px);
+	box-shadow: 0 8px 16px rgba(1,22,39,.22);
+}
+
+
+/* v3.3.8 — Old +P-HA skin reconstruction */
+html body .ha-sites-pro .ha-pro-shell,
+.ha-sites-pro .ha-pro-shell{
+  max-width: var(--ha-shell-max, 1220px);
+  width: 100%;
+  margin-inline: auto;
+}
+html body .ha-sites-pro .ha-pro-grid,
+.ha-sites-pro .ha-pro-grid{
+  gap: var(--ha-grid-gap, 26px);
+  align-items: stretch;
+}
+html body .ha-sites-pro .ha-pro-card,
+.ha-sites-pro .ha-pro-card{
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:12px;
+  padding:16px;
+  box-shadow:0 1px 2px rgba(15,23,42,.04), 0 10px 28px rgba(15,23,42,.045);
+  overflow:hidden;
+  transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+html body .ha-sites-pro .ha-pro-card:hover,
+.ha-sites-pro .ha-pro-card:hover{
+  transform:translateY(-4px);
+  border-color:#d7dee8;
+  box-shadow:0 14px 36px rgba(15,23,42,.09);
+}
+html body .ha-sites-pro .ha-pro-thumb,
+.ha-sites-pro .ha-pro-thumb{
+  height:var(--ha-thumb-h, 340px);
+  border:1px solid #dfe5ee;
+  border-radius:12px;
+  background:#f8fafc;
+  overflow:hidden;
+  margin:0;
+}
+html body .ha-sites-pro .ha-pro-thumb img,
+.ha-sites-pro .ha-pro-thumb img{
+  display:block;
+  width:100%;
+  min-height:100%;
+  object-fit:cover;
+  object-position:top center;
+  filter:none !important;
+  opacity:1 !important;
+}
+html body .ha-sites-pro .ha-pro-card-body,
+.ha-sites-pro .ha-pro-card-body{
+  padding:20px 0 0;
+  gap:12px;
+  display:flex;
+  flex-direction:column;
+}
+html body .ha-sites-pro .ha-pro-card-title,
+.ha-sites-pro .ha-pro-card-title{
+  margin:0;
+  color:#011627;
+  font-size:16px;
+  font-weight:900;
+  line-height:1.75;
+  text-align:center;
+}
+html body .ha-sites-pro .ha-pro-card:hover .ha-pro-card-title,
+.ha-sites-pro .ha-pro-card:hover .ha-pro-card-title{
+  color:#011627;
+}
+html body .ha-sites-pro .ha-pro-card-excerpt,
+.ha-sites-pro .ha-pro-card-excerpt{
+  margin:0;
+  color:#5f6b7a;
+  font-size:13px;
+  font-weight:400;
+  line-height:2.05;
+  text-align:justify;
+  text-align-last:center;
+  display:-webkit-box;
+  -webkit-line-clamp:3;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  min-height:78px;
+}
+html body .ha-sites-pro .ha-pro-actions,
+.ha-sites-pro .ha-pro-actions{
+  direction:rtl;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  margin-top:4px;
+  flex-wrap:nowrap;
+}
+html body .ha-sites-pro .ha-pro-actions .ha-pro-btn,
+.ha-sites-pro .ha-pro-actions .ha-pro-btn{
+  position:relative;
+  min-height:42px;
+  height:42px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:900;
+  line-height:1;
+  text-decoration:none;
+  text-align:center;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:1 1 0;
+  white-space:nowrap;
+  overflow:hidden;
+  transition:transform .22s ease, background .22s ease, color .22s ease, border-color .22s ease, box-shadow .22s ease;
+}
+html body .ha-sites-pro .ha-pro-actions .ha-pro-btn-primary,
+.ha-sites-pro .ha-pro-actions .ha-pro-btn-primary{
+  background:#011627 !important;
+  border:1.5px solid #011627 !important;
+  color:#fff !important;
+  box-shadow:none !important;
+}
+html body .ha-sites-pro .ha-pro-actions .ha-pro-btn-primary:hover,
+.ha-sites-pro .ha-pro-actions .ha-pro-btn-primary:hover{
+  background:#0d2742 !important;
+  border-color:#0d2742 !important;
+  color:#fff !important;
+  transform:translateY(-2px);
+}
+html body .ha-sites-pro .ha-pro-actions .ha-pro-btn-secondary,
+.ha-sites-pro .ha-pro-actions .ha-pro-btn-secondary{
+  background:#fff !important;
+  border:1.5px solid #011627 !important;
+  color:#011627 !important;
+  box-shadow:none !important;
+  padding-right:46px !important;
+  padding-left:18px !important;
+}
+/* kill every previous broken arrow pseudo, then rebuild with a real arrow character */
+html body .ha-sites-pro .ha-pro-actions .ha-pro-btn-secondary::before,
+.ha-sites-pro .ha-pro-actions .ha-pro-btn-secondary::before{
+  content:none !important;
+  display:none !important;
+}
+html body .ha-sites-pro .ha-pro-actions .ha-pro-btn-secondary::after,
+.ha-sites-pro .ha-pro-actions .ha-pro-btn-secondary::after{
+  content:'←' !important;
+  position:absolute !important;
+  right:8px !important;
+  top:50% !important;
+  width:26px !important;
+  height:26px !important;
+  border-radius:999px !important;
+  background:#011627 !important;
+  color:#fff !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  font-size:13px !important;
+  line-height:1 !important;
+  transform:translateY(-50%) !important;
+  transition:transform .28s ease, background .28s ease, color .28s ease !important;
+  box-shadow:0 3px 8px rgba(1,22,39,.16) !important;
+}
+html body .ha-sites-pro .ha-pro-actions .ha-pro-btn-secondary:hover,
+.ha-sites-pro .ha-pro-actions .ha-pro-btn-secondary:hover{
+  background:#fff !important;
+  border-color:#011627 !important;
+  color:#011627 !important;
+  transform:translateY(-2px);
+}
+html body .ha-sites-pro .ha-pro-actions .ha-pro-btn-secondary:hover::after,
+.ha-sites-pro .ha-pro-actions .ha-pro-btn-secondary:hover::after{
+  transform:translateY(-50%) translateX(-5px) !important;
+}
+html body .ha-sites-pro .ha-pro-loadmore,
+.ha-sites-pro .ha-pro-loadmore{
+  background:#fff;
+  color:#011627;
+  border:1.5px solid #011627;
+  border-radius:999px;
+  min-width:190px;
+  height:46px;
+  padding:12px 36px;
+  font-size:13px;
+  font-weight:900;
+  box-shadow:none;
+}
+html body .ha-sites-pro .ha-pro-loadmore:hover,
+.ha-sites-pro .ha-pro-loadmore:hover{
+  background:#011627;
+  color:#fff;
+  border-color:#011627;
+  transform:translateY(-2px);
+}
+/* Ensure Elementor dynamic controls can still win for typography/color/alignment */
+.elementor-element .ha-sites-pro .ha-pro-card-title,
+.elementor-element .ha-sites-pro .ha-pro-card-excerpt{
+  transition:color .2s ease;
+}
+@media (max-width: 767px){
+  html body .ha-sites-pro .ha-pro-actions,
+  .ha-sites-pro .ha-pro-actions{ flex-direction:row; }
+  html body .ha-sites-pro .ha-pro-thumb,
+  .ha-sites-pro .ha-pro-thumb{ height:var(--ha-thumb-h-mobile, 260px); }
+}
+@media (max-width: 480px){
+  html body .ha-sites-pro .ha-pro-actions,
+  .ha-sites-pro .ha-pro-actions{ flex-direction:column; }
+  html body .ha-sites-pro .ha-pro-actions .ha-pro-btn,
+  .ha-sites-pro .ha-pro-actions .ha-pro-btn{ width:100%; }
+}
+
+
+/* v3.3.9 mobile preview drawer + reliable arrow button */
+html body .ha-sites-pro .ha-pro-btn-secondary::before,
+.ha-sites-pro .ha-pro-btn-secondary::before{content:none!important;display:none!important}
+html body .ha-sites-pro .ha-pro-btn-secondary,
+.ha-sites-pro .ha-pro-btn-secondary{
+  position:relative!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  border:1.5px solid #cbd2dc!important;
+  background:#fff!important;
+  color:#011627!important;
+  border-radius:var(--ha-btn2-radius,999px)!important;
+  padding-inline-start:50px!important;
+  padding-inline-end:18px!important;
+  overflow:hidden!important;
+}
+html body .ha-sites-pro .ha-pro-btn-primary,
+.ha-sites-pro .ha-pro-btn-primary{border-radius:var(--ha-btn1-radius,999px)!important}
+html body .ha-sites-pro .ha-pro-btn-secondary .ha-pro-btn-text,
+.ha-sites-pro .ha-pro-btn-secondary .ha-pro-btn-text{position:relative;z-index:2}
+html body .ha-sites-pro .ha-pro-btn-secondary .ha-pro-btn-arrow,
+.ha-sites-pro .ha-pro-btn-secondary .ha-pro-btn-arrow{
+  position:absolute!important;
+  inset-inline-start:8px!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  width:24px!important;
+  height:24px!important;
+  border-radius:999px!important;
+  background:#011627!important;
+  color:#fff!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  line-height:1!important;
+  font-size:13px!important;
+  font-family:Tahoma,Arial,sans-serif!important;
+  transition:transform .28s ease, box-shadow .28s ease, background .28s ease!important;
+  z-index:2!important;
+}
+html body .ha-sites-pro .ha-pro-btn-secondary:hover,
+.ha-sites-pro .ha-pro-btn-secondary:hover{border-color:#011627!important;background:#fff!important;color:#011627!important;transform:translateY(-2px)!important}
+html body .ha-sites-pro .ha-pro-btn-secondary:hover .ha-pro-btn-arrow,
+.ha-sites-pro .ha-pro-btn-secondary:hover .ha-pro-btn-arrow{animation:ha-arrow-fly .45s cubic-bezier(.4,0,.2,1) forwards!important;box-shadow:0 8px 16px rgba(1,22,39,.22)!important}
+@keyframes ha-arrow-fly{
+  0%   { transform:translateY(-50%) translateX(0);     opacity:1; }
+  40%  { transform:translateY(-50%) translateX(-140%); opacity:0; }
+  41%  { transform:translateY(-50%) translateX(140%);  opacity:0; }
+  100% { transform:translateY(-50%) translateX(0);     opacity:1; }
+}
+
+@media (max-width:768px){
+  html body .ha-pro-modal .ha-pro-preview-header,
+  .ha-pro-modal .ha-pro-preview-header{
+    height:auto!important;
+    min-height:108px!important;
+    padding:8px 10px!important;
+    display:grid!important;
+    grid-template-columns:1fr auto!important;
+    grid-template-areas:"title close" "devices actions"!important;
+    align-items:center!important;
+    gap:8px!important;
+  }
+  html body .ha-pro-modal .ha-pro-preview-title,
+  .ha-pro-modal .ha-pro-preview-title{grid-area:title!important;min-width:0!important}
+  html body .ha-pro-modal .ha-pro-preview-title strong,
+  .ha-pro-modal .ha-pro-preview-title strong{font-size:12px!important;line-height:1.5!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  html body .ha-pro-modal .ha-pro-preview-title span,
+  .ha-pro-modal .ha-pro-preview-title span{font-size:10.5px!important;line-height:1.55!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;color:rgba(255,255,255,.72)!important;max-width:100%!important}
+  html body .ha-pro-modal .ha-pro-preview-devices,
+  .ha-pro-modal .ha-pro-preview-devices{grid-area:devices!important;width:100%!important;min-width:0!important;overflow-x:auto!important;border-radius:10px!important}
+  html body .ha-pro-modal .ha-pro-preview-devices button,
+  .ha-pro-modal .ha-pro-preview-devices button{font-size:11px!important;padding:8px 10px!important;white-space:nowrap!important;min-width:max-content!important}
+  html body .ha-pro-modal .ha-pro-preview-actions,
+  .ha-pro-modal .ha-pro-preview-actions{grid-area:actions!important;display:flex!important;gap:6px!important;justify-content:flex-end!important}
+  html body .ha-pro-modal .ha-pro-preview-open,
+  .ha-pro-modal .ha-pro-preview-open{font-size:11px!important;padding:8px 10px!important;white-space:nowrap!important;border-radius:10px!important}
+  html body .ha-pro-modal .ha-pro-preview-close,
+  .ha-pro-modal .ha-pro-preview-close{grid-area:close!important;width:36px!important;height:36px!important;border-radius:12px!important;background:rgba(239,68,68,.9)!important;color:#fff!important;font-size:22px!important}
+  html body .ha-pro-modal .ha-pro-frame-stage,
+  .ha-pro-modal .ha-pro-frame-stage{position:relative!important;display:block!important;overflow:hidden!important;min-height:0!important}
+  html body .ha-pro-modal .ha-pro-frame-wrap,
+  .ha-pro-modal .ha-pro-frame-wrap{position:absolute!important;inset:0!important;padding:8px!important;display:flex!important}
+  html body .ha-pro-modal .ha-pro-frame-wrap iframe,
+  .ha-pro-modal .ha-pro-frame-wrap iframe{width:100%!important;height:100%!important;border-radius:12px!important}
+  html body .ha-pro-modal .ha-pro-preview-side,
+  .ha-pro-modal .ha-pro-preview-side{
+    position:absolute!important;
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:#fff!important;
+    box-shadow:0 -16px 42px rgba(1,22,39,.18)!important;
+    transform:translateY(0)!important;
+    opacity:1!important;
+    pointer-events:auto!important;
+    z-index:50!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    padding-bottom:82px!important;
+  }
+  html body .ha-pro-modal .ha-pro-frame-stage.is-info-hidden .ha-pro-preview-side,
+  .ha-pro-modal .ha-pro-frame-stage.is-info-hidden .ha-pro-preview-side{
+    transform:translateY(100%)!important;
+    opacity:0!important;
+    pointer-events:none!important;
+  }
+  html body .ha-pro-modal .ha-pro-side-handle,
+  .ha-pro-modal .ha-pro-side-handle{
+    position:absolute!important;
+    right:16px!important;
+    left:auto!important;
+    top:auto!important;
+    bottom:16px!important;
+    width:auto!important;
+    min-width:132px!important;
+    height:44px!important;
+    padding:0 18px!important;
+    border-radius:999px!important;
+    transform:none!important;
+    background:#011627!important;
+    color:#fff!important;
+    border:1px solid rgba(255,255,255,.28)!important;
+    box-shadow:0 10px 24px rgba(1,22,39,.22)!important;
+    z-index:70!important;
+    font-size:13px!important;
+    font-weight:900!important;
+  }
+  html body .ha-pro-modal .ha-pro-side-handle::before,
+  .ha-pro-modal .ha-pro-side-handle::before{content:'جزئیات پروژه'!important;transform:none!important;font-family:inherit!important;display:block!important}
+  html body .ha-pro-modal .ha-pro-frame-stage:not(.is-info-hidden) .ha-pro-side-handle,
+  .ha-pro-modal .ha-pro-frame-stage:not(.is-info-hidden) .ha-pro-side-handle{
+    right:auto!important;
+    left:14px!important;
+    top:14px!important;
+    bottom:auto!important;
+    min-width:42px!important;
+    width:42px!important;
+    height:42px!important;
+    padding:0!important;
+    border-radius:12px!important;
+    background:#ef4444!important;
+    color:#fff!important;
+  }
+  html body .ha-pro-modal .ha-pro-frame-stage:not(.is-info-hidden) .ha-pro-side-handle::before,
+  .ha-pro-modal .ha-pro-frame-stage:not(.is-info-hidden) .ha-pro-side-handle::before{content:'×'!important;font-size:24px!important;line-height:1!important}
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   v3.4.0 FIXES
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Fix 1: Arrow swipe animation for preview button */
+@keyframes ha-arrow-swipe {
+  0%   { transform: translateY(-50%) translateX(0);    opacity: 1; }
+  40%  { transform: translateY(-50%) translateX(-120%); opacity: 0; }
+  41%  { transform: translateY(-50%) translateX(120%);  opacity: 0; }
+  100% { transform: translateY(-50%) translateX(0);    opacity: 1; }
+}
+html body .ha-sites-pro .ha-pro-btn-secondary:hover .ha-pro-btn-arrow,
+.ha-sites-pro .ha-pro-btn-secondary:hover .ha-pro-btn-arrow {
+  animation: ha-arrow-swipe 0.55s ease forwards !important;
+  transform: translateY(-50%) translateX(0) !important;
+}
+
+/* Fix 3: Desktop sidebar bigger — 340px */
+.ha-pro-preview-side {
+  width: 340px !important;
+  max-width: 340px !important;
+}
+.ha-pro-side-handle {
+  left: 340px !important;
+}
+.ha-pro-modal {
+  --ha-side-w: 340px;
+}
+.ha-pro-frame-stage.is-info-hidden .ha-pro-side-handle {
+  left: 0 !important;
+}
+
+/* Fix 2: Mobile sidebar — initially CLOSED, slides up when shown */
+@media (max-width: 768px) {
+  .ha-pro-preview-side {
+    position: fixed !important;
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: 65vh !important;
+    max-height: 80vh !important;
+    border-right: 0 !important;
+    border-top: 2px solid #dbe5ef !important;
+    border-radius: 20px 20px 0 0 !important;
+    box-shadow: 0 -8px 40px rgba(1,22,39,.18) !important;
+    transform: translateY(0) !important;
+    opacity: 1 !important;
+    transition: transform .35s cubic-bezier(.4,0,.2,1), opacity .35s ease !important;
+    z-index: 100 !important;
+  }
+  .ha-pro-frame-stage.is-info-hidden .ha-pro-preview-side {
+    transform: translateY(100%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  .ha-pro-side-handle {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 50% !important;
+    right: auto !important;
+    top: auto !important;
+    transform: translateX(-50%) !important;
+    width: 56px !important;
+    height: 28px !important;
+    border-radius: 14px 14px 0 0 !important;
+    border-bottom: 0 !important;
+    border-left: none !important;
+    z-index: 101 !important;
+    transition: bottom .35s ease, background .2s !important;
+  }
+  .ha-pro-frame-stage.is-info-hidden .ha-pro-side-handle {
+    bottom: 0 !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+  .ha-pro-side-handle::before { content: '\2303' !important; font-size: .85rem !important; }
+  .ha-pro-frame-stage.is-info-hidden .ha-pro-side-handle::before { content: '\2303' !important; transform: none !important; }
+}
+
+/* Fix 6: Blocked iframe fallback box mobile responsive */
+@media (max-width: 768px) {
+  .ha-pro-frame-fallback { padding: 16px !important; align-items: flex-start !important; padding-top: 40px !important; }
+  .ha-pro-frame-fallback-box { max-width: 100% !important; padding: 24px 20px !important; }
+  .ha-pro-frame-fallback h3 { font-size: .9rem !important; }
+  .ha-pro-frame-fallback p  { font-size: .8rem !important; }
+}

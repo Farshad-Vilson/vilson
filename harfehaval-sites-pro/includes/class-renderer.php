@@ -23,27 +23,27 @@ class HA_Sites_Pro_Renderer {
 			'hover_effect'         => 'scroll',
 			'pagination_type'      => 'load_more',
 			'show_header'          => 'yes',
-			'show_search'          => 'yes',
+			'show_search'          => 'no',
 			'show_filters'         => 'yes',
-			'show_status_filter'   => 'yes',
-			'show_sort'            => 'yes',
-			'show_layout_switcher' => 'yes',
+			'show_status_filter'   => 'no',
+			'show_sort'            => 'no',
+			'show_layout_switcher' => 'no',
 			'show_counter'         => 'yes',
 			'show_stats'           => 'no',
 			'show_swatches'        => 'no',
 			'show_fab'             => 'no',
 			'show_keyboard_hints'  => 'no',
 			'show_image'           => 'yes',
-			'show_badge'           => 'yes',
+			'show_badge'           => 'no',
 			'show_excerpt'         => 'yes',
-			'show_features'        => 'yes',
-			'show_price'           => 'yes',
-			'show_old_price'       => 'yes',
-			'show_rating'          => 'yes',
-			'show_delivery'        => 'yes',
-			'show_installment'     => 'yes',
-			'show_favorite'        => 'yes',
-			'show_compare'         => 'yes',
+			'show_features'        => 'no',
+			'show_price'           => 'no',
+			'show_old_price'       => 'no',
+			'show_rating'          => 'no',
+			'show_delivery'        => 'no',
+			'show_installment'     => 'no',
+			'show_favorite'        => 'no',
+			'show_compare'         => 'no',
 			'show_preview_button'  => 'yes',
 			'show_order_button'    => 'yes',
 			'category'             => '',
@@ -55,20 +55,20 @@ class HA_Sites_Pro_Renderer {
 			'button_style'         => 'solid',
 			'modal'                => 'yes',
 			'preview_mode'         => 'fullscreen',
-			'header_badge'         => 'نمونه‌سایت‌های آماده',
-			'header_title'         => 'انتخاب هوشمند سایت آماده برای شروع سریع‌تر',
-			'header_subtitle'      => 'جستجو، فیلتر، مقایسه و پیش‌نمایش زنده قالب‌ها در یک محیط حرفه‌ای و مستقل از قالب سایت.',
+			'header_badge'         => '',
+			'header_title'         => 'نمونه وبسایت‌هایی که برای کسب‌وکارها طراحی کرده‌ایم',
+			'header_subtitle'      => '',
 			'header_primary_text'  => 'مشاهده نمونه‌ها',
 			'header_secondary_text'=> 'مشاوره سفارش',
 			'search_placeholder'   => 'جستجو در سایت‌ها، امکانات، حوزه کاری...',
 			'sort_label'           => 'مرتب‌سازی',
-			'all_categories_label' => 'همه دسته‌بندی‌ها',
+			'all_categories_label' => 'همه پروژه‌ها',
 			'all_features_label'   => 'همه ویژگی‌ها',
 			'all_status_label'     => 'همه وضعیت‌ها',
-			'preview_label'        => 'پیش‌نمایش',
+			'preview_label'        => 'جزئیات بیشتر',
 			'order_label'          => 'سفارش سایت',
-			'new_tab_label'        => 'مشاهده کامل',
-			'loadmore_label'       => 'نمایش بیشتر',
+			'new_tab_label'        => 'نمایش در مرورگر',
+			'loadmore_label'       => 'نمایش پروژه‌های بیشتر',
 			'reset_label'          => 'حذف فیلترها',
 			'empty_title'          => 'نتیجه‌ای پیدا نشد',
 			'empty_text'           => 'فیلترها یا عبارت جستجو را تغییر دهید.',
@@ -81,6 +81,16 @@ class HA_Sites_Pro_Renderer {
 			'compare_bar_label'    => 'آیتم برای مقایسه انتخاب شد',
 			'preview_title'        => 'پیش‌نمایش زنده سایت',
 			'preview_note'         => 'نمایش تمام‌صفحه با امکان بررسی دسکتاپ، تبلت و موبایل',
+			'show_preview_helper'  => 'yes',
+			'preview_helper_text'  => 'اگر سایت در این محیط به دلایل فنی اجرا نشد، روی دکمه مشاهده کامل کلیک کنید.',
+			'container_mode'       => 'full',
+			'container_max_width'  => '1220',
+			'image_height'         => '240',
+			'show_filter_counts'   => 'no',
+			'show_project_type'    => 'no',
+			'show_pages_count'     => 'no',
+			'show_support'         => 'no',
+			'show_tech_stack'      => 'no',
 			'class'                => '',
 		);
 	}
@@ -178,7 +188,7 @@ class HA_Sites_Pro_Renderer {
 			'status'               => sanitize_key( $atts['status'] ),
 			'sort'                 => $sort,
 			'per_page'             => $atts['per_page'] ? max( 1, min( 60, absint( $atts['per_page'] ) ) ) : max( 1, min( 60, (int) HA_Sites_Pro_Settings::get( 'per_page' ) ) ),
-			'card_style'           => self::choice( $atts['card_style'], array( 'markil', 'glass', 'flat', 'neon', 'minimal' ), 'markil' ),
+			'card_style'           => self::choice( $atts['card_style'], array( 'markil', 'glass', 'flat', 'neon', 'minimal', 'dark' ), 'markil' ),
 			'button_style'         => self::choice( $atts['button_style'], array( 'solid', 'outline', 'soft' ), 'solid' ),
 			'modal'                => self::bool_attr( $atts['modal'] ),
 			'preview_mode'         => self::choice( $atts['preview_mode'], array( 'fullscreen', 'page', 'direct' ), 'fullscreen' ),
@@ -208,6 +218,16 @@ class HA_Sites_Pro_Renderer {
 			'compare_bar_label'    => self::label( $atts, 'compare_bar_label', $defaults['compare_bar_label'] ),
 			'preview_title'        => self::label( $atts, 'preview_title', $defaults['preview_title'] ),
 			'preview_note'         => self::label( $atts, 'preview_note', $defaults['preview_note'] ),
+			'show_preview_helper'  => self::bool_attr( $atts['show_preview_helper'] ),
+			'preview_helper_text'  => self::label( $atts, 'preview_helper_text', $defaults['preview_helper_text'] ),
+			'container_mode'       => self::choice( $atts['container_mode'], array( 'full', 'boxed' ), 'full' ),
+			'container_max_width'  => max( 320, min( 2200, absint( $atts['container_max_width'] ) ) ),
+			'image_height'         => max( 120, min( 800, absint( $atts['image_height'] ) ) ),
+			'show_filter_counts'   => self::bool_attr( $atts['show_filter_counts'] ),
+			'show_project_type'    => self::bool_attr( $atts['show_project_type'] ),
+			'show_pages_count'     => self::bool_attr( $atts['show_pages_count'] ),
+			'show_support'         => self::bool_attr( $atts['show_support'] ),
+			'show_tech_stack'      => self::bool_attr( $atts['show_tech_stack'] ),
 			'class'                => sanitize_html_class( $atts['class'] ),
 		);
 	}
@@ -221,6 +241,7 @@ class HA_Sites_Pro_Renderer {
 			'ha-sites-pro--' . $config['layout'],
 			'ha-sites-pro--card-' . $config['card_style'],
 			'ha-sites-pro--btn-' . $config['button_style'],
+			'ha-sites-pro--container-' . $config['container_mode'],
 		);
 		if ( $config['class'] ) {
 			$classes[] = $config['class'];
@@ -232,7 +253,7 @@ class HA_Sites_Pro_Renderer {
 			id="<?php echo esc_attr( $instance ); ?>"
 			class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
 			data-ha-config="<?php echo esc_attr( wp_json_encode( $config ) ); ?>"
-			style="--ha-pro-cols:<?php echo esc_attr( $config['columns'] ); ?>;--ha-pro-cols-tablet:<?php echo esc_attr( $config['tablet_columns'] ); ?>;--ha-pro-cols-mobile:<?php echo esc_attr( $config['mobile_columns'] ); ?>;"
+			style="--ha-pro-cols:<?php echo esc_attr( $config['columns'] ); ?>;--ha-pro-cols-tablet:<?php echo esc_attr( $config['tablet_columns'] ); ?>;--ha-pro-cols-mobile:<?php echo esc_attr( $config['mobile_columns'] ); ?>;--ha-shell-max:<?php echo esc_attr( 'boxed' === $config['container_mode'] ? $config['container_max_width'] . 'px' : '100%' ); ?>;--ha-thumb-h:<?php echo esc_attr( $config['image_height'] . 'px' ); ?>;"
 		>
 			<div class="ha-pro-shell">
 				<?php if ( $config['show_header'] ) : ?>
@@ -361,7 +382,7 @@ class HA_Sites_Pro_Renderer {
 							</div>
 						</header>
 						<div class="ha-pro-frame-stage">
-							<div class="ha-pro-frame-wrap"><iframe data-ha-frame title="<?php esc_attr_e( 'پیش‌نمایش سایت', 'harfehaval-sites-pro' ); ?>" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe></div>
+							<div class="ha-pro-frame-wrap"><iframe data-ha-frame title="<?php esc_attr_e( 'پیش‌نمایش سایت', 'harfehaval-sites-pro' ); ?>" loading="lazy"></iframe></div>
 							<button class="ha-pro-side-handle" data-ha-preview-info-toggle type="button" aria-label="<?php esc_attr_e( 'تغییر نمایش جزئیات', 'harfehaval-sites-pro' ); ?>"></button>
 							<aside class="ha-pro-preview-side" data-ha-modal-info></aside>
 						</div>

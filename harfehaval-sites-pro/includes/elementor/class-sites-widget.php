@@ -109,7 +109,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$this->add_control( 'per_page', [
 			'label'   => __( 'تعداد سایت در هر بار', 'harfehaval-sites-pro' ),
 			'type'    => Controls_Manager::NUMBER,
-			'default' => 12,
+			'default' => 6,
 			'min'     => 1,
 			'max'     => 60,
 		] );
@@ -203,6 +203,53 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'condition'   => [ 'hover_effect' => 'scroll' ],
 		] );
 
+		$this->add_control( 'container_mode', [
+			'label'   => __( 'حالت نمایش افزونه', 'harfehaval-sites-pro' ),
+			'type'    => Controls_Manager::SELECT,
+			'options' => [
+				'full'  => __( 'تمام عرض', 'harfehaval-sites-pro' ),
+				'boxed' => __( 'جعبه‌ای', 'harfehaval-sites-pro' ),
+			],
+			'default' => 'full',
+		] );
+
+		$this->add_control( 'container_max_width', [
+			'label'      => __( 'حداکثر عرض حالت جعبه‌ای (px)', 'harfehaval-sites-pro' ),
+			'type'       => Controls_Manager::NUMBER,
+			'default'    => 1220,
+			'min'        => 320,
+			'max'        => 2200,
+			'condition'  => [ 'container_mode' => 'boxed' ],
+		] );
+
+		$this->add_responsive_control( 'content_width', [
+			'label'      => __( 'عرض محتوای افزونه در هر دستگاه', 'harfehaval-sites-pro' ),
+			'type'       => Controls_Manager::SLIDER,
+			'size_units' => [ 'px', '%', 'vw' ],
+			'range'      => [
+				'px' => [ 'min' => 320, 'max' => 2200 ],
+				'%'  => [ 'min' => 20,  'max' => 100 ],
+				'vw' => [ 'min' => 20,  'max' => 100 ],
+			],
+			'selectors'  => [
+				'{{WRAPPER}} .ha-sites-pro' => '--ha-shell-max: {{SIZE}}{{UNIT}} !important;',
+			],
+		] );
+
+		$this->add_responsive_control( 'image_height', [
+			'label'      => __( 'ارتفاع قاب تصویر سایت / محصول', 'harfehaval-sites-pro' ),
+			'type'       => Controls_Manager::SLIDER,
+			'size_units' => [ 'px', 'vh' ],
+			'range'      => [
+				'px' => [ 'min' => 120, 'max' => 800 ],
+				'vh' => [ 'min' => 10,  'max' => 90 ],
+			],
+			'default'    => [ 'size' => 260, 'unit' => 'px' ],
+			'selectors'  => [
+				'{{WRAPPER}} .ha-sites-pro' => '--ha-thumb-h: {{SIZE}}{{UNIT}} !important;',
+			],
+		] );
+
 		$this->end_controls_section();
 	}
 
@@ -235,6 +282,15 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'show_order_button'    => 'دکمه سفارش',
 		];
 
+		$default_on = [
+			'show_header',
+			'show_filters',
+			'show_image',
+			'show_excerpt',
+			'show_preview_button',
+			'show_order_button',
+		];
+
 		foreach ( $fields as $key => $label ) {
 			$this->add_control( $key, [
 				'label'        => __( $label, 'harfehaval-sites-pro' ),
@@ -242,9 +298,48 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 				'label_on'     => __( 'بله', 'harfehaval-sites-pro' ),
 				'label_off'    => __( 'خیر', 'harfehaval-sites-pro' ),
 				'return_value' => 'yes',
-				'default'      => 'yes',
+				'default'      => in_array( $key, $default_on, true ) ? 'yes' : '',
 			] );
 		}
+
+		$this->add_control( 'show_preview_helper', [
+			'label'        => __( 'نمایش متن راهنمای پیش‌نمایش', 'harfehaval-sites-pro' ),
+			'type'         => Controls_Manager::SWITCHER,
+			'return_value' => 'yes',
+			'default'      => 'yes',
+		] );
+
+		$this->add_control( 'show_filter_counts', [
+			'label'        => __( 'نمایش تعداد کنار فیلترها', 'harfehaval-sites-pro' ),
+			'type'         => Controls_Manager::SWITCHER,
+			'return_value' => 'yes',
+			'default'      => '',
+		] );
+
+		$this->add_control( 'show_project_type', [
+			'label'        => __( 'نمایش نوع پروژه روی کارت', 'harfehaval-sites-pro' ),
+			'type'         => Controls_Manager::SWITCHER,
+			'return_value' => 'yes',
+			'default'      => '',
+		] );
+		$this->add_control( 'show_pages_count', [
+			'label'        => __( 'نمایش تعداد صفحات/بخش‌ها روی کارت', 'harfehaval-sites-pro' ),
+			'type'         => Controls_Manager::SWITCHER,
+			'return_value' => 'yes',
+			'default'      => '',
+		] );
+		$this->add_control( 'show_support', [
+			'label'        => __( 'نمایش پشتیبانی روی کارت', 'harfehaval-sites-pro' ),
+			'type'         => Controls_Manager::SWITCHER,
+			'return_value' => 'yes',
+			'default'      => '',
+		] );
+		$this->add_control( 'show_tech_stack', [
+			'label'        => __( 'نمایش تکنولوژی/سازگاری روی کارت', 'harfehaval-sites-pro' ),
+			'type'         => Controls_Manager::SWITCHER,
+			'return_value' => 'yes',
+			'default'      => '',
+		] );
 
 		$this->add_control( 'modal', [
 			'label'        => __( 'مودال پیش‌نمایش', 'harfehaval-sites-pro' ),
@@ -280,6 +375,14 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'default' => 'جستجو در سایت‌ها، امکانات، حوزه کاری...',
 		] );
 
+		$this->add_control( 'preview_helper_text', [
+			'label'      => __( 'متن راهنمای هدر پیش‌نمایش', 'harfehaval-sites-pro' ),
+			'type'       => Controls_Manager::TEXTAREA,
+			'default'    => 'اگر سایت در این محیط به دلایل فنی اجرا نشد، روی دکمه مشاهده کامل کلیک کنید.',
+			'rows'       => 2,
+			'condition'  => [ 'show_preview_helper' => 'yes' ],
+		] );
+
 		$this->end_controls_section();
 	}
 
@@ -312,19 +415,19 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$this->add_control( 'header_badge', [
 			'label'   => __( 'برچسب Hero', 'harfehaval-sites-pro' ),
 			'type'    => Controls_Manager::TEXT,
-			'default' => 'نمونه‌سایت‌های آماده',
+			'default' => '',
 		] );
 
 		$this->add_control( 'header_title', [
 			'label'   => __( 'عنوان Hero', 'harfehaval-sites-pro' ),
 			'type'    => Controls_Manager::TEXT,
-			'default' => 'انتخاب هوشمند سایت آماده برای شروع سریع‌تر',
+			'default' => 'نمونه وبسایت‌هایی که برای کسب‌وکارها طراحی کرده‌ایم',
 		] );
 
 		$this->add_control( 'header_subtitle', [
 			'label'      => __( 'زیرعنوان Hero', 'harfehaval-sites-pro' ),
 			'type'       => Controls_Manager::TEXTAREA,
-			'default'    => 'جستجو، فیلتر، مقایسه و پیش‌نمایش زنده قالب‌ها در یک محیط حرفه‌ای.',
+			'default'    => '',
 			'rows'       => 2,
 		] );
 
@@ -350,13 +453,13 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		] );
 
 		$labels = [
-			'all_categories_label' => [ 'همه دسته‌بندی‌ها', 'متن دکمه همه دسته‌ها' ],
+			'all_categories_label' => [ 'همه پروژه‌ها', 'متن دکمه همه دسته‌ها' ],
 			'all_features_label'   => [ 'همه ویژگی‌ها', 'متن دکمه همه ویژگی‌ها' ],
 			'all_status_label'     => [ 'همه وضعیت‌ها', 'متن دکمه همه وضعیت' ],
-			'preview_label'        => [ 'پیش‌نمایش', 'دکمه پیش‌نمایش' ],
+			'preview_label'        => [ 'جزئیات بیشتر', 'دکمه جزئیات / پیش‌نمایش' ],
 			'order_label'          => [ 'سفارش سایت', 'دکمه سفارش' ],
-			'new_tab_label'        => [ 'مشاهده کامل', 'دکمه تب جدید' ],
-			'loadmore_label'       => [ 'نمایش بیشتر', 'دکمه نمایش بیشتر' ],
+			'new_tab_label'        => [ 'نمایش در مرورگر', 'دکمه نمایش در مرورگر' ],
+			'loadmore_label'       => [ 'نمایش پروژه‌های بیشتر', 'دکمه نمایش بیشتر' ],
 			'reset_label'          => [ 'حذف فیلترها', 'دکمه ریست فیلترها' ],
 			'empty_title'          => [ 'نتیجه‌ای پیدا نشد', 'عنوان حالت خالی' ],
 			'empty_text'           => [ 'فیلترها یا عبارت جستجو را تغییر دهید.', 'متن حالت خالی' ],
@@ -625,7 +728,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$this->add_control( 'title_color', [
 			'label'     => __( 'رنگ عنوان', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-card-title' => 'color: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-card-title' => 'color: {{VALUE}} !important;' ],
 		] );
 		$this->end_controls_tab();
 
@@ -633,10 +736,23 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$this->add_control( 'title_color_hover', [
 			'label'     => __( 'رنگ عنوان (hover)', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-card:hover .ha-pro-card-title' => 'color: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-card:hover .ha-pro-card-title' => 'color: {{VALUE}} !important;' ],
 		] );
 		$this->end_controls_tab();
 		$this->end_controls_tabs();
+
+		$this->add_responsive_control( 'title_align', [
+			'label'   => __( 'تراز عنوان', 'harfehaval-sites-pro' ),
+			'type'    => Controls_Manager::CHOOSE,
+			'options' => [
+				'right'   => [ 'title' => __( 'راست', 'harfehaval-sites-pro' ), 'icon' => 'eicon-text-align-right' ],
+				'center'  => [ 'title' => __( 'وسط', 'harfehaval-sites-pro' ), 'icon' => 'eicon-text-align-center' ],
+				'left'    => [ 'title' => __( 'چپ', 'harfehaval-sites-pro' ), 'icon' => 'eicon-text-align-left' ],
+				'justify' => [ 'title' => __( 'جاستیفای', 'harfehaval-sites-pro' ), 'icon' => 'eicon-text-align-justify' ],
+			],
+			'default'   => 'center',
+			'selectors' => [ '{{WRAPPER}} .ha-pro-card-title' => 'text-align: {{VALUE}} !important;' ],
+		] );
 
 		$this->add_responsive_control( 'title_margin', [
 			'label'      => __( 'فاصله عنوان', 'harfehaval-sites-pro' ),
@@ -662,7 +778,20 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$this->add_control( 'excerpt_color', [
 			'label'     => __( 'رنگ توضیح', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::COLOR,
-			'selectors' => [ '{{WRAPPER}} .ha-pro-card-excerpt' => 'color: {{VALUE}};' ],
+			'selectors' => [ '{{WRAPPER}} .ha-pro-card-excerpt' => 'color: {{VALUE}} !important;' ],
+		] );
+
+		$this->add_responsive_control( 'excerpt_align', [
+			'label'   => __( 'تراز توضیح', 'harfehaval-sites-pro' ),
+			'type'    => Controls_Manager::CHOOSE,
+			'options' => [
+				'right'   => [ 'title' => __( 'راست', 'harfehaval-sites-pro' ), 'icon' => 'eicon-text-align-right' ],
+				'center'  => [ 'title' => __( 'وسط', 'harfehaval-sites-pro' ), 'icon' => 'eicon-text-align-center' ],
+				'left'    => [ 'title' => __( 'چپ', 'harfehaval-sites-pro' ), 'icon' => 'eicon-text-align-left' ],
+				'justify' => [ 'title' => __( 'جاستیفای', 'harfehaval-sites-pro' ), 'icon' => 'eicon-text-align-justify' ],
+			],
+			'default'   => 'justify',
+			'selectors' => [ '{{WRAPPER}} .ha-pro-card-excerpt' => 'text-align: {{VALUE}} !important; text-align-last: {{VALUE}} !important;' ],
 		] );
 
 		$this->add_control( 'excerpt_lines', [
@@ -800,7 +929,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'label'      => __( 'گردی', 'harfehaval-sites-pro' ),
 			'type'       => Controls_Manager::SLIDER,
 			'size_units' => [ 'px', 'rem', '%' ],
-			'selectors'  => [ '{{WRAPPER}} .ha-pro-btn-primary' => 'border-radius: {{SIZE}}{{UNIT}};' ],
+			'selectors'  => [ '{{WRAPPER}}' => '--ha-btn1-radius: {{SIZE}}{{UNIT}};', '{{WRAPPER}} .ha-pro-btn-primary' => 'border-radius: {{SIZE}}{{UNIT}};' ],
 		] );
 
 		$this->add_responsive_control( 'btn1_padding', [
@@ -857,7 +986,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'label'      => __( 'گردی', 'harfehaval-sites-pro' ),
 			'type'       => Controls_Manager::SLIDER,
 			'size_units' => [ 'px', 'rem', '%' ],
-			'selectors'  => [ '{{WRAPPER}} .ha-pro-btn-secondary' => 'border-radius: {{SIZE}}{{UNIT}};' ],
+			'selectors'  => [ '{{WRAPPER}}' => '--ha-btn2-radius: {{SIZE}}{{UNIT}};', '{{WRAPPER}} .ha-pro-btn-secondary' => 'border-radius: {{SIZE}}{{UNIT}};' ],
 		] );
 
 		$this->add_responsive_control( 'btn2_padding', [
@@ -1078,6 +1207,19 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'selectors' => [ '{{WRAPPER}} .ha-pro-hero p' => 'color: {{VALUE}};' ],
 		] );
 
+		$this->add_responsive_control( 'hero_text_align', [
+			'label'   => __( 'تراز متن هدر', 'harfehaval-sites-pro' ),
+			'type'    => Controls_Manager::CHOOSE,
+			'options' => [
+				'right'   => [ 'title' => __( 'راست', 'harfehaval-sites-pro' ), 'icon' => 'eicon-text-align-right' ],
+				'center'  => [ 'title' => __( 'وسط', 'harfehaval-sites-pro' ), 'icon' => 'eicon-text-align-center' ],
+				'left'    => [ 'title' => __( 'چپ', 'harfehaval-sites-pro' ), 'icon' => 'eicon-text-align-left' ],
+				'justify' => [ 'title' => __( 'جاستیفای', 'harfehaval-sites-pro' ), 'icon' => 'eicon-text-align-justify' ],
+			],
+			'default'   => 'center',
+			'selectors' => [ '{{WRAPPER}} .ha-pro-hero, {{WRAPPER}} .ha-pro-hero h2, {{WRAPPER}} .ha-pro-hero p' => 'text-align: {{VALUE}} !important;' ],
+		] );
+
 		$this->end_controls_section();
 	}
 
@@ -1124,6 +1266,13 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'selectors' => [ '{{WRAPPER}} .ha-pro-preview-devices button.is-active' => 'background: {{VALUE}};' ],
 		] );
 
+
+
+		$this->add_group_control( Group_Control_Border::get_type(), [
+			'name'     => 'modal_frame_border',
+			'label'    => __( 'حاشیه قاب پیش‌نمایش', 'harfehaval-sites-pro' ),
+			'selector' => '{{WRAPPER}} .ha-pro-frame-wrap iframe',
+		] );
 		$this->end_controls_section();
 	}
 
@@ -1171,7 +1320,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'feature'              => $s['feature'] ?? '',
 			'status'               => $s['status'] ?? '',
 			'sort'                 => $s['sort'] ?? 'newest',
-			'per_page'             => $s['per_page'] ?? 12,
+			'per_page'             => $s['per_page'] ?? 6,
 			'search_placeholder'   => $s['search_placeholder'] ?? '',
 			'header_badge'         => $s['header_badge'] ?? '',
 			'header_title'         => $s['header_title'] ?? '',
@@ -1196,6 +1345,20 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'favorite_label'       => $s['favorite_label'] ?? '',
 			'compare_label'        => $s['compare_label'] ?? '',
 			'compare_bar_label'    => $s['compare_bar_label'] ?? '',
+			'show_stats'           => $s['show_stats'] ?? '',
+			'show_swatches'        => $s['show_swatches'] ?? '',
+			'show_fab'             => $s['show_fab'] ?? '',
+			'show_keyboard_hints'  => $s['show_keyboard_hints'] ?? '',
+			'show_preview_helper'  => $s['show_preview_helper'] ?? 'yes',
+			'preview_helper_text'  => $s['preview_helper_text'] ?? '',
+			'show_filter_counts'   => $s['show_filter_counts'] ?? '',
+			'show_project_type'    => $s['show_project_type'] ?? '',
+			'show_pages_count'     => $s['show_pages_count'] ?? '',
+			'show_support'         => $s['show_support'] ?? '',
+			'show_tech_stack'      => $s['show_tech_stack'] ?? '',
+			'container_mode'       => $s['container_mode'] ?? 'full',
+			'container_max_width'  => $s['container_max_width'] ?? 1220,
+			'image_height'         => ( isset( $s['image_height']['size'] ) && '' !== $s['image_height']['size'] ) ? $s['image_height']['size'] : 260,
 		];
 
 		echo HA_Sites_Pro_Renderer::render( $atts ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped

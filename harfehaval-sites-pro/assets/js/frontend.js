@@ -181,6 +181,18 @@
 				if ((b = t.closest('[data-ha-preview-info-toggle]'))) { self._toggleInfo(); return; }
 				if ((b = t.closest('[data-ha-side-tab]')))   { self._activateSideTab(b.getAttribute('data-ha-side-tab')); return; }
 
+				/* Fix 5: handle .ha-pro-preview-open click explicitly for mobile */
+				if ((b = t.closest('.ha-pro-preview-open'))) {
+					e.preventDefault();
+					var href = b.href || b.getAttribute('href');
+					if (href && href !== '#' && href !== window.location.href) {
+						window.open(href, '_blank', 'noopener,noreferrer');
+					} else if (self._currentItem && self._currentItem.demo_url) {
+						window.open(self._currentItem.demo_url, '_blank', 'noopener,noreferrer');
+					}
+					return;
+				}
+
 				var shareToggle = t.closest('[data-ha-share-toggle]');
 				if (shareToggle) { var wrap = shareToggle.closest('.ha-pro-share'); if (wrap) wrap.classList.toggle('is-open'); e.stopPropagation(); return; }
 				var shareItem = t.closest('.ha-pro-share-item');
@@ -192,6 +204,16 @@
 					return;
 				}
 			});
+
+			/* Make the preview details panel scroll with the mouse wheel even when the iframe is focused nearby. */
+			this.refs.modal.addEventListener('wheel', function (e) {
+				var side = e.target.closest('.ha-pro-preview-side');
+				if (!side) return;
+				if (side.scrollHeight > side.clientHeight) {
+					e.preventDefault();
+					side.scrollTop += e.deltaY;
+				}
+			}, { passive: false });
 		}
 
 		if (this.refs.search) {
@@ -355,10 +377,11 @@
 	App.prototype._renderFilters = function (cats, feats) {
 		var self = this;
 
+		var showCounts = !!this.cfg.show_filter_counts;
 		if (this.refs.cats) {
 			var h = '<button type="button" class="ha-pro-chip ' + (!this.state.category ? 'is-active' : '') + '" data-ha-cat="">' + esc(this.label('all_categories_label', 'همه دسته‌بندی‌ها')) + '</button>';
 			h += cats.map(function (t) {
-				return '<button type="button" class="ha-pro-chip' + (self.state.category === t.slug ? ' is-active' : '') + '" data-ha-cat="' + esc(t.slug) + '">' + esc(t.name) + '<small>' + esc(t.count) + '</small></button>';
+				return '<button type="button" class="ha-pro-chip' + (self.state.category === t.slug ? ' is-active' : '') + '" data-ha-cat="' + esc(t.slug) + '">' + esc(t.name) + (showCounts ? '<small>' + esc(t.count) + '</small>' : '') + '</button>';
 			}).join('');
 			this.refs.cats.innerHTML = h;
 		}
@@ -366,7 +389,7 @@
 		if (this.refs.features) {
 			var fh = '<button type="button" class="ha-pro-chip ' + (!this.state.features.length ? 'is-active' : '') + '" data-ha-feature="">' + esc(this.label('all_features_label', 'همه ویژگی‌ها')) + '</button>';
 			fh += feats.map(function (t) {
-				return '<button type="button" class="ha-pro-chip' + (self.state.features.indexOf(t.slug) >= 0 ? ' is-active' : '') + '" data-ha-feature="' + esc(t.slug) + '">' + esc(t.name) + '<small>' + esc(t.count) + '</small></button>';
+				return '<button type="button" class="ha-pro-chip' + (self.state.features.indexOf(t.slug) >= 0 ? ' is-active' : '') + '" data-ha-feature="' + esc(t.slug) + '">' + esc(t.name) + (showCounts ? '<small>' + esc(t.count) + '</small>' : '') + '</button>';
 			}).join('');
 			this.refs.features.innerHTML = fh;
 		}
@@ -443,8 +466,9 @@
 
 		var img = '';
 		if (cfg.show_image) {
+			var imgAttrs = item.thumb_srcset ? ' srcset="' + esc(item.thumb_srcset) + '" sizes="' + esc(item.thumb_sizes || '(min-width: 1200px) 33vw, (min-width: 768px) 50vw, 100vw') + '"' : '';
 			var thumbHtml = item.thumb
-				? '<img src="' + esc(item.thumb) + '" alt="' + esc(item.thumb_alt || item.title) + '" loading="lazy" decoding="async">'
+				? '<img src="' + esc(item.thumb) + '"' + imgAttrs + ' alt="' + esc(item.thumb_alt || item.title) + '" loading="lazy" decoding="async">'
 				: '<div class="ha-pro-no-thumb">⌁</div>';
 			var quickView = (cfg.show_preview_button && item.demo_url)
 				? '<button type="button" class="ha-pro-quick-view" data-ha-quick-view="' + esc(item.id) + '">👁 پیش‌نمایش سریع</button>'
@@ -452,11 +476,15 @@
 			var codeBadge = item.code
 				? '<span class="ha-pro-code-badge">' + esc(item.code) + '</span>'
 				: '';
+			var ratingBadge = (cfg.show_rating && item.rating)
+				? '<span class="ha-pro-rating-badge">⭐ ' + esc(Number(item.rating).toLocaleString('fa-IR')) + '</span>'
+				: '';
 			img = '<div class="ha-pro-thumb">' +
 				(badge ? '<span class="ha-pro-badge ha-pro-badge-' + esc(item.status) + '">' + esc(badge) + '</span>' : '') +
 				thumbHtml +
 				quickView +
 				codeBadge +
+				ratingBadge +
 			'</div>';
 		}
 
@@ -469,10 +497,10 @@
 		}
 
 		var facts = '';
-		if (item.project_type) facts += '<span>🏷 ' + esc(item.project_type) + '</span>';
-		if (item.pages_count)  facts += '<span>📄 ' + esc(item.pages_count) + '</span>';
-		if (item.support)      facts += '<span>🛟 ' + esc(item.support) + '</span>';
-		if (item.tech_stack)   facts += '<span>⚙️ ' + esc(item.tech_stack) + '</span>';
+		if (cfg.show_project_type && item.project_type) facts += '<span>🏷 ' + esc(item.project_type) + '</span>';
+		if (cfg.show_pages_count && item.pages_count)  facts += '<span>📄 ' + esc(item.pages_count) + '</span>';
+		if (cfg.show_support && item.support)          facts += '<span>🛟 ' + esc(item.support) + '</span>';
+		if (cfg.show_tech_stack && item.tech_stack)    facts += '<span>⚙️ ' + esc(item.tech_stack) + '</span>';
 
 		var feats = '';
 		if (cfg.show_features) {
@@ -480,17 +508,19 @@
 		}
 
 		var meta = '';
-		if (cfg.show_rating     && item.rating)     meta += '<span class="ha-pro-meta-item">⭐ ' + esc(Number(item.rating).toLocaleString('fa-IR')) + '</span>';
 		if (cfg.show_delivery   && item.delivery)   meta += '<span class="ha-pro-meta-item">⏱ ' + esc(item.delivery) + '</span>';
 		if (cfg.show_installment && item.installment) meta += '<span class="ha-pro-meta-item">💳 ' + esc(item.installment) + '</span>';
 
 		var previewBtn = '';
 		if (cfg.show_preview_button && item.demo_url) {
-			previewBtn = '<button type="button" class="ha-pro-btn ha-pro-btn-secondary" data-ha-preview="' + esc(item.id) + '">' + esc(self.label('preview_label', 'پیش‌نمایش')) + '</button>';
+			previewBtn = '<button type="button" class="ha-pro-btn ha-pro-btn-secondary" data-ha-preview="' + esc(item.id) + '"><span class="ha-pro-btn-text">' + esc(self.label('preview_label', 'جزئیات بیشتر')) + '</span><span class="ha-pro-btn-arrow" aria-hidden="true">←</span></button>';
 		}
-		var orderBtn = (cfg.show_order_button && order)
-			? '<a class="ha-pro-btn ha-pro-btn-primary" href="' + esc(order) + '" target="_blank" rel="noopener noreferrer">' + esc(self.label('order_label', 'سفارش سایت')) + '</a>'
-			: '';
+		var orderBtn = '';
+		if (cfg.show_order_button && item.demo_url) {
+			orderBtn = '<a class="ha-pro-btn ha-pro-btn-primary" href="' + esc(item.demo_url) + '" target="_blank" rel="noopener noreferrer">' + esc(self.label('new_tab_label', 'نمایش در مرورگر')) + '</a>';
+		} else if (cfg.show_order_button && order) {
+			orderBtn = '<a class="ha-pro-btn ha-pro-btn-primary" href="' + esc(order) + '" target="_blank" rel="noopener noreferrer">' + esc(self.label('order_label', 'سفارش سایت')) + '</a>';
+		}
 
 		return '<article class="ha-pro-card" data-ha-card="' + esc(item.id) + '" data-hover="' + esc(this.hover) + '" role="listitem">' +
 			img + tools +
@@ -611,6 +641,7 @@
 
 	App.prototype._openModal = function (item) {
 		if (!this.refs.modal || !this.refs.frame) return;
+		this._currentItem = item;
 		var self = this;
 		var wrap = this.refs.frame.closest('.ha-pro-frame-wrap');
 
@@ -680,12 +711,12 @@
 					'<div class="ha-pro-frame-fallback-box">' +
 					'<div class="ha-pro-fallback-icon">🔒</div>' +
 					'<h3>پیش‌نمایش مستقیم در دسترس نیست</h3>' +
-					'<p>این سایت اجازه نمایش در قاب را نمی‌دهد.</p>' +
-					'<a class="ha-pro-btn ha-pro-btn-primary ha-pro-fallback-open" href="' + esc(item.demo_url) + '" target="_blank" rel="noopener noreferrer">باز کردن سایت ↗</a>' +
+					'<p>این سایت احتمالاً به دلایل فنی یا امنیتی اجازه نمایش در این قاب را نمی‌دهد. برای مشاهده کامل روی دکمه زیر کلیک کنید.</p>' +
+					'<a class="ha-pro-btn ha-pro-btn-primary ha-pro-fallback-open" href="' + esc(item.demo_url) + '" target="_blank" rel="noopener noreferrer">مشاهده کامل ↗</a>' +
 					'</div>';
 				wrap.appendChild(fb);
 			}
-		}, 6000);
+		}, 10000);
 
 		/* If hover-preload already started for this URL, iframe is already loading — reuse it */
 		if (this._preloadUrl !== item.demo_url) {
@@ -695,9 +726,16 @@
 		clearTimeout(this._preloadTimer);
 
 		if (this.refs.previewTitle)  this.refs.previewTitle.textContent  = item.title || '';
-		if (this.refs.previewDomain) this.refs.previewDomain.textContent = domainOf(item.demo_url) || (item.demo_url || '');
+		if (this.refs.previewDomain) this.refs.previewDomain.textContent = (this.cfg.show_preview_helper && this.cfg.preview_helper_text) ? this.cfg.preview_helper_text : (domainOf(item.demo_url) || (item.demo_url || ''));
 		if (this.refs.previewOpen)   this.refs.previewOpen.href = item.demo_url;
 		if (this.refs.modalInfo)     this.refs.modalInfo.innerHTML = this._sideHtml(item);
+
+		/* Mobile UX: show the site first; details panel opens as a full-screen drawer. */
+		var stage = this.refs.frame ? this.refs.frame.closest('.ha-pro-frame-stage') : null;
+		if (stage) {
+			var isMobilePreview = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+			stage.classList.toggle('is-info-hidden', !!isMobilePreview);
+		}
 
 		/* Inject share dropdown into header actions */
 		var actions = qs(this.refs.modal, '.ha-pro-preview-actions');
@@ -713,6 +751,14 @@
 		this.refs.modal.setAttribute('aria-hidden', 'false');
 		document.documentElement.classList.add('ha-pro-modal-open');
 		this.setDevice('desktop');
+
+		/* Fix 2: Ensure sidebar starts hidden on mobile */
+		var stageAfter = this.refs.frame ? this.refs.frame.closest('.ha-pro-frame-stage') : null;
+		if (stageAfter && window.innerWidth <= 768) {
+			stageAfter.classList.add('is-info-hidden');
+		} else if (stageAfter) {
+			stageAfter.classList.remove('is-info-hidden');
+		}
 	};
 
 	App.prototype._sideHtml = function (item) {
@@ -807,16 +853,19 @@
 		return storageGet(this._recentKey()).indexOf(String(id)) >= 0;
 	};
 
-	/* QR code via public service, with auto-fallback if blocked */
+	/* QR code via reliable service with single fallback (Fix 4) */
 	App.prototype._qrHtml = function (url) {
 		var enc = encodeURIComponent(url);
-		var primary  = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=0&qzone=1&data=' + enc;
-		var fallback = 'https://quickchart.io/qr?size=160&margin=1&text=' + enc;
-		var onerr = "this.onerror=null;this.src='" + fallback + "'";
+		var src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=2&qzone=1&data=' + enc;
+		var fb  = 'https://quickchart.io/qr?size=160&margin=2&text=' + enc;
 		return '<div class="ha-pro-qr">' +
-				'<img src="' + esc(primary) + '" onerror="' + onerr + '" alt="QR" width="160" height="160" loading="lazy" decoding="async">' +
-				'<div class="ha-pro-qr-text"><b>📱 پیش‌نمایش روی موبایل</b><span>با دوربین موبایل اسکن کنید تا دمو روی گوشی باز شود.</span></div>' +
-			'</div>';
+			'<img src="' + esc(src) + '" onerror="this.onerror=null;this.src=\'' + fb + '\'" ' +
+			'alt="QR" width="80" height="80" loading="lazy" decoding="async" ' +
+			'style="width:80px;height:80px;border-radius:8px;display:block;background:#fff;">' +
+			'<div class="ha-pro-qr-text">' +
+			'<span>با دوربین موبایل اسکن کنید تا دمو روی گوشی باز شود.</span>' +
+			'</div>' +
+		'</div>';
 	};
 
 	/* Toast notifications */

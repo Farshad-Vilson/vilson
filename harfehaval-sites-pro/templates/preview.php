@@ -57,16 +57,17 @@ $back_url = ! empty( $_SERVER['HTTP_REFERER'] ) ? esc_url( wp_unslash( $_SERVER[
 				<button type="button" data-device="tablet">⬜ تبلت</button>
 				<button type="button" data-device="mobile">📱 موبایل</button>
 			</div>
-			<a class="pv-newtab" href="<?php echo esc_url( $browser_url ); ?>" target="_blank" rel="noopener noreferrer">تب جدید ↗</a>
+			<a class="pv-newtab" href="<?php echo esc_url( $browser_url ); ?>" target="_blank" rel="noopener noreferrer">مشاهده کامل ↗</a>
 		</div>
 	</header>
-	<main class="pv-frame-wrap">
+	<div style="position:fixed;top:var(--ha-topbar);left:0;right:0;z-index:9;padding:10px 14px;background:#eef6ff;color:#27405d;border-bottom:1px solid #d7e3f2;font-size:13px;line-height:1.9;text-align:center">اگر سایت در این محیط به دلایل فنی اجرا نشد، روی دکمه مشاهده کامل کلیک کنید.</div>
+	<main class="pv-frame-wrap" style="inset:calc(var(--ha-topbar) + 54px) 0 0 0">
 		<iframe id="pv-frame" class="pv-frame desktop" src="<?php echo esc_url( $browser_url ); ?>" title="<?php echo esc_attr( $page_title ); ?>" allowfullscreen></iframe>
 	</main>
 	<div class="pv-loader" id="pv-loader"><span class="pv-spinner"></span><span>در حال بارگذاری پیش‌نمایش...</span></div>
-	<div class="pv-error" id="pv-error"><div class="pv-error-box"><div style="font-size:42px;margin-bottom:10px">⚠️</div><h2>پیش‌نمایش داخل iframe باز نشد</h2><p style="margin:8px 0 18px;color:#64748b;line-height:1.9">بعضی سایت‌ها نمایش داخل iframe را مسدود می‌کنند. می‌توانید دمو را مستقیم باز کنید.</p><a class="pv-btn" href="<?php echo esc_url( $browser_url ); ?>" target="_blank" rel="noopener noreferrer">باز کردن در تب جدید</a></div></div>
+	<div class="pv-error" id="pv-error"><div class="pv-error-box"><div style="font-size:42px;margin-bottom:10px">⚠️</div><h2>پیش‌نمایش داخل iframe باز نشد</h2><p style="margin:8px 0 18px;color:#64748b;line-height:1.9">بعضی سایت‌ها به دلایل فنی یا امنیتی اجازه نمایش داخل iframe را نمی‌دهند. برای مشاهده کامل، سایت را مستقیم باز کنید.</p><a class="pv-btn" href="<?php echo esc_url( $browser_url ); ?>" target="_blank" rel="noopener noreferrer">مشاهده کامل سایت</a></div></div>
 	<script>
-	(function(){var frame=document.getElementById('pv-frame'),loader=document.getElementById('pv-loader'),error=document.getElementById('pv-error'),timer;function hide(){clearTimeout(timer);if(loader)loader.classList.add('hidden')}function showError(){hide();if(frame)frame.style.display='none';if(error)error.classList.add('visible')}if(frame){frame.addEventListener('load',hide);timer=setTimeout(showError,15000)}document.querySelectorAll('[data-device]').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('[data-device]').forEach(function(b){b.classList.remove('active')});btn.classList.add('active');if(frame)frame.className='pv-frame '+btn.getAttribute('data-device')})})})();
+	(function(){var frame=document.getElementById('pv-frame'),loader=document.getElementById('pv-loader'),error=document.getElementById('pv-error'),timer;function hide(){clearTimeout(timer);if(loader)loader.classList.add('hidden')}function showError(){hide();if(frame)frame.style.display='none';if(error)error.classList.add('visible')}if(frame){frame.addEventListener('load',hide);timer=setTimeout(showError,12000)}document.querySelectorAll('[data-device]').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('[data-device]').forEach(function(b){b.classList.remove('active')});btn.classList.add('active');if(frame)frame.className='pv-frame '+btn.getAttribute('data-device')})})})();
 	</script>
 <?php endif; ?>
 </body>

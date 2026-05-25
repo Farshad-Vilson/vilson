@@ -182,9 +182,12 @@ class HA_Sites_Pro_REST {
 	public static function format_post( $post ) {
 		$post_id = $post->ID;
 		$thumb = '';
+		$thumb_srcset = '';
+		$thumb_sizes = '(min-width: 1200px) 33vw, (min-width: 768px) 50vw, 100vw';
 		$thumb_alt = get_the_title( $post );
 		if ( has_post_thumbnail( $post_id ) ) {
-			$thumb = get_the_post_thumbnail_url( $post_id, 'large' );
+			$thumb = get_the_post_thumbnail_url( $post_id, 'full' );
+			$thumb_srcset = wp_get_attachment_image_srcset( get_post_thumbnail_id( $post_id ), 'full' );
 			$alt = get_post_meta( get_post_thumbnail_id( $post_id ), '_wp_attachment_image_alt', true );
 			if ( $alt ) {
 				$thumb_alt = $alt;
@@ -199,6 +202,8 @@ class HA_Sites_Pro_REST {
 			'title'       => get_the_title( $post ),
 			'excerpt'     => $excerpt,
 			'thumb'       => $thumb,
+			'thumb_srcset'=> $thumb_srcset ? $thumb_srcset : '',
+			'thumb_sizes' => $thumb_sizes,
 			'thumb_alt'   => $thumb_alt,
 			'code'        => (string) get_post_meta( $post_id, '_ha_code', true ),
 			'price'       => self::meta_int_or_null( $post_id, '_ha_price' ),
