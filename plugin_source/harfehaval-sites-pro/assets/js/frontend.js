@@ -729,53 +729,79 @@
 
 		this._addRecent(item.id);
 
-		/* Clear previous error/loading state */
+		/* Clear previous state */
 		if (wrap) wrap.classList.remove('is-blocked', 'is-loading');
 		var oldErr = wrap ? wrap.querySelector('.ha-pro-frame-fallback') : null;
 		if (oldErr) oldErr.remove();
-		var oldBar = wrap ? wrap.querySelector('.ha-pro-progress-bar') : null;
-		if (oldBar) oldBar.remove();
+		var oldLdr = wrap ? wrap.querySelector('.ha-pro-loading-overlay') : null;
+		if (oldLdr) oldLdr.remove();
 
-		/* Animated progress bar */
-		var progressBar = null;
+		/* ── Beautiful circular loading overlay ── */
+		var TIMEOUT_MS   = 10000;
+		var circumference = 263.9; /* 2 * π * 42 */
+		var loadingEl    = null;
+		var fillEl       = null;
+		var pctEl        = null;
+		var startTime    = Date.now();
+		var loaded       = false;
+
 		if (wrap) {
-			progressBar = document.createElement('div');
-			progressBar.className = 'ha-pro-progress-bar';
-			progressBar.innerHTML = '<div class="ha-pro-progress-fill"></div>';
-			wrap.appendChild(progressBar);
+			loadingEl = document.createElement('div');
+			loadingEl.className = 'ha-pro-loading-overlay';
+			var domain = domainOf(item.demo_url) || item.demo_url || '';
+			loadingEl.innerHTML =
+				'<div class="ha-pro-ldr-ring">' +
+					'<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+						'<circle class="ha-pro-ldr-track" cx="50" cy="50" r="42"/>' +
+						'<circle class="ha-pro-ldr-fill"  cx="50" cy="50" r="42"/>' +
+					'</svg>' +
+					'<span class="ha-pro-ldr-pct">0%</span>' +
+				'</div>' +
+				'<div class="ha-pro-ldr-label">' +
+					'در حال بارگذاری' +
+					'<span class="ha-pro-ldr-dots"><span>.</span><span>.</span><span>.</span></span>' +
+				'</div>' +
+				(domain ? '<div class="ha-pro-ldr-domain">' + esc(domain) + '</div>' : '');
+			wrap.appendChild(loadingEl);
+			fillEl = loadingEl.querySelector('.ha-pro-ldr-fill');
+			pctEl  = loadingEl.querySelector('.ha-pro-ldr-pct');
 		}
-		var fill     = progressBar ? progressBar.querySelector('.ha-pro-progress-fill') : null;
-		var progress = 0;
 
-		function advanceProgress() {
-			if (progress < 85) {
-				progress += (85 - progress) * 0.08;
-				if (fill) fill.style.width = progress.toFixed(1) + '%';
-				self._progressTimer = setTimeout(advanceProgress, 300);
-			}
+		/* rAF loop: smoothly advance progress 0→98% over TIMEOUT_MS */
+		function rafTick() {
+			if (loaded) return;
+			var elapsed = Date.now() - startTime;
+			var pct     = Math.min(98, (elapsed / TIMEOUT_MS) * 100);
+			if (fillEl) fillEl.style.strokeDashoffset = String(circumference * (1 - pct / 100));
+			if (pctEl)  pctEl.textContent = Math.round(pct) + '%';
+			if (pct < 98) self._ldrRaf = requestAnimationFrame(rafTick);
 		}
-		clearTimeout(self._progressTimer);
-		advanceProgress();
+		cancelAnimationFrame(self._ldrRaf);
+		self._ldrRaf = requestAnimationFrame(rafTick);
 
-		if (wrap) wrap.classList.add('is-loading');
 		clearTimeout(this._frameTimer);
-		var loaded = false;
 
 		function onFrameLoaded() {
 			loaded = true;
+			cancelAnimationFrame(self._ldrRaf);
 			clearTimeout(self._frameTimer);
-			clearTimeout(self._progressTimer);
+			/* Complete to 100% then fade out */
+			if (fillEl) fillEl.style.strokeDashoffset = '0';
+			if (pctEl)  pctEl.textContent = '100%';
+			if (loadingEl) {
+				loadingEl.style.opacity = '0';
+				setTimeout(function () { if (loadingEl && loadingEl.parentNode) loadingEl.remove(); }, 420);
+			}
 			if (wrap) wrap.classList.remove('is-loading');
-			if (fill) fill.style.width = '100%';
-			setTimeout(function () { if (progressBar && progressBar.parentNode) progressBar.remove(); }, 500);
 		}
 
 		this.refs.frame.onload = onFrameLoaded;
+
 		this._frameTimer = setTimeout(function () {
 			if (!loaded && wrap) {
-				clearTimeout(self._progressTimer);
-				wrap.classList.remove('is-loading');
-				if (progressBar && progressBar.parentNode) progressBar.remove();
+				loaded = true;
+				cancelAnimationFrame(self._ldrRaf);
+				if (loadingEl && loadingEl.parentNode) loadingEl.remove();
 				wrap.classList.add('is-blocked');
 				var fb = document.createElement('div');
 				fb.className = 'ha-pro-frame-fallback';
@@ -783,12 +809,12 @@
 					'<div class="ha-pro-frame-fallback-box">' +
 					'<div class="ha-pro-fallback-icon">🔒</div>' +
 					'<h3>پیش‌نمایش مستقیم در دسترس نیست</h3>' +
-					'<p>این سایت احتمالاً به دلایل فنی یا امنیتی اجازه نمایش در این قاب را نمی‌دهد. برای مشاهده کامل روی دکمه زیر کلیک کنید.</p>' +
+					'<p>این سایت اجازه نمایش در این قاب را نمی‌دهد. روی دکمه زیر کلیک کنید.</p>' +
 					'<a class="ha-pro-btn ha-pro-btn-primary ha-pro-fallback-open" href="' + esc(item.demo_url) + '" target="_blank" rel="noopener noreferrer">مشاهده کامل ↗</a>' +
 					'</div>';
 				wrap.appendChild(fb);
 			}
-		}, 10000);
+		}, TIMEOUT_MS);
 
 		if (this._preloadUrl !== item.demo_url) {
 			this.refs.frame.src = item.demo_url;
@@ -797,18 +823,27 @@
 		clearTimeout(this._preloadTimer);
 
 		if (this.refs.previewTitle)  this.refs.previewTitle.textContent  = item.title || '';
-		if (this.refs.previewDomain) this.refs.previewDomain.textContent = (this.cfg.show_preview_helper && this.cfg.preview_helper_text) ? this.cfg.preview_helper_text : (domainOf(item.demo_url) || item.demo_url || '');
+		if (this.refs.previewDomain) this.refs.previewDomain.textContent = domainOf(item.demo_url) || item.demo_url || '';
 		if (this.refs.previewOpen)   this.refs.previewOpen.href = item.demo_url;
 		if (this.refs.modalInfo)     this.refs.modalInfo.innerHTML = this._sideHtml(item);
 
-		/* Share button */
+		/* Share button — remove old first, then insert fresh (prevents duplication) */
 		var actions = qs(this.refs.modal, '.ha-pro-preview-actions');
 		if (actions) {
-			var oldShare = qs(actions, '.ha-pro-share');
+			var oldShare = qs(actions, '[data-ha-copy-btn]');
 			if (oldShare) oldShare.remove();
-			var holder = document.createElement('span');
-			holder.innerHTML = this._buildShareMenu(item);
-			actions.insertBefore(holder.firstChild, actions.firstChild);
+			var copyBtn = document.createElement('button');
+			copyBtn.type = 'button';
+			copyBtn.className = 'ha-pro-share-copy-btn';
+			copyBtn.setAttribute('data-ha-copy-btn', '1');
+			copyBtn.setAttribute('data-copy', item.demo_url || '');
+			copyBtn.innerHTML = '<span class="ha-pro-copy-icon">📋</span>کپی لینک';
+			copyBtn.addEventListener('click', function () {
+				copyText(item.demo_url || '').then(function (ok) {
+					toast(ok ? 'لینک کپی شد' : 'کپی نشد', ok ? 'success' : 'error', ok ? '📋' : '⚠️');
+				});
+			});
+			actions.insertBefore(copyBtn, actions.firstChild);
 		}
 
 		this.refs.modal.hidden = false;
