@@ -3306,6 +3306,12 @@ html body .ha-sites-pro .ha-pro-btn-secondary:hover .ha-pro-btn-arrow,
    v3.4.2 PATCH — UX & Animation Fixes
    ═══════════════════════════════════════════════════════════════════════ */
 
+/* ── 0. CRITICAL: respect [hidden] attribute — prevents modal covering page ── */
+html body .ha-pro-modal[hidden],
+.ha-pro-modal[hidden] {
+  display: none !important;
+}
+
 /* ── 1. Hide device switcher (دسکتاپ/تبلت/موبایل) on mobile ── */
 @media (max-width: 768px) {
   html body .ha-pro-modal .ha-pro-preview-devices,

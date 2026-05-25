@@ -683,6 +683,8 @@ function ha_sites_pro_inline_styles( $id ) {
 {$p} .ha-pro-rating-badge { position:absolute !important; left:12px !important; bottom:12px !important; display:inline-flex !important; align-items:center !important; gap:4px !important; padding:6px 10px !important; border-radius:999px !important; background:rgba(1,22,39,.88) !important; color:#fff !important; font-size:12px !important; font-weight:800 !important; z-index:3 !important; box-shadow:0 8px 18px rgba(1,22,39,.18) !important; }
 {$m} .ha-pro-frame-fallback-box p { line-height:1.9 !important; }
 
+/* CRITICAL: respect HTML [hidden] attribute — modal must not cover page when closed */
+{$m}[hidden] { display:none !important; }
 
 
 /* v3.3.6 final instance fixes */
@@ -722,24 +724,28 @@ function ha_sites_pro_inline_styles( $id ) {
 {$p} .ha-pro-btn-secondary .ha-pro-btn-arrow { position:absolute !important; inset-inline-start:8px !important; top:50% !important; transform:translateY(-50%) !important; width:24px !important; height:24px !important; border-radius:999px !important; background:#011627 !important; color:#fff !important; display:inline-flex !important; align-items:center !important; justify-content:center !important; line-height:1 !important; font-size:13px !important; font-family:Tahoma,Arial,sans-serif !important; transition:transform .28s ease, box-shadow .28s ease, background .28s ease !important; z-index:2 !important; }
 {$p} .ha-pro-btn-secondary:hover .ha-pro-btn-arrow { transform:translateY(-50%) translateX(-4px) !important; box-shadow:0 8px 16px rgba(1,22,39,.22) !important; }
 @media (max-width:768px){
-{$m} .ha-pro-preview-header { height:auto !important; min-height:108px !important; padding:8px 10px !important; display:grid !important; grid-template-columns:1fr auto !important; grid-template-areas:'title close' 'devices actions' !important; align-items:center !important; gap:8px !important; }
-{$m} .ha-pro-preview-title { grid-area:title !important; min-width:0 !important; }
-{$m} .ha-pro-preview-title strong { font-size:12px !important; line-height:1.5 !important; white-space:nowrap !important; overflow:hidden !important; text-overflow:ellipsis !important; }
-{$m} .ha-pro-preview-title span { font-size:10.5px !important; line-height:1.55 !important; display:-webkit-box !important; -webkit-line-clamp:2 !important; -webkit-box-orient:vertical !important; overflow:hidden !important; color:rgba(255,255,255,.72) !important; max-width:100% !important; }
-{$m} .ha-pro-preview-devices { grid-area:devices !important; width:100% !important; min-width:0 !important; overflow-x:auto !important; border-radius:10px !important; }
-{$m} .ha-pro-preview-devices button { font-size:11px !important; padding:8px 10px !important; white-space:nowrap !important; min-width:max-content !important; }
-{$m} .ha-pro-preview-actions { grid-area:actions !important; display:flex !important; gap:6px !important; justify-content:flex-end !important; }
-{$m} .ha-pro-preview-open { font-size:11px !important; padding:8px 10px !important; white-space:nowrap !important; border-radius:10px !important; }
-{$m} .ha-pro-preview-close { grid-area:close !important; width:36px !important; height:36px !important; border-radius:12px !important; background:rgba(239,68,68,.9) !important; color:#fff !important; font-size:22px !important; }
+/* Header: single compact flex row — device switcher hidden */
+{$m} .ha-pro-preview-header { height:54px !important; min-height:54px !important; max-height:54px !important; padding:0 10px !important; display:flex !important; flex-direction:row !important; align-items:center !important; gap:6px !important; flex-wrap:nowrap !important; overflow:hidden !important; }
+{$m} .ha-pro-preview-title { flex:1 1 0 !important; min-width:0 !important; display:flex !important; flex-direction:column !important; justify-content:center !important; overflow:hidden !important; }
+{$m} .ha-pro-preview-title strong { font-size:12px !important; line-height:1.4 !important; white-space:nowrap !important; overflow:hidden !important; text-overflow:ellipsis !important; }
+{$m} .ha-pro-preview-title span { font-size:10px !important; line-height:1.3 !important; white-space:nowrap !important; overflow:hidden !important; text-overflow:ellipsis !important; color:rgba(255,255,255,.6) !important; max-width:100% !important; display:block !important; }
+/* Hide device switcher buttons (دسکتاپ/تبلت/موبایل) on mobile */
+{$m} .ha-pro-preview-devices { display:none !important; }
+{$m} .ha-pro-preview-actions { flex-shrink:0 !important; display:flex !important; gap:4px !important; align-items:center !important; }
+{$m} .ha-pro-preview-open { font-size:10px !important; padding:5px 8px !important; white-space:nowrap !important; border-radius:6px !important; }
+{$m} .ha-pro-preview-close { flex-shrink:0 !important; width:30px !important; height:30px !important; border-radius:8px !important; background:rgba(239,68,68,.9) !important; color:#fff !important; font-size:20px !important; }
 {$m} .ha-pro-frame-stage { position:relative !important; display:block !important; overflow:hidden !important; min-height:0 !important; }
 {$m} .ha-pro-frame-wrap { position:absolute !important; inset:0 !important; padding:8px !important; display:flex !important; }
 {$m} .ha-pro-frame-wrap iframe { width:100% !important; height:100% !important; border-radius:12px !important; }
-{$m} .ha-pro-preview-side { position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; max-width:none !important; min-width:0 !important; border:0 !important; border-radius:0 !important; background:#fff !important; box-shadow:0 -16px 42px rgba(1,22,39,.18) !important; transform:translateY(0) !important; opacity:1 !important; pointer-events:auto !important; z-index:50 !important; overflow-y:auto !important; -webkit-overflow-scrolling:touch !important; padding-bottom:82px !important; }
+{$m} .ha-pro-preview-side { position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; max-width:none !important; min-width:0 !important; border:0 !important; border-radius:0 !important; background:#fff !important; box-shadow:0 -16px 42px rgba(1,22,39,.18) !important; transform:translateY(0) !important; opacity:1 !important; pointer-events:auto !important; z-index:50 !important; overflow-y:auto !important; -webkit-overflow-scrolling:touch !important; padding-bottom:82px !important; transition:transform .4s cubic-bezier(.32,1,.4,1), opacity .3s ease !important; }
 {$m} .ha-pro-frame-stage.is-info-hidden .ha-pro-preview-side { transform:translateY(100%) !important; opacity:0 !important; pointer-events:none !important; }
-{$m} .ha-pro-side-handle { position:absolute !important; right:16px !important; left:auto !important; top:auto !important; bottom:16px !important; width:auto !important; min-width:132px !important; height:44px !important; padding:0 18px !important; border-radius:999px !important; transform:none !important; background:#011627 !important; color:#fff !important; border:1px solid rgba(255,255,255,.28) !important; box-shadow:0 10px 24px rgba(1,22,39,.22) !important; z-index:70 !important; font-size:13px !important; font-weight:900 !important; }
-{$m} .ha-pro-side-handle::before { content:'جزئیات پروژه' !important; transform:none !important; font-family:inherit !important; display:block !important; }
-{$m} .ha-pro-frame-stage:not(.is-info-hidden) .ha-pro-side-handle { right:auto !important; left:14px !important; top:14px !important; bottom:auto !important; min-width:42px !important; width:42px !important; height:42px !important; padding:0 !important; border-radius:12px !important; background:#ef4444 !important; color:#fff !important; }
-{$m} .ha-pro-frame-stage:not(.is-info-hidden) .ha-pro-side-handle::before { content:'×' !important; font-size:24px !important; line-height:1 !important; }
+{$m} .ha-pro-side-handle { position:absolute !important; right:50% !important; left:auto !important; top:auto !important; bottom:20px !important; transform:translateX(50%) !important; width:auto !important; min-width:150px !important; height:44px !important; padding:0 20px !important; border-radius:999px !important; background:#011627 !important; color:#fff !important; border:1px solid rgba(255,255,255,.28) !important; box-shadow:0 10px 24px rgba(1,22,39,.22) !important; z-index:70 !important; font-size:13px !important; font-weight:900 !important; display:flex !important; align-items:center !important; justify-content:center !important; }
+/* جزئیات پروژه text — explicitly override rotate(180deg) from desktop rule */
+{$m} .ha-pro-side-handle::before { content:'جزئیات پروژه' !important; transform:none !important; font-family:inherit !important; display:block !important; font-size:13px !important; font-weight:900 !important; }
+{$m} .ha-pro-frame-stage.is-info-hidden .ha-pro-side-handle { transform:translateX(50%) !important; right:50% !important; left:auto !important; bottom:20px !important; top:auto !important; min-width:150px !important; width:auto !important; height:44px !important; padding:0 20px !important; border-radius:999px !important; background:#011627 !important; }
+{$m} .ha-pro-frame-stage.is-info-hidden .ha-pro-side-handle::before { content:'جزئیات پروژه' !important; transform:none !important; font-size:13px !important; font-weight:900 !important; }
+{$m} .ha-pro-frame-stage:not(.is-info-hidden) .ha-pro-side-handle { right:auto !important; left:14px !important; top:14px !important; bottom:auto !important; transform:none !important; min-width:42px !important; width:42px !important; height:42px !important; padding:0 !important; border-radius:12px !important; background:#ef4444 !important; color:#fff !important; }
+{$m} .ha-pro-frame-stage:not(.is-info-hidden) .ha-pro-side-handle::before { content:'×' !important; font-size:24px !important; line-height:1 !important; transform:none !important; }
 }
 
 /* ── v3.4.0 fixes ── */
@@ -753,10 +759,12 @@ function ha_sites_pro_inline_styles( $id ) {
 }
 {$p} .ha-pro-btn-secondary:hover .ha-pro-btn-arrow { animation: ha-arrow-swipe 0.55s ease forwards !important; }
 
-/* Fix 3: Desktop sidebar 340px */
+/* Fix 3: Desktop sidebar 340px — only on desktop */
+@media (min-width:769px){
 {$m} .ha-pro-preview-side { width:340px !important; max-width:340px !important; min-width:260px !important; }
 {$m} .ha-pro-side-handle { left:340px !important; }
 {$m} .ha-pro-frame-stage.is-info-hidden .ha-pro-side-handle { left:0 !important; }
+}
 
 /* Fix 6: Blocked iframe fallback mobile */
 @media (max-width: 768px) {
