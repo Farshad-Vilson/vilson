@@ -1,17 +1,16 @@
 <?php
 /**
- * Plugin Name: حرفو — کاراکتر هوشمند حرف اول
+ * Plugin Name: حرفو v3 — اوربیت هوشمند حرف اول
  * Plugin URI:  https://harfaval.com
- * Description: کاراکتر ژله‌ای هوشمند با فیزیک واقعی، تحلیل محتوا و حافظه بازدیدکننده.
- * Version:     2.0.0
+ * Description: کره شیشه‌ای هوشمند با فیزیک ماوس، یادگیری ماشین، ۱۰۰+ رفتار و تحلیل استایل سایت.
+ * Version:     3.0.0
  * Author:      حرف اول
  * Text Domain: harfo
- * License:     GPL v2 or later
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'HARFO_VER', '2.0.0' );
+define( 'HARFO_VER', '3.0.0' );
 define( 'HARFO_URL', plugin_dir_url( __FILE__ ) );
 
 add_action( 'wp_enqueue_scripts', function () {
@@ -20,127 +19,98 @@ add_action( 'wp_enqueue_scripts', function () {
 } );
 
 add_action( 'wp_footer', function () { ?>
-<div id="harfo-wrapper" dir="rtl" aria-hidden="true">
+<div id="harfo-root" aria-hidden="true" dir="rtl">
 
-	<!-- ── کاراکتر اصلی ── -->
-	<div id="harfo-frame" class="hm-loading">
+  <!-- ── Spring wrapper (physics transforms this) ── -->
+  <div id="harfo-w" class="hs-loading">
 
-		<!-- حباب گفتار با typing indicator -->
-		<div id="harfo-bubble">
-			<div id="harfo-bubble-inner">
-				<div id="harfo-typing">
-					<span class="hd"></span>
-					<span class="hd"></span>
-					<span class="hd"></span>
-				</div>
-				<span id="harfo-text"></span>
-			</div>
-		</div>
+    <!-- HUD / speech bubble -->
+    <div id="h-hud">
+      <div id="h-dots"><i></i><i></i><i></i></div>
+      <p id="h-msg"></p>
+    </div>
 
-		<!-- ZZZ خواب -->
-		<div id="harfo-zzz" aria-hidden="true">
-			<b class="hz hz1">Z</b>
-			<b class="hz hz2">z</b>
-			<b class="hz hz3">z</b>
-		</div>
+    <!-- ZZZ sleep bubbles -->
+    <div id="h-zzz" aria-hidden="true">
+      <b class="hz">Z</b><b class="hz">z</b><b class="hz">z</b>
+    </div>
 
-		<!-- SVG کاراکتر — طراحی حیوان خانگی -->
-		<svg id="harfo-svg" viewBox="0 0 100 112" xmlns="http://www.w3.org/2000/svg">
+    <!-- ── Orb ── -->
+    <div id="h-orb">
 
-			<!-- سایه زمینی -->
-			<ellipse id="h-shadow" cx="50" cy="110" rx="21" ry="4"
-				fill="rgba(13,27,42,0.13)"/>
+      <!-- Outer ambient aura -->
+      <div class="g-aura"></div>
 
-			<!-- دُم -->
-			<path id="h-tail"
-				d="M 76,92 Q 90,84 87,73 Q 84,63 91,57"
-				stroke="#1DBFB4" stroke-width="8.5"
-				fill="none" stroke-linecap="round"/>
+      <!-- Ear bumps (glass-like) -->
+      <div class="g-ear g-el"></div>
+      <div class="g-ear g-er"></div>
 
-			<!-- گوش چپ -->
-			<circle cx="27" cy="23" r="17" fill="#1DBFB4"/>
-			<ellipse cx="27" cy="26" rx="9" ry="10" fill="#0fb3a8" opacity="0.5"/>
+      <!-- Glass sphere layers -->
+      <div class="g-sphere">
 
-			<!-- گوش راست -->
-			<circle cx="73" cy="23" r="17" fill="#1DBFB4"/>
-			<ellipse cx="73" cy="26" rx="9" ry="10" fill="#0fb3a8" opacity="0.5"/>
+        <!-- Outer shell (ring + glow) -->
+        <div class="g-shell"></div>
 
-			<!-- بدن اصلی -->
-			<ellipse cx="50" cy="70" rx="39" ry="42" fill="#1DBFB4"/>
+        <!-- Dark inner core -->
+        <div class="g-core">
 
-			<!-- هایلایت بدن -->
-			<ellipse cx="37" cy="52" rx="9" ry="6.5"
-				fill="rgba(255,255,255,0.18)" transform="rotate(-22 37 52)"/>
+          <!-- Glass highlight top-left -->
+          <div class="g-hl"></div>
 
-			<!-- گونه‌ها -->
-			<circle cx="22" cy="65" r="10" fill="#0fb3a8" opacity="0.32"/>
-			<circle cx="78" cy="65" r="10" fill="#0fb3a8" opacity="0.32"/>
+          <!-- Face: eyes + H1 logo (SVG) -->
+          <svg id="h-face" viewBox="0 0 72 70" fill="none" xmlns="http://www.w3.org/2000/svg">
 
-			<!-- سفیدی چشم -->
-			<circle cx="35" cy="52" r="13" fill="white"/>
-			<circle cx="65" cy="52" r="13" fill="white"/>
+            <!-- EYES: happy ^^ -->
+            <path class="fe fe-h" d="M9,21 Q19,10 29,21"   stroke="#1DBFB4" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+            <path class="fe fe-h" d="M43,21 Q53,10 63,21"  stroke="#1DBFB4" stroke-width="3.5" fill="none" stroke-linecap="round"/>
 
-			<!-- مردمک‌ها (JS این‌ها را برای ردیابی چشم جابه‌جا می‌کند) -->
-			<circle id="h-pl" cx="35" cy="53" r="8.5" fill="#0D1B2A"/>
-			<circle id="h-pr" cx="65" cy="53" r="8.5" fill="#0D1B2A"/>
+            <!-- EYES: sleeping vv -->
+            <path class="fe fe-s" d="M9,14 Q19,23 29,14"   stroke="#1DBFB4" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+            <path class="fe fe-s" d="M43,14 Q53,23 63,14"  stroke="#1DBFB4" stroke-width="3.5" fill="none" stroke-linecap="round"/>
 
-			<!-- برق چشم -->
-			<circle cx="38.5" cy="50" r="2.8" fill="white"/>
-			<circle cx="68.5" cy="50" r="2.8" fill="white"/>
+            <!-- EYES: surprised OO -->
+            <circle class="fe fe-x" cx="19" cy="16" r="8"  stroke="#1DBFB4" stroke-width="3" fill="rgba(29,191,180,0.1)"/>
+            <circle class="fe fe-x" cx="53" cy="16" r="8"  stroke="#1DBFB4" stroke-width="3" fill="rgba(29,191,180,0.1)"/>
 
-			<!-- پلک‌ها (CSS scaleY برای بستن) -->
-			<rect class="h-lid" id="h-lid-l" x="22" y="39" width="26" height="26"
-				rx="13" fill="#1DBFB4"/>
-			<rect class="h-lid" id="h-lid-r" x="52" y="39" width="26" height="26"
-				rx="13" fill="#1DBFB4"/>
+            <!-- EYES: mischief >< -->
+            <path class="fe fe-m" d="M9,22 L29,12 M29,22 L9,12"  stroke="#1DBFB4" stroke-width="3" stroke-linecap="round"/>
+            <path class="fe fe-m" d="M43,22 L63,12 M63,22 L43,12" stroke="#1DBFB4" stroke-width="3" stroke-linecap="round"/>
 
-			<!-- بینی -->
-			<ellipse cx="50" cy="68" rx="3.5" ry="2.5" fill="#0D1B2A" opacity="0.65"/>
+            <!-- EYES: curious ~ -->
+            <path class="fe fe-c" d="M9,17 Q14,11 19,17 Q24,23 29,17"  stroke="#1DBFB4" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path class="fe fe-c" d="M43,17 Q48,11 53,17 Q58,23 63,17" stroke="#1DBFB4" stroke-width="3" fill="none" stroke-linecap="round"/>
 
-			<!-- دهان — حالت لبخند (پیش‌فرض) -->
-			<path class="h-mouth h-smile"
-				d="M 37,76 Q 50,86 63,76"
-				stroke="#0D1B2A" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+            <!-- H1 LOGO MARK (always visible) -->
+            <g class="g-logo">
+              <!-- H — white bars -->
+              <rect x="4"  y="30" width="10" height="34" rx="2.5" fill="rgba(255,255,255,0.86)"/>
+              <rect x="23" y="30" width="10" height="34" rx="2.5" fill="rgba(255,255,255,0.86)"/>
+              <rect x="4"  y="43" width="29" height="9"  fill="rgba(255,255,255,0.86)"/>
+              <!-- 1 — teal -->
+              <rect x="36" y="37" width="9" height="27" rx="2" fill="#1DBFB4"/>
+              <path d="M26,30 L47,30 L36,39 L26,39 Z" fill="#1DBFB4"/>
+            </g>
 
-			<!-- دهان — ناراحت -->
-			<path class="h-mouth h-sad"
-				d="M 37,82 Q 50,74 63,82"
-				stroke="#0D1B2A" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+          </svg>
 
-			<!-- دهان — هیجان‌زده (باز) -->
-			<path class="h-mouth h-open"
-				d="M 39,75 Q 50,86 61,75 Q 50,92 39,75 Z"
-				fill="#0D1B2A" stroke="none"/>
+        </div><!-- /g-core -->
+      </div><!-- /g-sphere -->
 
-			<!-- دهان — بی‌تفاوت / خواب -->
-			<path class="h-mouth h-neutral"
-				d="M 41,79 L 59,79"
-				stroke="#0D1B2A" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+    </div><!-- /h-orb -->
 
-			<!-- دست کمکی (در حالت helping) -->
-			<path class="h-arm h-arm-r"
-				d="M 83,65 Q 97,60 94,74"
-				stroke="#1DBFB4" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <!-- Ground glow reflection -->
+    <div class="g-ground"></div>
 
-		</svg>
+    <!-- Close button -->
+    <button id="h-close" aria-label="پنهان کردن">×</button>
 
-		<!-- دکمه بستن -->
-		<button id="harfo-close" title="پنهان کردن حرفو" aria-label="پنهان کردن">×</button>
+  </div><!-- /harfo-w -->
 
-	</div><!-- /harfo-frame -->
+  <!-- Restore button (visible when hidden) -->
+  <div id="h-restore" role="button" tabindex="0" aria-label="نمایش حرفو">
+    <div class="r-shell"></div>
+    <div class="r-core"><span>H1</span></div>
+  </div>
 
-	<!-- دکمه بازگشت (وقتی پنهان است) -->
-	<button id="harfo-restore" title="نمایش حرفو" aria-label="باز کردن حرفو">
-		<svg viewBox="0 0 46 46" xmlns="http://www.w3.org/2000/svg">
-			<circle cx="23" cy="23" r="21" fill="#1DBFB4"/>
-			<circle cx="17" cy="21" r="5" fill="#0D1B2A"/>
-			<circle cx="29" cy="21" r="5" fill="#0D1B2A"/>
-			<circle cx="18.5" cy="19.5" r="1.8" fill="white"/>
-			<circle cx="30.5" cy="19.5" r="1.8" fill="white"/>
-			<path d="M15,29 Q23,36 31,29"
-				stroke="#0D1B2A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-		</svg>
-	</button>
-
-</div>
+</div><!-- /harfo-root -->
 <?php } );

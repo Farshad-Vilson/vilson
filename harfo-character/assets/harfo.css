@@ -1,416 +1,594 @@
 /* ============================================================
-   HARFO v2 — حرف اول — Smart Pet Character
+   HARFO v3 — Orbital Intelligence — حرف اول
+   Glassy orb · Spring physics · 100+ behaviors
    ============================================================ */
 
-/* ── Wrapper (spring physics moves this via transform) ── */
-#harfo-wrapper {
+/* ── Root anchor (fixed, no pointer) ── */
+#harfo-root {
 	position: fixed;
-	right: 28px;
-	bottom: 28px;
+	right: 0; bottom: 0;
 	z-index: 2147483640;
 	pointer-events: none;
+	font-family: 'Vazirmatn','IRANSans',Tahoma,Arial,sans-serif;
+}
+
+/* ── Spring wrapper — JS moves via transform:translate(dx,dy) ── */
+#harfo-w {
+	position: absolute;
+	right: 28px; bottom: 28px;
+	pointer-events: auto;
 	user-select: none;
 	-webkit-user-select: none;
 	will-change: transform;
-	/* JS overrides transform: translate(dx,dy) */
 }
 
-#harfo-wrapper * { box-sizing: border-box; }
-
-/* ── Main Frame ── */
-#harfo-frame {
+/* ── Orb container ── */
+#h-orb {
 	position: relative;
-	width: 92px;
-	height: 92px;
+	width: 90px; height: 90px;
 	cursor: pointer;
-	pointer-events: auto;
-	filter: drop-shadow(0 10px 22px rgba(13,27,42,0.26));
-	transition: filter .3s ease;
 }
 
-#harfo-frame:hover {
-	filter: drop-shadow(0 12px 28px rgba(29,191,180,0.38));
+/* ── Ambient aura (behind orb) ── */
+.g-aura {
+	position: absolute;
+	top: 50%; left: 50%;
+	width: 170%; height: 170%;
+	transform: translate(-50%,-50%);
+	background: radial-gradient(circle, rgba(29,191,180,0.22) 0%, transparent 65%);
+	border-radius: 50%;
+	pointer-events: none;
+	animation: ha-pulse 3.6s ease-in-out infinite;
 }
 
-/* ── SVG ── */
-#harfo-svg {
-	width: 92px;
-	height: 104px;
-	overflow: visible;
-	display: block;
+/* ── Ear bumps ── */
+.g-ear {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 21px; height: 30px;
+	border-radius: 50%;
+	background: radial-gradient(circle at 50% 38%, rgba(29,191,180,0.22), rgba(10,22,36,0.45));
+	border: 1px solid rgba(29,191,180,0.32);
+	box-shadow: 0 0 14px rgba(29,191,180,0.2), inset 0 0 8px rgba(29,191,180,0.1);
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+}
+.g-el { left: -10px; }
+.g-er { right: -10px; }
+
+/* ── Glass sphere layers ── */
+.g-sphere {
+	position: absolute; inset: 0;
+	border-radius: 50%;
 }
 
-/* ── Eyelids (scaleY from top = close down) ── */
-.h-lid {
-	transform-box: fill-box;
-	transform-origin: center top;
-	transform: scaleY(0);
-	transition: transform .4s cubic-bezier(.4,0,.2,1);
+/* Outer ring + multi-layer glow */
+.g-shell {
+	position: absolute; inset: 0;
+	border-radius: 50%;
+	border: 2px solid rgba(29,191,180,0.55);
+	box-shadow:
+		0 0 20px rgba(29,191,180,0.55),
+		0 0 42px rgba(29,191,180,0.32),
+		0 0 88px rgba(29,191,180,0.15),
+		inset 0 0 22px rgba(29,191,180,0.1);
+	animation: ha-glow 3.5s ease-in-out infinite;
+	pointer-events: none;
 }
 
-/* ── Mouth (default = smile visible, rest hidden) ── */
-.h-mouth        { display: none; }
-.h-smile        { display: block; }
-
-/* ── Arm (hidden by default) ── */
-.h-arm { opacity: 0; transition: opacity .4s ease; }
-
-/* ── Tail ── */
-#h-tail {
-	transform-box: fill-box;
-	transform-origin: 76px 92px;
-	animation: h-tail-wag 1.6s ease-in-out infinite;
+/* Dark inner core */
+.g-core {
+	position: absolute;
+	inset: 6px;
+	border-radius: 50%;
+	background: radial-gradient(circle at 38% 30%, #1e3e58 0%, #0c1e30 42%, #040c16 100%);
+	box-shadow:
+		inset 0 0 28px rgba(29,191,180,0.15),
+		inset 0 -14px 30px rgba(0,0,0,0.65);
+	overflow: hidden;
 }
 
-@keyframes h-tail-wag {
-	0%,100% { transform: rotate(0deg); }
-	35%     { transform: rotate(-14deg); }
-	70%     { transform: rotate(12deg); }
+/* Starfield particles inside */
+.g-core::before {
+	content: '';
+	position: absolute; inset: 0;
+	background-image:
+		radial-gradient(circle, rgba(29,191,180,0.7) 1px, transparent 1px),
+		radial-gradient(circle, rgba(29,191,180,0.45) 1px, transparent 1px),
+		radial-gradient(circle, rgba(200,255,255,0.35) 1px, transparent 1px);
+	background-size: 20px 20px, 32px 32px, 16px 16px;
+	background-position: 4px 5px, 11px 14px, 7px 3px;
+	opacity: 0.45;
+	animation: ha-stars 9s linear infinite;
 }
 
-/* ============================================================
-   STATE: LOADING  (invisible)
-   ============================================================ */
-.hm-loading #harfo-svg { opacity: 0; }
-
-/* ============================================================
-   STATE: ARRIVING
-   ============================================================ */
-@keyframes h-arrive {
-	0%   { transform: translateY(200px) scaleX(.8) scaleY(1.25); opacity: 0; }
-	55%  { transform: translateY(-18px) scaleX(1.22) scaleY(.78); opacity: 1; }
-	70%  { transform: translateY(10px)  scaleX(.94) scaleY(1.07); }
-	82%  { transform: translateY(-7px)  scaleX(1.06) scaleY(.95); }
-	91%  { transform: translateY(4px)   scaleX(.98) scaleY(1.02); }
-	100% { transform: translateY(0)     scaleX(1)   scaleY(1); }
+/* Glass highlight top-left */
+.g-hl {
+	position: absolute;
+	top: 9%; left: 14%;
+	width: 36px; height: 23px;
+	background: radial-gradient(ellipse at 38% 38%, rgba(255,255,255,0.32) 0%, transparent 72%);
+	border-radius: 50%;
+	transform: rotate(-22deg);
+	pointer-events: none;
 }
 
-.hm-arriving #harfo-svg {
-	opacity: 1;
-	animation: h-arrive .9s cubic-bezier(.22,1,.36,1) both;
+/* Face SVG fills core */
+#h-face {
+	position: absolute; inset: 0;
+	width: 100%; height: 100%;
 }
 
-/* ============================================================
-   STATE: IDLE  — slow gentle float
-   ============================================================ */
-@keyframes h-float {
-	0%,100% { transform: translateY(0)    scaleX(1)    scaleY(1); }
-	35%     { transform: translateY(-9px) scaleX(.97)  scaleY(1.03); }
-	65%     { transform: translateY(-13px) scaleX(.95) scaleY(1.05); }
-}
+/* Eye expression display */
+.fe       { display: none; }
+.fe-h     { display: block; }  /* default: happy */
 
-.hm-idle #harfo-svg,
-.hm-curious #harfo-svg,
-.hm-reacting #harfo-svg {
-	animation: h-float 4s ease-in-out infinite;
-}
-
-/* Blink in idle */
-@keyframes h-blink {
-	0%,88%,100% { transform: scaleY(0); }
-	93%         { transform: scaleY(1); }
-}
-.hm-idle .h-lid {
-	animation: h-blink 5.5s ease-in-out infinite;
-}
-/* stagger blink slightly */
-.hm-idle #h-lid-r {
-	animation-delay: .06s;
-}
-
-/* ============================================================
-   STATE: GREETING  — wave + happy
-   ============================================================ */
-@keyframes h-greet {
-	0%,100% { transform: rotate(0deg); }
-	18%     { transform: rotate(-11deg) translateY(-7px); }
-	38%     { transform: rotate(9deg)   translateY(-11px); }
-	58%     { transform: rotate(-13deg) translateY(-8px); }
-	78%     { transform: rotate(7deg)   translateY(-5px); }
-}
-.hm-greeting #harfo-svg {
-	animation: h-greet 1.4s ease-in-out both;
-	transform-origin: center bottom;
-}
-.hm-greeting #h-tail {
-	animation-duration: .5s;   /* wag faster when greeting */
+/* Ground glow reflection */
+.g-ground {
+	width: 58px; height: 10px;
+	margin: 4px auto 0;
+	background: radial-gradient(ellipse, rgba(29,191,180,0.32) 0%, transparent 70%);
+	border-radius: 50%;
+	animation: ha-pulse 3.5s ease-in-out infinite;
 }
 
 /* ============================================================
-   STATE: READING  — calm tilt back and forth
+   KEYFRAME ANIMATIONS
    ============================================================ */
-@keyframes h-read {
-	0%,100% { transform: rotate(0deg)  translateY(0); }
-	28%     { transform: rotate(-4deg) translateY(-5px); }
-	72%     { transform: rotate(4deg)  translateY(-4px); }
-}
-.hm-reading #harfo-svg {
-	animation: h-read 2.8s ease-in-out infinite;
+
+@keyframes ha-pulse {
+	0%,100% { opacity: 0.7; transform: translate(-50%,-50%) scale(1); }
+	50%     { opacity: 1;   transform: translate(-50%,-50%) scale(1.18); }
 }
 
-/* ============================================================
-   STATE: HELPING  — gentle pulse + arm
-   ============================================================ */
-@keyframes h-help {
-	0%,100% { transform: scale(1); }
-	50%     { transform: scale(1.03); }
-}
-.hm-helping #harfo-svg { animation: h-help 2s ease-in-out infinite; }
-.hm-helping .h-arm-r   { opacity: 1; }
-
-@keyframes h-arm-sway {
-	0%,100% { transform: rotate(0deg); }
-	40%     { transform: rotate(-8deg); }
-	80%     { transform: rotate(6deg); }
-}
-.hm-helping .h-arm-r {
-	transform-box: fill-box;
-	transform-origin: 83px 65px;
-	animation: h-arm-sway 1.8s ease-in-out infinite;
+@keyframes ha-glow {
+	0%,100% {
+		box-shadow: 0 0 20px rgba(29,191,180,0.55), 0 0 42px rgba(29,191,180,0.32),
+		            0 0 88px rgba(29,191,180,0.15), inset 0 0 22px rgba(29,191,180,0.1);
+	}
+	50% {
+		box-shadow: 0 0 34px rgba(29,191,180,0.82), 0 0 66px rgba(29,191,180,0.48),
+		            0 0 130px rgba(29,191,180,0.24), inset 0 0 32px rgba(29,191,180,0.18);
+	}
 }
 
-/* ============================================================
-   STATE: BORED  — slow, droopy eyelids
-   ============================================================ */
-@keyframes h-bored {
-	0%,100% { transform: translateY(0)    scaleX(1); }
-	60%     { transform: translateY(-5px) scaleX(1.01); }
+@keyframes ha-stars {
+	0%   { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
 }
-.hm-bored #harfo-svg { animation: h-bored 6s ease-in-out infinite; }
-.hm-bored .h-lid     { transform: scaleY(.42); }
-.hm-bored #h-tail    { animation-duration: 4s; }
 
-/* ============================================================
-   STATE: SLEEPING  — slow breathing + closed eyes + zzz
-   ============================================================ */
-@keyframes h-sleep {
-	0%,100% { transform: scaleX(1)    scaleY(1); }
-	50%     { transform: scaleX(1.04) scaleY(.97); }
+/* Float */
+@keyframes ha-float {
+	0%,100% { transform: translateY(0) rotate(0deg); }
+	38%     { transform: translateY(-10px) rotate(-1.8deg); }
+	68%     { transform: translateY(-14px) rotate(1.8deg); }
 }
-.hm-sleeping #harfo-svg  { animation: h-sleep 3s ease-in-out infinite; }
-.hm-sleeping .h-lid      { transform: scaleY(1) !important; }
-.hm-sleeping .h-mouth    { display: none !important; }
-.hm-sleeping .h-neutral  { display: block !important; }
-.hm-sleeping #h-tail     { animation-play-state: paused; }
 
-/* ============================================================
-   STATE: WAKING  — surprise shake
-   ============================================================ */
-@keyframes h-wake {
+/* Jelly */
+@keyframes ha-jelly {
+	0%,100% { transform: scale(1,1); }
+	14%     { transform: scale(1.32,0.68); }
+	30%     { transform: scale(0.76,1.3); }
+	47%     { transform: scale(1.16,0.85); }
+	64%     { transform: scale(0.92,1.08); }
+}
+
+/* Spin */
+@keyframes ha-spin360 {
+	from { transform: rotate(0deg); }
+	to   { transform: rotate(360deg); }
+}
+
+/* Barrel roll 3D */
+@keyframes ha-barrel {
+	0%   { transform: rotateY(0) scale(1); }
+	25%  { transform: rotateY(90deg) scale(0.65); }
+	50%  { transform: rotateY(180deg) scale(1); }
+	75%  { transform: rotateY(270deg) scale(0.65); }
+	100% { transform: rotateY(360deg) scale(1); }
+}
+
+/* Shake */
+@keyframes ha-shake {
+	0%,100% { transform: translateX(0); }
+	14%     { transform: translateX(-11px); }
+	28%     { transform: translateX(11px); }
+	42%     { transform: translateX(-8px); }
+	57%     { transform: translateX(8px); }
+	71%     { transform: translateX(-4px); }
+	85%     { transform: translateX(4px); }
+}
+
+/* Dance wiggle */
+@keyframes ha-dance {
+	0%,100% { transform: rotate(0) scale(1); }
+	18%     { transform: rotate(-15deg) scale(1.1); }
+	36%     { transform: rotate(15deg) scale(1.1); }
+	54%     { transform: rotate(-10deg) scale(1.06); }
+	72%     { transform: rotate(10deg) scale(1.06); }
+	90%     { transform: rotate(-4deg) scale(1.02); }
+}
+
+/* Scare/startle */
+@keyframes ha-scare {
 	0%   { transform: scale(1); }
-	18%  { transform: scale(1.32) rotate(-6deg); }
-	36%  { transform: scale(.88) rotate(5deg); }
-	54%  { transform: scale(1.18) rotate(-3deg); }
-	78%  { transform: scale(.96); }
+	18%  { transform: scale(1.42) rotate(-8deg); }
+	36%  { transform: scale(0.83) rotate(7deg); }
+	54%  { transform: scale(1.22) rotate(-4deg); }
+	75%  { transform: scale(0.96); }
 	100% { transform: scale(1); }
 }
-.hm-waking #harfo-svg { animation: h-wake .65s ease both; }
 
-/* ============================================================
-   STATE: FAREWELL  — pleading stretch
-   ============================================================ */
-@keyframes h-plead {
-	0%,100% { transform: scaleX(1)    translateY(0); }
-	30%     { transform: scaleX(1.14) translateY(-9px); }
-	65%     { transform: scaleX(.9)   translateY(-11px); }
+/* Tiny then restore */
+@keyframes ha-tiny {
+	0%   { transform: scale(1); }
+	28%  { transform: scale(0.25); }
+	68%  { transform: scale(0.25); }
+	100% { transform: scale(1); }
 }
-.hm-farewell #harfo-svg  { animation: h-plead 1.1s ease-in-out infinite; }
-.hm-farewell .h-mouth    { display: none !important; }
-.hm-farewell .h-sad      { display: block !important; }
-.hm-farewell .h-lid      { transform: scaleY(.22); }
-.hm-farewell #h-tail     { animation-duration: .5s; }
 
-/* ============================================================
-   JELLY  — on-demand class added by JS
-   ============================================================ */
-@keyframes h-jelly {
-	0%,100% { transform: scaleX(1)    scaleY(1); }
-	16%     { transform: scaleX(1.28) scaleY(.73); }
-	33%     { transform: scaleX(.8)   scaleY(1.26); }
-	50%     { transform: scaleX(1.14) scaleY(.88); }
-	68%     { transform: scaleX(.93)  scaleY(1.07); }
+/* Huge then restore */
+@keyframes ha-huge {
+	0%   { transform: scale(1); }
+	35%  { transform: scale(1.65); }
+	65%  { transform: scale(1.65); }
+	100% { transform: scale(1); }
 }
-.hf-jelly #harfo-svg { animation: h-jelly .65s ease !important; }
+
+/* Tunnel out */
+@keyframes ha-tout {
+	0%   { transform: scale(1) rotateY(0) ; opacity: 1; }
+	100% { transform: scale(0) rotateY(180deg); opacity: 0; }
+}
+
+/* Tunnel in */
+@keyframes ha-tin {
+	0%   { transform: scale(0) rotateY(-180deg); opacity: 0; }
+	100% { transform: scale(1) rotateY(0); opacity: 1; }
+}
+
+/* Ghost flicker */
+@keyframes ha-ghost {
+	0%,100% { opacity: 1; }
+	40%     { opacity: 0.12; filter: blur(2px); }
+	70%     { opacity: 0.55; }
+}
+
+/* Warp out */
+@keyframes ha-warpout {
+	0%   { transform: scale(1); opacity: 1; }
+	100% { transform: scaleX(5) scaleY(0.2); opacity: 0; }
+}
+
+/* Warp in */
+@keyframes ha-warpin {
+	0%   { transform: scaleX(5) scaleY(0.2); opacity: 0; }
+	100% { transform: scale(1); opacity: 1; }
+}
+
+/* Bounce land */
+@keyframes ha-land {
+	0%   { transform: scale(1); }
+	18%  { transform: scale(1.28,0.7); }
+	36%  { transform: scale(0.8,1.26); }
+	54%  { transform: scale(1.12,0.9); }
+	72%  { transform: scale(0.95,1.05); }
+	100% { transform: scale(1); }
+}
+
+/* Freeze + snap */
+@keyframes ha-freeze {
+	0%,55% { filter: brightness(2.5) saturate(0); }
+	60%    { filter: brightness(1) saturate(1); transform: scale(1.18); }
+	100%   { transform: scale(1); filter: none; }
+}
+
+/* Rainbow glow */
+@keyframes ha-rainbow {
+	0%   { filter: hue-rotate(0deg) brightness(1.2); }
+	100% { filter: hue-rotate(360deg) brightness(1.2); }
+}
+
+/* Sleeping breathe */
+@keyframes ha-sleepbreathe {
+	0%,100% { transform: scale(1) rotate(0deg); }
+	50%     { transform: scale(1.06,0.95) rotate(2deg); }
+}
+
+/* Glow ping */
+@keyframes ha-glowping {
+	0%   { box-shadow: 0 0 0 0 rgba(29,191,180,0.9), 0 0 20px rgba(29,191,180,0.55); }
+	100% { box-shadow: 0 0 0 45px rgba(29,191,180,0), 0 0 20px rgba(29,191,180,0.55); }
+}
+
+/* Spiral */
+@keyframes ha-spiral {
+	0%   { transform: rotate(0deg) scale(0.5); opacity: 0; }
+	60%  { transform: rotate(540deg) scale(1.08); opacity: 1; }
+	100% { transform: rotate(720deg) scale(1); }
+}
+
+/* Echo ring */
+@keyframes ha-echo-ring {
+	0%   { transform: scale(1); opacity: 0.6; }
+	100% { transform: scale(2.4); opacity: 0; }
+}
+
+/* Ear wiggle */
+@keyframes ha-ear-w {
+	0%,100% { transform: translateY(-50%) scaleX(1); }
+	25%     { transform: translateY(-60%) scaleX(0.8); }
+	75%     { transform: translateY(-40%) scaleX(1.2); }
+}
+
+/* Float up high */
+@keyframes ha-floathigh {
+	0%   { transform: translateY(0); }
+	50%  { transform: translateY(-35px); }
+	100% { transform: translateY(0); }
+}
+
+/* Edge patrol */
+@keyframes ha-patrol {
+	0%,100% { transform: translateX(0); }
+	50%     { transform: translateX(-20px); }
+}
 
 /* ============================================================
-   ZZZ BUBBLES
+   ONE-SHOT ANIMATION CLASSES (added/removed by JS on #h-orb)
+   All use !important to override base float
    ============================================================ */
-#harfo-zzz {
-	position: absolute;
-	top: -6px;
-	left: -22px;
-	opacity: 0;
+#h-orb.ha-jelly    { animation: ha-jelly    .62s ease !important; }
+#h-orb.ha-spin     { animation: ha-spin360  .7s  cubic-bezier(.4,0,.2,1) both !important; }
+#h-orb.ha-spin2    { animation: ha-spin360  .35s linear 2 both !important; }
+#h-orb.ha-barrel   { animation: ha-barrel   .82s ease both !important; }
+#h-orb.ha-shake    { animation: ha-shake    .62s ease both !important; }
+#h-orb.ha-dance    { animation: ha-dance    .85s ease-in-out both !important; }
+#h-orb.ha-scare    { animation: ha-scare    .55s ease both !important; }
+#h-orb.ha-tiny     { animation: ha-tiny     1.5s ease both !important; }
+#h-orb.ha-huge     { animation: ha-huge     1.3s ease both !important; }
+#h-orb.ha-tout     { animation: ha-tout     .42s ease-in  both !important; }
+#h-orb.ha-tin      { animation: ha-tin      .42s ease-out both !important; }
+#h-orb.ha-ghost    { animation: ha-ghost    1.2s ease both !important; }
+#h-orb.ha-warpout  { animation: ha-warpout  .28s ease-in  both !important; }
+#h-orb.ha-warpin   { animation: ha-warpin   .28s ease-out both !important; }
+#h-orb.ha-land     { animation: ha-land     .55s ease both !important; }
+#h-orb.ha-freeze   { animation: ha-freeze   1.1s ease both !important; }
+#h-orb.ha-spiral   { animation: ha-spiral   .9s  ease-out both !important; }
+#h-orb.ha-floathigh { animation: ha-floathigh 1.8s ease-in-out both !important; }
+
+.ha-rainbow #h-orb { animation: ha-rainbow 1.6s linear both !important; }
+.ha-ping .g-shell  { animation: ha-glowping .85s ease-out both !important; }
+
+/* Ear wiggle state */
+.ha-earwig .g-ear { animation: ha-ear-w .6s ease-in-out 3; }
+
+/* Echo rings (injected divs) */
+.h-echo-ring {
+	position: fixed;
+	border-radius: 50%;
+	border: 2px solid rgba(29,191,180,0.6);
 	pointer-events: none;
-	transition: opacity .6s ease;
+	z-index: 2147483638;
+	animation: ha-echo-ring .8s ease-out both;
 }
-.hm-sleeping #harfo-zzz { opacity: 1; }
+
+/* ============================================================
+   STATE CLASSES
+   ============================================================ */
+
+/* Idle float */
+.hs-idle #h-orb   { animation: ha-float 4.2s ease-in-out infinite; }
+.hs-curious #h-orb { animation: ha-float 3s ease-in-out infinite; }
+
+/* Sleeping */
+.hs-sleep .fe-h    { display: none; }
+.hs-sleep .fe-s    { display: block; }
+.hs-sleep #h-orb   { animation: ha-sleepbreathe 2.9s ease-in-out infinite; }
+
+/* Surprised */
+.hs-surprise .fe-h { display: none; }
+.hs-surprise .fe-x { display: block; }
+
+/* Mischief */
+.hs-mischief .fe-h { display: none; }
+.hs-mischief .fe-m { display: block; }
+
+/* Curious wavy */
+.hs-curious .fe-h  { display: none; }
+.hs-curious .fe-c  { display: block; }
+
+/* ============================================================
+   ZZZ SLEEP
+   ============================================================ */
+#h-zzz {
+	position: absolute;
+	top: -8px; left: -24px;
+	opacity: 0; pointer-events: none;
+	transition: opacity .55s ease;
+}
+.hs-sleep #h-zzz { opacity: 1; }
 
 .hz {
 	display: block;
 	position: absolute;
 	font-style: normal;
+	font-weight: 900;
 	color: #1DBFB4;
-	text-shadow: 0 2px 5px rgba(13,27,42,0.28);
-	animation: h-zzz-rise 2.4s ease-in-out infinite;
+	text-shadow: 0 0 10px rgba(29,191,180,0.7);
+	animation: ha-zzz 2.4s ease-in-out infinite;
 }
-.hz1 { font-size: 22px; top: 0;   left: 0;   animation-delay: 0s; }
-.hz2 { font-size: 16px; top: 22px; left: 24px; animation-delay: .65s; }
-.hz3 { font-size: 12px; top: 40px; left: 42px; animation-delay: 1.3s; }
+.hz:nth-child(1) { font-size: 22px; top:0;   left:0;   animation-delay:0s; }
+.hz:nth-child(2) { font-size: 15px; top:22px; left:25px; animation-delay:.66s; }
+.hz:nth-child(3) { font-size: 11px; top:40px; left:42px; animation-delay:1.32s; }
 
-@keyframes h-zzz-rise {
-	0%   { transform: translate(0,0)       scale(.4); opacity: 0; }
+@keyframes ha-zzz {
+	0%   { transform: translate(0,0) scale(.4); opacity: 0; }
 	20%  { opacity: 1; }
-	75%  { opacity: .7; }
-	100% { transform: translate(-20px,-42px) scale(1.4); opacity: 0; }
+	80%  { opacity: .7; }
+	100% { transform: translate(-20px,-40px) scale(1.4); opacity: 0; }
 }
 
 /* ============================================================
-   SPEECH BUBBLE
+   HUD / SPEECH BUBBLE
    ============================================================ */
-#harfo-bubble {
+#h-hud {
 	position: absolute;
-	bottom: calc(100% + 16px);
-	right: -6px;
-	min-width: 70px;
-	max-width: 220px;
-	pointer-events: none;
+	bottom: calc(100% + 14px);
+	right: -4px;
+	min-width: 80px; max-width: 230px;
+	background: rgba(255,255,255,0.97);
+	color: #0D1B2A;
+	border: 2px solid rgba(29,191,180,0.75);
+	border-radius: 16px 16px 3px 16px;
+	padding: 9px 14px;
+	box-shadow: 0 6px 28px rgba(13,27,42,0.18), 0 0 0 1px rgba(29,191,180,0.12);
+	font-size: 13px; font-weight: 700; line-height: 1.5;
+	direction: rtl; text-align: right;
 	opacity: 0;
 	transform: scale(0) translateY(8px);
 	transform-origin: bottom right;
-	transition:
-		opacity .32s ease,
-		transform .35s cubic-bezier(.34,1.56,.64,1);
+	transition: opacity .3s ease, transform .36s cubic-bezier(.34,1.56,.64,1);
+	pointer-events: none;
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
 }
-#harfo-bubble.hb-show {
-	opacity: 1;
-	transform: scale(1) translateY(0);
-}
+#h-hud.hud-on { opacity: 1; transform: scale(1) translateY(0); }
 
-#harfo-bubble-inner {
-	background: #fff;
-	color: #0D1B2A;
-	border: 2.5px solid #1DBFB4;
-	border-radius: 18px 18px 4px 18px;
-	padding: 9px 15px;
-	box-shadow: 0 6px 22px rgba(13,27,42,0.14);
-	font-family: 'Vazirmatn','IRANSans',Tahoma,Arial,sans-serif;
-	font-size: 13px;
-	font-weight: 700;
-	line-height: 1.5;
-	direction: rtl;
-	text-align: right;
-	position: relative;
-	min-height: 36px;
-	display: flex;
-	align-items: center;
-}
-
-/* Tail of bubble */
-#harfo-bubble-inner::after {
+#h-hud::after {
 	content: '';
 	position: absolute;
-	bottom: -10px;
-	right: 14px;
-	width: 18px;
-	height: 10px;
-	background: #1DBFB4;
-	clip-path: polygon(0 0, 100% 0, 60% 100%);
+	bottom: -9px; right: 14px;
+	width: 16px; height: 9px;
+	background: rgba(29,191,180,0.75);
+	clip-path: polygon(0 0, 100% 0, 55% 100%);
 }
-#harfo-bubble-inner::before {
+#h-hud::before {
 	content: '';
 	position: absolute;
-	bottom: -7px;
-	right: 16px;
-	width: 14px;
-	height: 8px;
-	background: white;
-	clip-path: polygon(0 0, 100% 0, 60% 100%);
+	bottom: -6px; right: 16px;
+	width: 12px; height: 7px;
+	background: rgba(255,255,255,0.97);
+	clip-path: polygon(0 0, 100% 0, 55% 100%);
 	z-index: 1;
 }
 
-/* Typing indicator (3 dots) */
-#harfo-typing {
+/* Typing dots */
+#h-dots {
 	display: none;
-	align-items: center;
-	gap: 5px;
+	gap: 5px; align-items: center;
 	padding: 2px 0;
 }
-.hd {
+#h-dots i {
 	display: inline-block;
-	width: 7px;
-	height: 7px;
+	width: 7px; height: 7px;
 	border-radius: 50%;
 	background: #1DBFB4;
-	animation: h-dot .65s ease-in-out infinite;
+	animation: hd-bounce .65s ease-in-out infinite;
 }
-.hd:nth-child(2) { animation-delay: .14s; }
-.hd:nth-child(3) { animation-delay: .28s; }
+#h-dots i:nth-child(2) { animation-delay: .14s; }
+#h-dots i:nth-child(3) { animation-delay: .28s; }
 
-@keyframes h-dot {
+@keyframes hd-bounce {
 	0%,60%,100% { transform: translateY(0); }
-	30%         { transform: translateY(-7px); }
+	30%         { transform: translateY(-8px); }
 }
-
-#harfo-text { display: block; }
+#h-msg { margin: 0; }
 
 /* ============================================================
-   CLOSE / RESTORE BUTTONS
+   PORTAL RING (injected by JS for tunnel effect)
    ============================================================ */
-#harfo-close {
+.h-portal-ring {
+	position: fixed;
+	border-radius: 50%;
+	border: 3px solid rgba(29,191,180,0.95);
+	box-shadow: 0 0 24px rgba(29,191,180,0.7), inset 0 0 18px rgba(29,191,180,0.4);
+	pointer-events: none;
+	z-index: 2147483638;
+	animation: hp-ring .55s ease-out both;
+}
+@keyframes hp-ring {
+	0%   { transform: scale(0.2); opacity: 1; }
+	65%  { transform: scale(1.08); opacity: 0.85; }
+	100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* Speed lines for warp/flee */
+.h-spline {
+	position: fixed;
+	height: 2px;
+	background: linear-gradient(90deg, rgba(29,191,180,0.85), transparent);
+	border-radius: 2px;
+	pointer-events: none;
+	z-index: 2147483637;
+	animation: hsl .45s ease-out both;
+}
+@keyframes hsl {
+	0%   { opacity: .9; }
+	100% { opacity: 0; transform: scaleX(0.3); }
+}
+
+/* ============================================================
+   CLOSE / RESTORE
+   ============================================================ */
+#h-close {
 	position: absolute;
-	top: -11px;
-	left: -11px;
-	width: 26px;
-	height: 26px;
+	top: -12px; left: -12px;
+	width: 26px; height: 26px;
 	background: #0D1B2A;
 	color: white;
-	border: 2.5px solid white;
+	border: 2px solid rgba(29,191,180,0.65);
 	border-radius: 50%;
-	font-size: 16px;
-	line-height: 21px;
+	font-size: 16px; line-height: 22px;
 	text-align: center;
 	cursor: pointer;
 	opacity: 0;
 	transform: scale(0);
-	transition: opacity .25s ease, transform .25s cubic-bezier(.34,1.56,.64,1);
-	padding: 0;
-	font-family: Arial, sans-serif;
-	pointer-events: auto;
-	z-index: 10;
+	transition: opacity .25s ease, transform .28s cubic-bezier(.34,1.56,.64,1);
+	padding: 0; z-index: 10;
 }
-#harfo-frame:hover #harfo-close { opacity: 1; transform: scale(1); }
+#harfo-w:hover #h-close { opacity: 1; transform: scale(1); }
 
-#harfo-restore {
+/* Restore button */
+#h-restore {
+	position: absolute;
+	right: 28px; bottom: 28px;
+	width: 58px; height: 58px;
 	display: none;
-	width: 58px;
-	height: 58px;
-	background: none;
-	border: none;
 	cursor: pointer;
-	padding: 0;
 	pointer-events: auto;
-	filter: drop-shadow(0 5px 12px rgba(13,27,42,0.28));
-	animation: h-float 4s ease-in-out infinite;
-	transition: filter .25s ease, transform .25s ease;
+	animation: ha-float 4s ease-in-out infinite;
 }
-#harfo-restore:hover {
-	filter: drop-shadow(0 7px 16px rgba(29,191,180,0.42));
-	transform: scale(1.1);
-}
-#harfo-restore svg { width: 100%; height: 100%; }
+#harfo-root.h-hidden #h-restore { display: block; }
+#harfo-root.h-hidden #harfo-w   { display: none; }
 
-/* ============================================================
-   HIDDEN
-   ============================================================ */
-#harfo-wrapper.harfo-hidden #harfo-frame   { display: none; }
-#harfo-wrapper.harfo-hidden #harfo-restore { display: block; }
+.r-shell {
+	position: absolute; inset: 0;
+	border-radius: 50%;
+	border: 2px solid rgba(29,191,180,0.55);
+	box-shadow: 0 0 22px rgba(29,191,180,0.45), 0 0 44px rgba(29,191,180,0.2);
+	animation: ha-glow 3s ease-in-out infinite;
+}
+.r-core {
+	position: absolute; inset: 6px;
+	border-radius: 50%;
+	background: radial-gradient(circle at 38% 32%, #1e3e58 0%, #040c16 100%);
+	display: flex; align-items: center; justify-content: center;
+}
+.r-core span {
+	color: #1DBFB4;
+	font-weight: 900; font-size: 14px;
+	font-family: Arial, sans-serif;
+	letter-spacing: -1px;
+}
 
 /* ============================================================
    MOBILE
    ============================================================ */
 @media (max-width: 767px) {
-	#harfo-wrapper { right: 14px; bottom: 18px; }
-	#harfo-frame   { width: 74px; height: 74px; }
-	#harfo-svg     { width: 74px; height: 83px; }
-	#harfo-bubble  { max-width: 180px; font-size: 12px; }
+	#harfo-w   { right: 14px; bottom: 18px; }
+	#h-orb     { width: 74px; height: 74px; }
+	#h-hud     { font-size: 12px; max-width: 185px; }
+	#h-restore { right: 14px; bottom: 18px; }
 }
