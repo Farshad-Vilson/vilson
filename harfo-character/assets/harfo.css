@@ -1,0 +1,443 @@
+/* =========================================
+   HARFO CHARACTER — حرف اول
+   Version 1.0.0
+   ========================================= */
+
+/* ---- Wrapper ---- */
+#harfo-wrapper {
+	position: fixed;
+	bottom: 28px;
+	right: 28px;
+	z-index: 2147483640;
+	font-family: 'Vazirmatn', 'IRANSans', Tahoma, Arial, sans-serif;
+	pointer-events: none;
+	user-select: none;
+	-webkit-user-select: none;
+	transition: left 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+	            top  0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+	            right 0.4s ease,
+	            bottom 0.4s ease;
+}
+
+#harfo-wrapper * {
+	box-sizing: border-box;
+	pointer-events: auto;
+}
+
+/* ---- Container ---- */
+#harfo-container {
+	position: relative;
+	width: 90px;
+	height: 90px;
+	cursor: pointer;
+	will-change: transform;
+	filter: drop-shadow(0 8px 20px rgba(13, 27, 42, 0.28));
+	transition: filter 0.3s ease;
+}
+
+#harfo-container:hover {
+	filter: drop-shadow(0 10px 24px rgba(29, 191, 180, 0.4));
+}
+
+/* ---- SVG ---- */
+#harfo-svg {
+	width: 90px;
+	height: 101px;
+	overflow: visible;
+	display: block;
+}
+
+/* ---- Arms (hidden by default) ---- */
+.harfo-arm {
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+
+/* ---- Eyelids ---- */
+.harfo-eyelid {
+	transform-box: fill-box;
+	transform-origin: center top;
+	transform: scaleY(0);
+	transition: transform 0.35s ease;
+}
+
+/* ---- Mouth ---- */
+.harfo-mouth {
+	display: none;
+}
+.harfo-mouth.m-happy {
+	display: block;
+}
+
+/* ============================================
+   STATE: ENTERING
+   ============================================ */
+@keyframes harfo-enter {
+	0%   { transform: translateY(-220px) scaleX(0.75) scaleY(1.3); opacity: 0; }
+	55%  { transform: translateY(22px)  scaleX(1.25) scaleY(0.75); opacity: 1; }
+	70%  { transform: translateY(-14px) scaleX(0.93) scaleY(1.08); }
+	82%  { transform: translateY(8px)   scaleX(1.07) scaleY(0.93); }
+	91%  { transform: translateY(-5px)  scaleX(0.97) scaleY(1.03); }
+	100% { transform: translateY(0)     scaleX(1)    scaleY(1); }
+}
+.harfo-state-entering #harfo-svg {
+	animation: harfo-enter 0.95s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ============================================
+   STATE: IDLE — float
+   ============================================ */
+@keyframes harfo-float {
+	0%,100% { transform: translateY(0)    scaleX(1)    scaleY(1); }
+	30%     { transform: translateY(-10px) scaleX(0.96) scaleY(1.04); }
+	60%     { transform: translateY(-14px) scaleX(0.94) scaleY(1.06); }
+}
+.harfo-state-idle #harfo-svg,
+.harfo-state-curious #harfo-svg {
+	animation: harfo-float 3.6s ease-in-out infinite;
+}
+
+/* ============================================
+   STATE: WAVING
+   ============================================ */
+@keyframes harfo-wave {
+	0%,100% { transform: rotate(0deg); }
+	15%     { transform: rotate(-12deg) translateY(-6px); }
+	35%     { transform: rotate(10deg)  translateY(-10px); }
+	55%     { transform: rotate(-14deg) translateY(-8px); }
+	75%     { transform: rotate(8deg)   translateY(-5px); }
+}
+.harfo-state-waving #harfo-svg {
+	animation: harfo-wave 1.4s ease-in-out both;
+	transform-origin: center bottom;
+}
+.harfo-state-waving .harfo-arm-r {
+	opacity: 1;
+}
+@keyframes harfo-arm-wave {
+	0%,100% { transform: rotate(0deg); }
+	30%     { transform: rotate(-25deg); }
+	60%     { transform: rotate(20deg); }
+}
+.harfo-state-waving .harfo-arm-r {
+	transform-box: fill-box;
+	transform-origin: 80px 52px;
+	animation: harfo-arm-wave 0.55s ease-in-out 3;
+}
+
+/* ============================================
+   STATE: EXCITED — fast bounce
+   ============================================ */
+@keyframes harfo-excited {
+	0%,100% { transform: translateY(0)    scaleX(1)    scaleY(1); }
+	22%     { transform: translateY(-20px) scaleX(0.88) scaleY(1.14); }
+	44%     { transform: translateY(0)     scaleX(1.18) scaleY(0.83); }
+	66%     { transform: translateY(-14px) scaleX(0.91) scaleY(1.10); }
+	83%     { transform: translateY(4px)   scaleX(1.08) scaleY(0.93); }
+}
+.harfo-state-excited #harfo-svg {
+	animation: harfo-excited 0.65s ease-in-out infinite !important;
+}
+.harfo-state-excited .harfo-mouth.m-happy { display: none; }
+.harfo-state-excited .harfo-mouth.m-open  { display: block; }
+.harfo-state-excited .harfo-pupil-l,
+.harfo-state-excited .harfo-pupil-r {
+	transform-box: fill-box;
+	transform-origin: center;
+	transform: scale(1.15);
+	transition: transform 0.3s ease;
+}
+
+/* ============================================
+   STATE: READING
+   ============================================ */
+@keyframes harfo-reading {
+	0%,100% { transform: translateY(0) rotate(0deg); }
+	25%     { transform: translateY(-6px) rotate(-3deg); }
+	75%     { transform: translateY(-4px) rotate(3deg); }
+}
+.harfo-state-reading #harfo-svg {
+	animation: harfo-reading 2s ease-in-out infinite !important;
+}
+
+/* ============================================
+   STATE: BORED
+   ============================================ */
+@keyframes harfo-bored {
+	0%,100% { transform: translateY(0)   scaleX(1)    scaleY(1); }
+	50%     { transform: translateY(-5px) scaleX(0.98) scaleY(1.02); }
+}
+.harfo-state-bored #harfo-svg {
+	animation: harfo-bored 5s ease-in-out infinite !important;
+}
+.harfo-state-bored .harfo-eyelid {
+	transform: scaleY(0.35);
+}
+
+/* ============================================
+   STATE: SLEEPING
+   ============================================ */
+@keyframes harfo-sleep {
+	0%,100% { transform: scaleX(1)    scaleY(1); }
+	50%     { transform: scaleX(1.05) scaleY(0.96); }
+}
+.harfo-state-sleeping #harfo-svg {
+	animation: harfo-sleep 2.8s ease-in-out infinite !important;
+}
+.harfo-state-sleeping .harfo-eyelid {
+	transform: scaleY(1) !important;
+}
+.harfo-state-sleeping .harfo-mouth.m-happy   { display: none; }
+.harfo-state-sleeping .harfo-mouth.m-neutral { display: block; }
+
+/* ============================================
+   STATE: STARTLED — quick shock
+   ============================================ */
+@keyframes harfo-startled {
+	0%   { transform: scale(1) rotate(0deg); }
+	20%  { transform: scale(1.35) rotate(-6deg); }
+	40%  { transform: scale(0.88) rotate(5deg); }
+	60%  { transform: scale(1.18) rotate(-3deg); }
+	80%  { transform: scale(0.95); }
+	100% { transform: scale(1); }
+}
+.harfo-state-startled #harfo-svg {
+	animation: harfo-startled 0.55s ease both !important;
+}
+
+/* ============================================
+   STATE: PLEADING
+   ============================================ */
+@keyframes harfo-plead {
+	0%,100% { transform: scaleX(1)    translateY(0); }
+	30%     { transform: scaleX(1.14) translateY(-8px); }
+	60%     { transform: scaleX(0.9)  translateY(-10px); }
+}
+.harfo-state-pleading #harfo-svg {
+	animation: harfo-plead 1s ease-in-out infinite !important;
+}
+.harfo-state-pleading .harfo-arm-r,
+.harfo-state-pleading .harfo-arm-l {
+	opacity: 1;
+}
+.harfo-state-pleading .harfo-mouth.m-happy { display: none; }
+.harfo-state-pleading .harfo-mouth.m-sad   { display: block; }
+.harfo-state-pleading .harfo-eyelid {
+	transform: scaleY(0.2);
+}
+
+/* ============================================
+   STATE: CLICKED (jelly on demand)
+   ============================================ */
+@keyframes harfo-jelly {
+	0%,100% { transform: scaleX(1)    scaleY(1); }
+	18%     { transform: scaleX(1.28) scaleY(0.72); }
+	36%     { transform: scaleX(0.82) scaleY(1.24); }
+	54%     { transform: scaleX(1.12) scaleY(0.88); }
+	72%     { transform: scaleX(0.94) scaleY(1.06); }
+}
+#harfo-container.harfo-jelly #harfo-svg {
+	animation: harfo-jelly 0.65s ease !important;
+}
+
+/* ============================================
+   ZZZ SLEEP BUBBLES
+   ============================================ */
+#harfo-zzz {
+	position: absolute;
+	top: -8px;
+	left: -18px;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.5s ease;
+}
+.harfo-state-sleeping #harfo-zzz {
+	opacity: 1;
+}
+.hz {
+	display: block;
+	position: absolute;
+	font-weight: 900;
+	color: #1DBFB4;
+	text-shadow: 0 2px 4px rgba(13,27,42,0.3);
+	animation: harfo-zzz-rise 2.2s ease-in-out infinite;
+}
+.hz1 { font-size: 20px; top: 0;   left: 0;   animation-delay: 0s; }
+.hz2 { font-size: 15px; top: 18px; left: 22px; animation-delay: 0.6s; }
+.hz3 { font-size: 11px; top: 32px; left: 38px; animation-delay: 1.2s; }
+
+@keyframes harfo-zzz-rise {
+	0%   { transform: translate(0,0)     scale(0.4); opacity: 0; }
+	25%  { opacity: 1; }
+	70%  { opacity: 0.7; }
+	100% { transform: translate(-18px,-38px) scale(1.3); opacity: 0; }
+}
+
+/* ============================================
+   SPEECH BUBBLE
+   ============================================ */
+#harfo-speech {
+	position: absolute;
+	bottom: calc(100% + 14px);
+	right: -8px;
+	background: #ffffff;
+	color: #0D1B2A;
+	padding: 9px 16px;
+	border-radius: 18px 18px 4px 18px;
+	font-size: 13px;
+	font-weight: 700;
+	line-height: 1.4;
+	white-space: nowrap;
+	box-shadow: 0 6px 20px rgba(13,27,42,0.16);
+	border: 2.5px solid #1DBFB4;
+	transform: scale(0) translateY(10px);
+	transform-origin: bottom right;
+	transition: transform 0.32s cubic-bezier(0.34,1.56,0.64,1),
+	            opacity  0.3s ease;
+	opacity: 0;
+	pointer-events: none;
+	direction: rtl;
+	text-align: right;
+	max-width: 200px;
+	white-space: normal;
+}
+#harfo-speech::after {
+	content: '';
+	position: absolute;
+	bottom: -9px;
+	right: 14px;
+	width: 16px;
+	height: 9px;
+	background: #1DBFB4;
+	clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+#harfo-speech::before {
+	content: '';
+	position: absolute;
+	bottom: -7px;
+	right: 15px;
+	width: 14px;
+	height: 8px;
+	background: white;
+	clip-path: polygon(0 0, 100% 0, 50% 100%);
+	z-index: 1;
+}
+#harfo-speech.visible {
+	transform: scale(1) translateY(0);
+	opacity: 1;
+}
+
+/* ============================================
+   HIDE BUTTON
+   ============================================ */
+#harfo-hide-btn {
+	position: absolute;
+	top: -10px;
+	left: -10px;
+	width: 24px;
+	height: 24px;
+	background: #0D1B2A;
+	color: white;
+	border: 2px solid white;
+	border-radius: 50%;
+	font-size: 15px;
+	line-height: 20px;
+	text-align: center;
+	cursor: pointer;
+	opacity: 0;
+	transform: scale(0);
+	transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+	padding: 0;
+	font-family: Arial, sans-serif;
+	z-index: 10;
+}
+#harfo-container:hover #harfo-hide-btn {
+	opacity: 1;
+	transform: scale(1);
+}
+
+/* ============================================
+   SHOW BUTTON (when hidden)
+   ============================================ */
+#harfo-show-btn {
+	display: none;
+	width: 54px;
+	height: 54px;
+	background: none;
+	border: none;
+	cursor: pointer;
+	padding: 0;
+	filter: drop-shadow(0 4px 10px rgba(13,27,42,0.28));
+	transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1),
+	            filter 0.25s ease;
+	animation: harfo-float 3.6s ease-in-out infinite;
+}
+#harfo-show-btn:hover {
+	transform: scale(1.12);
+	filter: drop-shadow(0 6px 14px rgba(29,191,180,0.45));
+}
+#harfo-show-btn svg {
+	width: 100%;
+	height: 100%;
+}
+
+/* ============================================
+   HIDDEN STATE
+   ============================================ */
+#harfo-wrapper.harfo-hidden #harfo-container {
+	display: none;
+}
+#harfo-wrapper.harfo-hidden #harfo-show-btn {
+	display: block;
+}
+
+/* ============================================
+   CLICK RIPPLE
+   ============================================ */
+.harfo-ripple {
+	position: fixed;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background: rgba(29, 191, 180, 0.38);
+	transform: scale(0);
+	pointer-events: none;
+	z-index: 2147483639;
+	animation: harfo-ripple-anim 0.65s ease-out forwards;
+	margin-left: -16px;
+	margin-top: -16px;
+}
+@keyframes harfo-ripple-anim {
+	0%   { transform: scale(0);   opacity: 1; }
+	100% { transform: scale(5.5); opacity: 0; }
+}
+
+/* ============================================
+   MOBILE
+   ============================================ */
+@media (max-width: 767px) {
+	#harfo-wrapper {
+		bottom: 18px;
+		right: 14px;
+	}
+	#harfo-container {
+		width: 72px;
+		height: 72px;
+	}
+	#harfo-svg {
+		width: 72px;
+		height: 81px;
+	}
+	#harfo-speech {
+		font-size: 12px;
+		padding: 8px 12px;
+	}
+}
+
+/* ============================================
+   SCROLL-FOLLOW TRANSITION
+   ============================================ */
+#harfo-wrapper.harfo-moving {
+	transition: left 0.55s cubic-bezier(0.34,1.56,0.64,1),
+	            top  0.55s cubic-bezier(0.34,1.56,0.64,1);
+}
