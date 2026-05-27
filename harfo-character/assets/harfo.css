@@ -1,6 +1,6 @@
-/* ═══════════════════════════════════════════════════════
-   حرفو v9 — Galaxy Jelly Ball
-   ═══════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════
+   حرفو v9.1 — Galaxy Jelly Ball
+   ════════════════════════════════════════════════════════ */
 
 /* ── Root overlay ── */
 #h-root {
@@ -8,132 +8,118 @@
   inset: 0;
   pointer-events: none;
   z-index: 2147483640;
-  overflow: hidden;
+  overflow: visible;   /* must be visible — overflow:hidden clips the glow */
 }
 
-/* ── Character wrapper (120×120, physics-positioned) ── */
+/* ── Character wrapper ── */
 #h-w {
   position: absolute;
-  width: 120px; height: 120px;
+  width: 120px;
+  height: 120px;
   pointer-events: all;
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
   touch-action: none;
+  /* hidden until JS sets position — prevents flash at (0,0) */
+  opacity: 0;
+  transition: opacity .4s ease;
 }
+#h-w.h-ready { opacity: 1; }
 
-/* ── Outer glow (does NOT squish) ── */
+/* ── Outer glow (separate element so squish doesn't affect it) ── */
 #h-glow {
   position: absolute;
   width: 100px; height: 100px;
   top: 10px; left: 10px;
   border-radius: 50%;
   background: transparent;
-  box-shadow:
-    0 0 18px 6px  rgba(109,40,217,.55),
-    0 0 45px 14px rgba(109,40,217,.22),
-    0 0 80px 22px rgba(43,207,192,.12);
-  animation: glowPulse 3.5s ease-in-out infinite;
   pointer-events: none;
+  animation: glowPulse 3.6s ease-in-out infinite;
 }
-
 @keyframes glowPulse {
-  0%,100% { opacity: .8;  box-shadow: 0 0 18px 6px rgba(109,40,217,.55), 0 0 45px 14px rgba(109,40,217,.22), 0 0 80px 22px rgba(43,207,192,.12); }
-  50%     { opacity: 1; box-shadow: 0 0 24px 10px rgba(109,40,217,.75), 0 0 60px 20px rgba(109,40,217,.35), 0 0 100px 28px rgba(43,207,192,.18); }
+  0%,100% { box-shadow: 0 0 16px 5px rgba(109,40,217,.55), 0 0 44px 14px rgba(109,40,217,.2),  0 0 75px 20px rgba(43,207,192,.1);  }
+  50%     { box-shadow: 0 0 24px 9px rgba(109,40,217,.78), 0 0 60px 20px rgba(109,40,217,.35), 0 0 100px 28px rgba(43,207,192,.18); }
 }
 
-/* ── Jelly ball (80×80, squishes via transform) ── */
+/* ── Jelly Ball ── */
 #h-ball {
   position: absolute;
   width: 80px; height: 80px;
   top: 20px; left: 20px;
   border-radius: 50%;
   background: radial-gradient(circle at 38% 32%,
-    #7C3AED 0%,
-    #2D1B6E 38%,
-    #0D0A28 75%,
-    #050714 100%);
+    #7C3AED 0%, #2D1B6E 38%, #0D0A28 76%, #050714 100%);
+  border: 1px solid rgba(139,92,246,.45);
   overflow: hidden;
-  will-change: transform;
   transform-origin: center center;
-  border: 1px solid rgba(139,92,246,.5);
+  will-change: transform;
 }
 
-/* ── Galaxy rotating arm ── */
+/* ── Rotating galaxy arm ── */
 #h-arm {
   position: absolute;
   inset: -15%;
-  width: 130%; height: 130%;
+  border-radius: 50%;
   background: conic-gradient(
-    from 0deg at 50% 50%,
+    from 0deg,
     transparent         0deg,
-    rgba(139,92,246,.5) 40deg,
-    rgba(167,139,250,.3)70deg,
+    rgba(139,92,246,.55) 40deg,
+    rgba(167,139,250,.35) 70deg,
     transparent         110deg,
-    rgba(236,72,153,.3) 180deg,
+    rgba(236,72,153,.3)  180deg,
     transparent         220deg,
-    rgba(96,165,250,.25)280deg,
+    rgba(96,165,250,.28) 280deg,
     transparent         320deg,
-    rgba(139,92,246,.4) 340deg,
+    rgba(139,92,246,.45) 345deg,
     transparent         360deg
   );
-  border-radius: 50%;
   animation: armSpin 20s linear infinite;
   mix-blend-mode: screen;
 }
-
 @keyframes armSpin {
-  from { transform: rotate(0deg);   }
-  to   { transform: rotate(360deg); }
+  to { transform: rotate(360deg); }
 }
 
-/* ── Stars container ── */
-#h-stars {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  pointer-events: none;
-}
-
+/* ── Stars ── */
+#h-stars { position: absolute; inset: 0; border-radius: 50%; }
 .h-star {
   position: absolute;
   border-radius: 50%;
   background: white;
-  animation: starTwinkle 2s ease-in-out infinite alternate;
+  animation: twinkle 2.2s ease-in-out infinite alternate;
+}
+@keyframes twinkle {
+  from { opacity: .85; transform: scale(1);   }
+  to   { opacity: .08; transform: scale(.35); }
 }
 
-@keyframes starTwinkle {
-  from { opacity: .9; transform: scale(1); }
-  to   { opacity: .1; transform: scale(.4); }
-}
-
-/* ── Nebula blobs ── */
+/* ── Nebula ── */
 #h-neb {
   position: absolute;
   inset: 0;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 25% 60%, rgba(236,72,153,.22) 0%, transparent 45%),
-    radial-gradient(circle at 75% 35%, rgba(96,165,250,.20) 0%, transparent 40%),
-    radial-gradient(circle at 50% 50%, rgba(167,139,250,.18) 0%, transparent 55%);
+    radial-gradient(circle at 25% 62%, rgba(236,72,153,.22) 0%, transparent 48%),
+    radial-gradient(circle at 74% 34%, rgba(96,165,250,.20) 0%, transparent 42%),
+    radial-gradient(circle at 50% 50%, rgba(167,139,250,.16) 0%, transparent 55%);
   mix-blend-mode: screen;
-  animation: nebFloat 8s ease-in-out infinite alternate;
+  animation: nebDrift 9s ease-in-out infinite alternate;
+}
+@keyframes nebDrift {
+  from { transform: translate(0,0) rotate(0deg);    }
+  to   { transform: translate(3px,2px) rotate(14deg); }
 }
 
-@keyframes nebFloat {
-  from { transform: translate(0,0)    rotate(0deg);   }
-  to   { transform: translate(3px,2px) rotate(15deg); }
-}
-
-/* ── Glossy sheen (top-left highlight) ── */
+/* ── Sheen / highlight ── */
 #h-sheen {
   position: absolute;
-  width: 30px; height: 20px;
-  top: 10px; left: 12px;
-  background: radial-gradient(ellipse, rgba(255,255,255,.28) 0%, transparent 70%);
+  width: 28px; height: 18px;
+  top: 10px; left: 13px;
+  background: radial-gradient(ellipse, rgba(255,255,255,.3) 0%, transparent 70%);
   border-radius: 50%;
+  transform: rotate(-18deg);
   pointer-events: none;
-  transform: rotate(-20deg);
 }
 
 /* ── Face ── */
@@ -148,9 +134,8 @@
   width: 20px; height: 20px;
   border-radius: 50%;
   background: white;
-  overflow: visible;
-  box-shadow: 0 0 6px rgba(255,255,255,.6);
-  transition: width .2s, height .2s, transform .15s;
+  box-shadow: 0 0 5px rgba(255,255,255,.7);
+  transition: width .25s, height .25s, top .25s, left .25s;
 }
 #h-el { left: 12px; top: 26px; }
 #h-er { left: 48px; top: 26px; }
@@ -163,189 +148,164 @@
   top: 5px; left: 5px;
   will-change: transform;
 }
-
 .h-sh {
   position: absolute;
   width: 5px; height: 5px;
   border-radius: 50%;
   background: white;
   top: 3px; left: 3px;
-  pointer-events: none;
 }
 
-/* ── Mouth ── */
 #h-mo {
   position: absolute;
-  left: 50%; bottom: 15px;
+  left: 50%;
   transform: translateX(-50%);
+  bottom: 14px;
   width: 22px; height: 10px;
-  border-bottom: 3px solid rgba(30,27,78,.8);
-  border-left:   1.5px solid transparent;
-  border-right:  1.5px solid transparent;
+  border-bottom: 3px solid rgba(20,10,60,.75);
   border-radius: 0 0 11px 11px;
-  transition: all .3s cubic-bezier(.34,1.56,.64,1);
+  transition: all .35s cubic-bezier(.34,1.56,.64,1);
 }
 
-/* ═══ MOOD STATES ═══ */
-
-/* curious */
-#h-ball[data-mood="curious"] .h-eye {
-  width: 22px; height: 22px;
-}
-#h-ball[data-mood="curious"] #h-el { left: 11px; top: 25px; }
-#h-ball[data-mood="curious"] #h-er { left: 47px; top: 25px; }
-
+/* ══ MOODS ══ */
 /* happy */
 #h-ball[data-mood="happy"] #h-mo {
   width: 30px; height: 14px;
   border-radius: 0 0 15px 15px;
-  bottom: 12px;
+  bottom: 11px;
 }
-#h-ball[data-mood="happy"] #h-arm {
-  animation-duration: 8s;
-}
-#h-ball[data-mood="happy"] #h-glow { /* compensate since glow is outside ball */ }
+#h-ball[data-mood="happy"] .h-eye { width: 22px; height: 22px; }
+#h-ball[data-mood="happy"] #h-el  { left: 11px; top: 25px; }
+#h-ball[data-mood="happy"] #h-er  { left: 47px; top: 25px; }
 
 /* scared */
-#h-ball[data-mood="scared"] .h-eye {
-  width: 24px; height: 24px;
-}
-#h-ball[data-mood="scared"] #h-el { left: 10px; top: 24px; }
-#h-ball[data-mood="scared"] #h-er { left: 46px; top: 24px; }
+#h-ball[data-mood="scared"] .h-eye { width: 24px; height: 24px; }
+#h-ball[data-mood="scared"] #h-el  { left: 10px; top: 23px; }
+#h-ball[data-mood="scared"] #h-er  { left: 46px; top: 23px; }
 #h-ball[data-mood="scared"] #h-mo {
-  width: 14px; height: 6px;
-  border-radius: 50%;
-  border-bottom: 3px solid rgba(30,27,78,.8);
+  width: 14px; height: 7px;
+  border-bottom: 3px solid rgba(20,10,60,.75);
+  border-radius: 0 0 7px 7px;
 }
 
 /* sad */
 #h-ball[data-mood="sad"] #h-mo {
   border-bottom: none;
-  border-top: 3px solid rgba(30,27,78,.8);
+  border-top: 3px solid rgba(20,10,60,.75);
   border-radius: 11px 11px 0 0;
-  bottom: 13px; height: 8px;
+  bottom: 13px;
 }
 
 /* sleeping */
 #h-ball[data-mood="sleeping"] .h-eye {
-  height: 8px;
+  height: 7px;
   border-radius: 50% 50% 0 0;
 }
 #h-ball[data-mood="sleeping"] .h-pu { top: 0; }
 #h-ball[data-mood="sleeping"] #h-mo {
   width: 18px; height: 0;
   border-radius: 0;
-  bottom: 17px;
+  bottom: 16px;
 }
-#h-ball[data-mood="sleeping"] #h-arm {
-  animation-duration: 35s;
-}
+#h-ball[data-mood="sleeping"] #h-arm { animation-duration: 40s; }
 
-/* sheltered (umbrella over head) */
+/* curious */
+#h-ball[data-mood="curious"] .h-eye { width: 22px; height: 22px; }
+#h-ball[data-mood="curious"] #h-el  { left: 11px; top: 25px; }
+#h-ball[data-mood="curious"] #h-er  { left: 47px; top: 25px; }
+
+/* sheltered */
 #h-ball[data-mood="sheltered"] #h-mo {
   width: 28px; height: 13px;
   border-radius: 0 0 14px 14px;
-  bottom: 12px;
+  bottom: 11px;
 }
 
-/* ── Idle float is handled by JS on the wrapper (#h-w) to avoid
-   conflicting with the squish transform on #h-ball ── */
-
-
-/* ═══ TIME OF DAY ═══ */
+/* ══ TIME OF DAY ══ */
 #h-ball[data-time="morning"] {
   background: radial-gradient(circle at 38% 32%,
-    #A855F7 0%, #4C1D95 38%, #1E1B4B 75%, #0D0A28 100%);
+    #A855F7 0%, #4C1D95 38%, #1E1B4B 76%, #0D0A28 100%);
 }
 #h-ball[data-time="evening"] {
   background: radial-gradient(circle at 38% 32%,
-    #9333EA 0%, #3B1C6E 38%, #1E1029 75%, #0A0514 100%);
+    #9333EA 0%, #3B1C6E 38%, #1B0B2E 76%, #0A0514 100%);
 }
 #h-ball[data-time="night"] {
   background: radial-gradient(circle at 38% 32%,
-    #4C1D95 0%, #1E1B4B 38%, #080B1A 75%, #020408 100%);
+    #4C1D95 0%, #1E1B4B 38%, #080B1A 76%, #020408 100%);
 }
-#h-ball[data-time="night"] .h-star { animation-duration: 1s; }
+#h-ball[data-time="night"]   .h-star { animation-duration: 1s; }
+#h-ball[data-time="morning"] .h-star { animation-duration: 3s; }
 
-/* ═══ RAIN ═══ */
+/* ══ RAIN ══ */
 #h-rain {
   position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-  border-radius: 50%;
   top: 20px; left: 20px;
   width: 80px; height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  pointer-events: none;
 }
-
 .h-rdrop {
   position: absolute;
   width: 1.5px;
-  background: linear-gradient(to bottom, transparent, rgba(147,197,253,.75));
+  background: linear-gradient(to bottom, transparent, rgba(147,197,253,.72));
   border-radius: 0 0 2px 2px;
   pointer-events: none;
 }
 
-/* ═══ UMBRELLA ═══ */
+/* ══ UMBRELLA ══ */
 #h-umb {
   position: fixed;
   width: 72px; height: 55px;
   cursor: grab;
   display: none;
-  z-index: 2147483641;
+  z-index: 2147483642;
   pointer-events: all;
-  filter: drop-shadow(0 4px 10px rgba(0,0,0,.3));
-  transition: filter .2s;
-  -webkit-user-select: none;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,.35));
+  transition: filter .2s, opacity .4s;
   user-select: none;
+  -webkit-user-select: none;
+  opacity: 0;
 }
-#h-umb:hover {
-  filter: drop-shadow(0 4px 16px rgba(43,207,192,.6));
-  cursor: grab;
-}
-#h-umb.sheltering {
-  filter: drop-shadow(0 4px 20px rgba(43,207,192,.9));
-}
+#h-umb.h-umb-show  { opacity: 1; }
+#h-umb:hover       { filter: drop-shadow(0 4px 18px rgba(43,207,192,.65)); }
+#h-umb.h-umb-cover { filter: drop-shadow(0 4px 24px rgba(43,207,192,.95)); }
 
-/* ═══ PARTICLES ═══ */
+/* ══ PARTICLES ══ */
 #h-fx {
-  position: fixed;
+  position: absolute;   /* relative to #h-root which = full viewport */
   inset: 0;
   pointer-events: none;
-  z-index: 2147483639;
   overflow: visible;
 }
-
 .h-pt {
   position: absolute;
   pointer-events: none;
   line-height: 1;
-  font-size: 13px;
   will-change: transform, opacity;
 }
-.h-pt-sp  { color: #FBBF24; text-shadow: 0 0 6px #FCD34D; }
-.h-pt-hrt { color: #F472B6; }
-.h-pt-zzz { color: rgba(167,139,250,.9); font-weight: 700; font-size: 11px; }
-.h-pt-str { color: white; font-size: 8px; }
-.h-pt-drp { color: rgba(147,197,253,.8); font-size: 9px; }
+.h-pt-sp  { color: #FBBF24; font-size: 14px; text-shadow: 0 0 5px #FDE68A; }
+.h-pt-hrt { color: #F472B6; font-size: 13px; }
+.h-pt-zzz { color: rgba(167,139,250,.95); font-size: 11px; font-weight: 700; letter-spacing: 1px; }
 
-/* ═══ WAVE / EXIT INTENT ARM ═══ */
-#h-wave-arm {
+/* ══ EXIT-INTENT ARM ══ */
+#h-arm-w {
   position: absolute;
-  width: 20px; height: 8px;
-  top: 12px; left: 50%;
-  transform: translateX(-50%) rotate(-30deg);
-  transform-origin: right center;
-  background: #7C3AED;
+  width: 18px; height: 8px;
+  top: 8px; left: 50%;
+  margin-left: -9px;
+  background: #6D28D9;
   border-radius: 4px;
-  pointer-events: none;
+  transform-origin: right center;
   opacity: 0;
+  pointer-events: none;
 }
-#h-wave-arm.waving {
+#h-arm-w.h-wave {
   opacity: 1;
-  animation: waveArm .5s ease-in-out 3;
+  animation: armWave .45s ease-in-out 4;
 }
-@keyframes waveArm {
-  0%,100% { transform: translateX(-50%) rotate(-30deg); }
-  50%     { transform: translateX(-50%) rotate(10deg);  }
+@keyframes armWave {
+  0%,100% { transform: rotate(-35deg); }
+  50%     { transform: rotate(15deg);  }
 }

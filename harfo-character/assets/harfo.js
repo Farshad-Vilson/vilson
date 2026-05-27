@@ -1,783 +1,564 @@
 /* ════════════════════════════════════════════════════════════════
-   حرفو v9 — Galaxy Jelly Ball · Intelligence Engine
-   Physics + Squish + Pupil tracking + Rain + Umbrella + Behaviors
-   Zero external dependencies.
+   حرفو v9.1 — Galaxy Jelly Ball · Physics + Intelligence Engine
+   Zero external dependencies. Self-contained.
    ════════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
 
-  /* ── Config ─────────────────────────────────────────────────── */
+  /* ── Config ── */
   var C = {
-    WRAP:     120,   /* wrapper px                        */
-    BALL:      80,   /* ball diameter                     */
-    BALL_OFF:  20,   /* ball top/left offset in wrapper   */
+    WRAP: 120, BALL: 80, BOFF: 20,  /* wrapper / ball / ball-offset */
 
-    /* Spring physics */
-    SK:  0.058,   /* spring stiffness  */
-    SD:  0.80,    /* spring damping    */
-    MSP: 20,      /* max speed         */
+    /* Spring */
+    SK: 0.055, SD: 0.80, MSP: 20,
 
     /* Squish spring */
-    SQK: 0.16,   /* squish stiffness  */
-    SQD: 0.68,   /* squish damping    */
-    SQA: 0.30,   /* max squish amount */
+    SQK: 0.18, SQD: 0.65, SQA: 0.32,
 
-    /* Mouse zones (distance from ball CENTER) */
-    Z_NOTICE: 420,
-    Z_TEASE:  280,
-    Z_ALERT:  180,
-    Z_FLEE:   120,
-    Z_PANIC:   68,
+    /* Mouse zones (px from ball center) */
+    ZN: 440, ZT: 280, ZA: 175, ZF: 118, ZP: 65,
 
     /* Forces */
-    FF: 6.0,    /* flee force   */
-    PF: 10.5,   /* panic force  */
+    FF: 6.2, PF: 11.0,
 
-    /* Wander */
-    WI_MIN: 3500,   /* min ms between wanders */
-    WI_MAX: 7000,   /* max ms between wanders */
+    /* Wander timing (ms) */
+    WLO: 3000, WHI: 7500,
 
     /* Sleep */
-    SLEEP_AFTER: 50000,  /* ms idle → sleep */
-
-    /* Rain */
-    RAIN_MIN:  4 * 60 * 1000,
-    RAIN_MAX: 12 * 60 * 1000,
-    RAIN_DUR:  18000,
+    SLP: 55000,
   };
 
-  /* ── State ──────────────────────────────────────────────────── */
+  /* ── State ── */
   var S = {
-    /* position of wrapper top-left */
-    x: 0, y: 0,
-    vx: 0, vy: 0,
-    tx: 0, ty: 0,
-
-    /* squish scale */
-    sx: 1, sy: 1,
-    sxv: 0, syv: 0,
-
-    /* mouse */
+    x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0,
+    sx: 1, sy: 1, sxv: 0, syv: 0,
     mx: -9999, my: -9999,
-
-    /* pupils (offset from center of eye) */
-    plx: 0, ply: 0,
-    prx: 0, pry: 0,
-
-    /* state */
-    zone:  'far',
-    mood:  'normal',
-
-    /* flags */
-    dragging:   false,
-    raining:    false,
-    sheltered:  false,
-    sleeping:   false,
-
-    /* timers */
-    idleSince:    Date.now(),
-    lastWander:   0,
-    wanderNext:   1200,  /* first wander after 1.2s */
-    lastPt:       0,
-    onArrive:     null,
-
-    /* umbrella */
-    umbX: 0, umbY: 0,
-    umbDragging: false,
-    umbDOX: 0, umbDOY: 0,
+    plx: 0, ply: 0, prx: 0, pry: 0,
+    zone: 'far', mood: 'normal',
+    drag: false, dox: 0, doy: 0,
+    rain: false, shelter: false,
+    sleeping: false,
+    idleAt: Date.now(),
+    lastWander: 0, nextWander: 1500,
+    lastZzz: 0,
+    ux: 0, uy: 0,  /* umbrella position */
+    udrag: false, udox: 0, udoy: 0,
+    onArrive: null,
   };
 
-  /* ── DOM ─────────────────────────────────────────────────────── */
-  var D = {};
+  /* ── DOM refs ── */
+  var W, BALL, PL, PR, RAIN, UMB, FX, ARM_W, STARS;
 
-  /* ── Helpers ─────────────────────────────────────────────────── */
-  function cl(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
-  function lr(a, b, t)   { return a + (b - a) * t; }
-  function rn(lo, hi)    { return lo + Math.random() * (hi - lo); }
-  function ri(arr)       { return arr[Math.floor(Math.random() * arr.length)]; }
+  /* ── Utils ── */
+  function cl(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function lr(a, b, t) { return a + (b - a) * t; }
+  function rn(a, b)    { return a + Math.random() * (b - a); }
 
-  function ballCenter() {
-    return {
-      x: S.x + C.WRAP / 2,
-      y: S.y + C.WRAP / 2
-    };
+  function bCenter() {
+    return { x: S.x + C.WRAP / 2, y: S.y + C.WRAP / 2 };
   }
-
-  function distMouse() {
-    if (S.mx < 0) return Infinity;
-    var b = ballCenter();
-    return Math.hypot(S.mx - b.x, S.my - b.y);
+  function dMouse() {
+    if (S.mx < 0) return 1e9;
+    var c = bCenter();
+    return Math.hypot(S.mx - c.x, S.my - c.y);
   }
-
-  function getZone(d) {
-    if (d < C.Z_PANIC)  return 'panic';
-    if (d < C.Z_FLEE)   return 'flee';
-    if (d < C.Z_ALERT)  return 'alert';
-    if (d < C.Z_TEASE)  return 'tease';
-    if (d < C.Z_NOTICE) return 'notice';
+  function toZone(d) {
+    if (d < C.ZP) return 'panic';
+    if (d < C.ZF) return 'flee';
+    if (d < C.ZA) return 'alert';
+    if (d < C.ZT) return 'tease';
+    if (d < C.ZN) return 'notice';
     return 'far';
   }
+  function maxX() { return window.innerWidth  - C.WRAP - 4; }
+  function maxY() { return window.innerHeight - C.WRAP - 4; }
 
-  /* ── Movement ───────────────────────────────────────────────── */
-  function moveTo(x, y, cb) {
-    var maxX = window.innerWidth  - C.WRAP - 4;
-    var maxY = window.innerHeight - C.WRAP - 4;
-    S.tx = cl(x, 4, maxX);
-    S.ty = cl(y, 4, maxY);
+  /* ── Mood ── */
+  function mood(m) {
+    if (!BALL || S.mood === m) return;
+    S.mood = m;
+    BALL.setAttribute('data-mood', m);
+  }
+
+  /* ── Movement ── */
+  function goTo(x, y, cb) {
+    S.tx = cl(x, 4, maxX());
+    S.ty = cl(y, 4, maxY());
     S.onArrive = cb || null;
   }
-
-  function parkHome(cb) {
-    moveTo(
-      window.innerWidth  - C.WRAP - 28,
-      window.innerHeight - C.WRAP - 28,
-      cb
-    );
+  function parkHome() {
+    goTo(window.innerWidth - C.WRAP - 28, window.innerHeight - C.WRAP - 28);
   }
-
-  /* Autonomous wander — picks a random screen position */
   function wander() {
-    if (S.dragging || S.zone === 'flee' || S.zone === 'panic') return;
+    if (S.drag) return;
     var vw = window.innerWidth, vh = window.innerHeight;
-    var x = rn(vw * 0.12, vw * 0.82) - C.WRAP / 2;
-    var y = rn(vh * 0.12, vh * 0.82) - C.WRAP / 2;
-    moveTo(x, y);
-    S.lastWander = Date.now();  /* reset timer */
+    goTo(rn(vw * 0.1, vw * 0.85) - C.WRAP / 2,
+         rn(vh * 0.1, vh * 0.82) - C.WRAP / 2);
+    S.lastWander  = Date.now();
+    S.nextWander  = rn(C.WLO, C.WHI);
   }
 
-  /* ── Repulsion forces ────────────────────────────────────────── */
+  /* ── Repulsion ── */
   function repulse() {
-    var b  = ballCenter();
-    var dx = b.x - S.mx, dy = b.y - S.my;
-    var d  = Math.hypot(dx, dy) || 1;
+    var c = bCenter();
+    var dx = c.x - S.mx, dy = c.y - S.my;
+    var d = Math.hypot(dx, dy) || 1;
     var nx = dx / d, ny = dy / d;
-
-    if (d < C.Z_PANIC) {
-      var t = Math.pow((C.Z_PANIC - d) / C.Z_PANIC, 1.2);
-      S.vx += nx * t * C.PF;
-      S.vy += ny * t * C.PF * 0.65;
+    if (d < C.ZP) {
+      var t = Math.pow((C.ZP - d) / C.ZP, 1.2);
+      S.vx += nx * t * C.PF; S.vy += ny * t * C.PF * 0.6;
     } else {
-      var t2 = Math.pow((C.Z_FLEE - d) / C.Z_FLEE, 1.5);
-      S.vx += nx * t2 * C.FF;
-      S.vy += ny * t2 * C.FF * 0.55;
+      var t2 = Math.pow((C.ZF - d) / C.ZF, 1.5);
+      S.vx += nx * t2 * C.FF; S.vy += ny * t2 * C.FF * 0.55;
     }
-    /* Squish burst on flee */
-    S.sxv += ny * 0.7;
-    S.syv += nx * 0.7;
+    S.sxv += ny * 0.6; S.syv += nx * 0.6;
   }
 
-  /* ── Squish physics ─────────────────────────────────────────── */
-  function tickSquish(sp, vx, vy) {
-    var ux = sp > 0.2 ? vx / sp : 0;
-    var uy = sp > 0.2 ? vy / sp : 0;
-    var k  = cl(sp * 0.024, 0, C.SQA);
-
-    /* elongate in direction of motion, compress perpendicular */
-    var txs = 1 + (ux * ux - uy * uy * 0.55) * k;
-    var tys = 1 + (uy * uy - ux * ux * 0.55) * k;
-
-    S.sxv = S.sxv * C.SQD + (txs - S.sx) * C.SQK;
-    S.syv = S.syv * C.SQD + (tys - S.sy) * C.SQK;
-    S.sx += S.sxv;
-    S.sy += S.syv;
-    S.sx = cl(S.sx, 0.62, 1.52);
-    S.sy = cl(S.sy, 0.62, 1.52);
+  /* ── Squish physics ── */
+  function tickSquish(sp) {
+    var ux = sp > 0.2 ? S.vx / sp : 0;
+    var uy = sp > 0.2 ? S.vy / sp : 0;
+    var k  = cl(sp * 0.025, 0, C.SQA);
+    var tx = 1 + (ux * ux - uy * uy * 0.5) * k;
+    var ty = 1 + (uy * uy - ux * ux * 0.5) * k;
+    S.sxv = S.sxv * C.SQD + (tx - S.sx) * C.SQK;
+    S.syv = S.syv * C.SQD + (ty - S.sy) * C.SQK;
+    S.sx  = cl(S.sx + S.sxv, 0.60, 1.55);
+    S.sy  = cl(S.sy + S.syv, 0.60, 1.55);
   }
 
-  /* ── Pupil tracking ─────────────────────────────────────────── */
+  /* ── Pupil tracking ── */
   function tickPupils() {
-    if (S.mood === 'sleeping' || S.mx < 0) {
-      S.plx = lr(S.plx, 0, 0.1);
-      S.ply = lr(S.ply, 0, 0.1);
-      S.prx = lr(S.prx, 0, 0.1);
-      S.pry = lr(S.pry, 0, 0.1);
-      return;
+    var tx = 0, ty = 0;
+    if (S.mx > 0 && S.mood !== 'sleeping') {
+      var c = bCenter();
+      var dx = S.mx - c.x, dy = S.my - c.y;
+      var d  = Math.hypot(dx, dy) || 1;
+      var r  = cl(d / 90, 0, 1) * 5;
+      tx = (dx / d) * r; ty = (dy / d) * r;
     }
-    var b  = ballCenter();
-    var dx = S.mx - b.x, dy = S.my - b.y;
-    var d  = Math.hypot(dx, dy) || 1;
-    var r  = Math.min(d / 100, 1) * 5;
-    var tx = (dx / d) * r;
-    var ty = (dy / d) * r;
-
-    S.plx = lr(S.plx, tx, 0.13);
-    S.ply = lr(S.ply, ty, 0.13);
-    S.prx = lr(S.prx, tx, 0.13);
-    S.pry = lr(S.pry, ty, 0.13);
+    S.plx = lr(S.plx, tx, 0.14); S.ply = lr(S.ply, ty, 0.14);
+    S.prx = lr(S.prx, tx, 0.14); S.pry = lr(S.pry, ty, 0.14);
   }
 
-  /* ── Mood / expression ──────────────────────────────────────── */
-  function setMood(m) {
-    if (S.mood === m) return;
-    S.mood = m;
-    if (D.ball) D.ball.setAttribute('data-mood', m);
-  }
-
-  /* ── Zone change reactions ──────────────────────────────────── */
-  function onZoneChange(prev, cur) {
+  /* ── Zone reactions ── */
+  function onZone(prev, cur) {
     if (cur === 'panic' || cur === 'flee') {
-      setMood('scared');
-      if (cur === 'panic') { S.sxv = -1.0; S.syv = 1.0; } /* panic squish */
+      mood('scared');
+      if (cur === 'panic') { S.sxv = -1.1; S.syv = 1.1; }
     } else if (cur === 'tease' || cur === 'notice') {
-      setMood('curious');
-    } else if (cur === 'alert') {
-      setMood('curious');
+      mood('curious');
     } else if (cur === 'far') {
       if (prev === 'flee' || prev === 'panic') {
-        /* escaped! celebrate */
-        setMood('happy');
-        spawnPt('sp', 7);
-        spawnPt('hrt', 2);
+        mood('happy');
+        spark(7); hearts(2);
         S.sxv = -0.9; S.syv = 0.9;
-        setTimeout(function () { setMood('normal'); }, 2500);
-      } else {
-        setMood('normal');
-      }
+        setTimeout(function () { mood('normal'); }, 2200);
+      } else { mood('normal'); }
     }
   }
 
-  /* ── Time of day ─────────────────────────────────────────────── */
-  function timeState() {
+  /* ── Time of day ── */
+  function applyTime() {
+    if (!BALL) return;
     var h = new Date().getHours();
-    if (h >= 6  && h < 12) return 'morning';
-    if (h >= 12 && h < 18) return 'afternoon';
-    if (h >= 18 && h < 22) return 'evening';
-    return 'night';
+    var t = h >= 6 && h < 12 ? 'morning' :
+            h >= 12 && h < 18 ? 'afternoon' :
+            h >= 18 && h < 22 ? 'evening'   : 'night';
+    BALL.setAttribute('data-time', t);
+    C.MSP  = t === 'night' ? 11 : t === 'morning' ? 24 : 20;
+    C.WLO  = t === 'night' ? 6000 : t === 'morning' ? 2200 : 3000;
+    C.WHI  = t === 'night' ? 14000 : t === 'morning' ? 4500 : 7500;
   }
 
-  function applyTimeStyle() {
-    var ts = timeState();
-    if (D.ball) D.ball.setAttribute('data-time', ts);
-    /* night: slower, dreamier */
-    if (ts === 'night') {
-      C.MSP      = 12;
-      C.WI_MIN   = 7000;
-      C.WI_MAX   = 14000;
-    } else if (ts === 'morning') {
-      C.MSP      = 24;
-      C.WI_MIN   = 2500;
-      C.WI_MAX   = 5000;
-    } else {
-      C.MSP      = 20;
-      C.WI_MIN   = 3500;
-      C.WI_MAX   = 7000;
-    }
-  }
-
-  /* ── Particles ───────────────────────────────────────────────── */
+  /* ── Particles ── */
   var pts = [];
-
-  var PT_MAP = {
-    sp:  { chars: ['✦','✧','⋆','·'], cls: 'h-pt-sp' },
-    hrt: { chars: ['♥','♡'],         cls: 'h-pt-hrt' },
-    zzz: { chars: ['z','Z','ᶻ'],      cls: 'h-pt-zzz' },
-    str: { chars: ['·','*'],          cls: 'h-pt-str' },
-    drp: { chars: ['💧','·'],         cls: 'h-pt-drp' },
-  };
-
-  function spawnPt(type, count) {
-    if (!D.fx) return;
-    var b  = ballCenter();
-    var pm = PT_MAP[type] || PT_MAP.sp;
-    for (var i = 0; i < count; i++) {
-      var el = document.createElement('div');
-      el.className = 'h-pt ' + pm.cls;
-      el.textContent = ri(pm.chars);
-      var angle = rn(0, Math.PI * 2);
-      var spd   = rn(1.2, 3.5);
-      var life  = rn(500, 1100);
-      el.style.left = (b.x - 6) + 'px';
-      el.style.top  = (b.y - 6) + 'px';
-      el._vx = Math.cos(angle) * spd;
-      el._vy = Math.sin(angle) * spd - 1.5;
-      el._life = life;
-      el._born = Date.now();
-      D.fx.appendChild(el);
-      pts.push(el);
-    }
+  function mkPt(ch, cls, x, y) {
+    if (!FX) return;
+    var e = document.createElement('div');
+    e.className = 'h-pt ' + cls;
+    e.textContent = ch;
+    e.style.left  = x + 'px';
+    e.style.top   = y + 'px';
+    e._vx = rn(-2.5, 2.5);
+    e._vy = rn(-3.5, -1.2);
+    e._life = rn(600, 1100);
+    e._born = Date.now();
+    FX.appendChild(e);
+    pts.push(e);
   }
+  function spark(n)  { var b = bCenter(); for (var i=0;i<n;i++) mkPt(['✦','✧','⋆','·'][0|rn(0,4)], 'h-pt-sp',  b.x-7, b.y-7); }
+  function hearts(n) { var b = bCenter(); for (var i=0;i<n;i++) mkPt('♥', 'h-pt-hrt', b.x-6, b.y-6); }
+  function zzz()     { var b = bCenter(); mkPt(['z','Z','ᶻ'][0|rn(0,3)], 'h-pt-zzz', b.x + rn(-10,10), b.y - 40); }
 
   function tickPts() {
     var now = Date.now();
     pts = pts.filter(function (p) {
       var age = now - p._born;
       if (age > p._life) { p.remove(); return false; }
+      p._vy += 0.065;
+      p.style.left = (parseFloat(p.style.left) + p._vx) + 'px';
+      p.style.top  = (parseFloat(p.style.top)  + p._vy) + 'px';
       var t = age / p._life;
-      p._vy += 0.07;  /* gravity */
-      p.style.left    = (parseFloat(p.style.left) + p._vx) + 'px';
-      p.style.top     = (parseFloat(p.style.top)  + p._vy) + 'px';
-      p.style.opacity = (1 - t * t).toFixed(2);
-      p.style.transform = 'scale(' + (1 - t * 0.5).toFixed(2) + ')';
+      p.style.opacity   = (1 - t * t).toFixed(2);
+      p.style.transform = 'scale(' + (1 - t * 0.45).toFixed(2) + ')';
       return true;
     });
   }
 
-  /* ── Rain system ─────────────────────────────────────────────── */
-  var rainDrops  = [];
-  var rainIntId  = null;
+  /* ── Rain ── */
+  var rdrops = [], rInt = null;
 
   function startRain() {
-    if (S.raining) return;
-    S.raining = true;
-    if (S.mood !== 'scared') setMood('sad');
-
-    rainIntId = setInterval(spawnRainDrop, 55);
-
-    /* Show umbrella 2s after rain starts */
-    setTimeout(function () {
-      if (S.raining) showUmbrella();
-    }, 2000);
-
-    /* Auto stop */
-    setTimeout(stopRain, C.RAIN_DUR);
+    if (S.rain) return;
+    S.rain = true;
+    mood('sad');
+    rInt = setInterval(mkRDrop, 55);
+    setTimeout(showUmb, 2200);
+    setTimeout(stopRain, 20000);
   }
-
   function stopRain() {
-    if (!S.raining) return;
-    S.raining = false;
-    clearInterval(rainIntId);
-    rainIntId = null;
-    rainDrops.forEach(function (d) { d.remove(); });
-    rainDrops = [];
-    hideUmbrella();
+    if (!S.rain) return;
+    S.rain = false;
+    clearInterval(rInt); rInt = null;
+    rdrops.forEach(function(d){ try { d.remove(); } catch(e){} });
+    rdrops = [];
+    hideUmb();
     if (S.mood === 'sad' || S.mood === 'sheltered') {
-      setMood('happy');
-      spawnPt('sp', 5);
-      setTimeout(function () { setMood('normal'); }, 2000);
+      mood('happy'); spark(5);
+      setTimeout(function(){ mood('normal'); }, 1800);
     }
   }
-
-  function spawnRainDrop() {
-    if (!D.rain || S.sheltered) return;
-    var drop = document.createElement('div');
-    drop.className = 'h-rdrop';
-    var h  = rn(8, 16);
-    drop.style.height = h + 'px';
-    drop.style.left   = rn(0, 78) + 'px';
-    drop.style.top    = '0px';
-    drop._vy = rn(4, 7);
-    D.rain.appendChild(drop);
-    rainDrops.push(drop);
+  function mkRDrop() {
+    if (!RAIN || S.shelter) return;
+    var d = document.createElement('div');
+    d.className = 'h-rdrop';
+    var h = rn(8, 17);
+    d.style.height = h + 'px';
+    d.style.left   = rn(2, 75) + 'px';
+    d.style.top    = '-5px';
+    d._vy = rn(4, 7);
+    RAIN.appendChild(d);
+    rdrops.push(d);
   }
-
   function tickRain() {
-    rainDrops = rainDrops.filter(function (d) {
+    rdrops = rdrops.filter(function (d) {
       var y = parseFloat(d.style.top) + d._vy;
-      if (y > 80) { d.remove(); return false; }
+      if (y > 82) { try { d.remove(); } catch(e){} return false; }
       d.style.top = y + 'px';
       return true;
     });
   }
-
-  /* ── Umbrella ─────────────────────────────────────────────────── */
-  function showUmbrella() {
-    if (!D.umb) return;
-    var b = ballCenter();
-    /* Place umbrella ~130px to the right of ball */
-    S.umbX = cl(b.x + 130, 10, window.innerWidth  - 80);
-    S.umbY = cl(b.y - 40,  10, window.innerHeight - 60);
-    D.umb.style.left    = S.umbX + 'px';
-    D.umb.style.top     = S.umbY + 'px';
-    D.umb.style.display = 'block';
-    D.umb.style.opacity = '0';
-    D.umb.style.transition = 'opacity .4s';
-    setTimeout(function () { D.umb.style.opacity = '1'; }, 30);
+  function schedRain() {
+    setTimeout(function(){ startRain(); schedRain(); }, rn(4*60000, 13*60000));
   }
 
-  function hideUmbrella() {
-    if (!D.umb) return;
-    D.umb.style.opacity = '0';
-    setTimeout(function () {
-      if (!S.raining) D.umb.style.display = 'none';
-    }, 400);
-    S.sheltered = false;
+  /* ── Umbrella ── */
+  function showUmb() {
+    if (!UMB) return;
+    var c = bCenter();
+    S.ux = cl(c.x + 130, 10, window.innerWidth  - 80);
+    S.uy = cl(c.y - 40,  10, window.innerHeight - 60);
+    UMB.style.left    = S.ux + 'px';
+    UMB.style.top     = S.uy + 'px';
+    UMB.style.display = 'block';
+    UMB.style.opacity = '0';
+    setTimeout(function(){ UMB.classList.add('h-umb-show'); }, 30);
   }
-
-  function checkShelter() {
-    if (!S.raining || !D.umb || D.umb.style.display === 'none') return;
-    var b  = ballCenter();
-    /* umbrella center is roughly (umbX+36, umbY+26) */
-    var ux = S.umbX + 36;
-    var uy = S.umbY + 26;
-    var d  = Math.hypot(ux - b.x, uy - b.y);
-    if (d < 58) {
-      if (!S.sheltered) {
-        S.sheltered = true;
-        D.umb.classList.add('sheltering');
-        setMood('sheltered');
-        spawnPt('hrt', 3);
-        /* stop rain drops */
-        rainDrops.forEach(function(d){ d.remove(); });
-        rainDrops = [];
+  function hideUmb() {
+    if (!UMB) return;
+    UMB.classList.remove('h-umb-show', 'h-umb-cover');
+    setTimeout(function(){
+      if (!S.rain) UMB.style.display = 'none';
+    }, 420);
+    S.shelter = false;
+  }
+  function chkShelter() {
+    if (!S.rain || !UMB || UMB.style.display === 'none') { return; }
+    var c = bCenter();
+    var d = Math.hypot((S.ux + 36) - c.x, (S.uy + 26) - (c.y - 18));
+    if (d < 56) {
+      if (!S.shelter) {
+        S.shelter = true;
+        UMB.classList.add('h-umb-cover');
+        mood('sheltered');
+        hearts(4);
+        rdrops.forEach(function(dr){ try{dr.remove();}catch(e){} });
+        rdrops = [];
       }
-    } else {
-      if (S.sheltered) {
-        S.sheltered = false;
-        D.umb.classList.remove('sheltering');
-        if (S.raining) setMood('sad');
-      }
+    } else if (S.shelter) {
+      S.shelter = false;
+      UMB.classList.remove('h-umb-cover');
+      if (S.rain) mood('sad');
     }
   }
 
-  function initUmbrellaDrag() {
-    if (!D.umb) return;
-
-    D.umb.addEventListener('mousedown', function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      S.umbDragging = true;
-      S.umbDOX = e.clientX - S.umbX;
-      S.umbDOY = e.clientY - S.umbY;
-      D.umb.style.cursor = 'grabbing';
-    });
-
-    D.umb.addEventListener('touchstart', function (e) {
-      e.stopPropagation();
-      var t = e.touches[0];
-      S.umbDragging = true;
-      S.umbDOX = t.clientX - S.umbX;
-      S.umbDOY = t.clientY - S.umbY;
-    }, { passive: true });
-
-    document.addEventListener('mousemove', function (e) {
-      if (!S.umbDragging) return;
-      S.umbX = e.clientX - S.umbDOX;
-      S.umbY = e.clientY - S.umbDOY;
-      D.umb.style.left = S.umbX + 'px';
-      D.umb.style.top  = S.umbY + 'px';
-    });
-
-    document.addEventListener('touchmove', function (e) {
-      if (!S.umbDragging) return;
-      var t = e.touches[0];
-      S.umbX = t.clientX - S.umbDOX;
-      S.umbY = t.clientY - S.umbDOY;
-      D.umb.style.left = S.umbX + 'px';
-      D.umb.style.top  = S.umbY + 'px';
-    }, { passive: true });
-
-    document.addEventListener('mouseup', function () {
-      if (S.umbDragging) { S.umbDragging = false; D.umb.style.cursor = 'grab'; }
-    });
-
-    document.addEventListener('touchend', function () {
-      S.umbDragging = false;
-    });
-  }
-
-  /* ── Schedule rain ───────────────────────────────────────────── */
-  function scheduleRain() {
-    var delay = rn(C.RAIN_MIN, C.RAIN_MAX);
-    setTimeout(function () {
-      startRain();
-      scheduleRain(); /* reschedule */
-    }, delay);
-  }
-
-  /* ── Sleep management ────────────────────────────────────────── */
-  var sleepCheckId = setInterval(function () {
-    if (S.dragging || S.raining || S.umbDragging) return;
-    var idle = Date.now() - S.idleSince;
-    if (idle > C.SLEEP_AFTER && !S.sleeping) {
-      S.sleeping = true;
-      setMood('sleeping');
-    }
-  }, 5000);
-
-  /* ── Apply DOM updates each frame ───────────────────────────── */
+  /* ── Apply DOM each frame ── */
   function applyDOM() {
-    if (!D.w) return;
+    if (!W) return;
+    var sp2 = Math.hypot(S.vx, S.vy);
+    var fy  = (!S.drag && sp2 < 0.5) ? Math.sin(Date.now() / 1320) * 3.5 : 0;
 
-    /* Idle float on wrapper (doesn't conflict with ball squish transform) */
-    var sp2    = Math.hypot(S.vx, S.vy);
-    var floatY = (sp2 < 0.6 && !S.dragging)
-      ? Math.sin(Date.now() / 1350) * 3.5
-      : 0;
+    W.style.transform =
+      'translate(' + (S.x | 0) + 'px,' + ((S.y | 0) + fy).toFixed(1) + 'px)';
 
-    D.w.style.transform =
-      'translate(' + Math.round(S.x) + 'px,' +
-      (Math.round(S.y) + floatY).toFixed(1) + 'px)';
-
-    /* Ball squish */
-    if (D.ball) {
-      D.ball.style.transform =
+    if (BALL)
+      BALL.style.transform =
         'scaleX(' + S.sx.toFixed(3) + ') scaleY(' + S.sy.toFixed(3) + ')';
-    }
 
-    /* Pupils */
-    if (D.pl) D.pl.style.transform = 'translate(' + S.plx.toFixed(1) + 'px,' + S.ply.toFixed(1) + 'px)';
-    if (D.pr) D.pr.style.transform = 'translate(' + S.prx.toFixed(1) + 'px,' + S.pry.toFixed(1) + 'px)';
+    if (PL) PL.style.transform = 'translate(' + S.plx.toFixed(1) + 'px,' + S.ply.toFixed(1) + 'px)';
+    if (PR) PR.style.transform = 'translate(' + S.prx.toFixed(1) + 'px,' + S.pry.toFixed(1) + 'px)';
   }
 
-  /* ── Main RAF tick ───────────────────────────────────────────── */
+  /* ── Main RAF loop ── */
   function tick() {
-    if (!S.dragging) {
-      var d  = distMouse();
-      var z  = getZone(d);
+    try {
+      if (!S.drag) {
+        var d = dMouse();
+        var z = toZone(d);
 
-      /* Zone change */
-      if (z !== S.zone) {
-        onZoneChange(S.zone, z);
-        S.zone = z;
+        if (z !== S.zone) { onZone(S.zone, z); S.zone = z; }
+
+        /* zone forces */
+        if (z === 'flee' || z === 'panic') {
+          repulse();
+        } else if (z === 'notice' || z === 'tease') {
+          var c = bCenter();
+          var dx = S.mx - c.x, dy = S.my - c.y;
+          var dd = Math.hypot(dx, dy) || 1;
+          S.vx += (dx/dd) * 0.055; S.vy += (dy/dd) * 0.032;
+        } else if (z === 'alert') {
+          var c2 = bCenter();
+          var ax = c2.x - S.mx, ay = c2.y - S.my;
+          var ad = Math.hypot(ax, ay) || 1;
+          S.vx += (ax/ad) * 0.65; S.vy += (ay/ad) * 0.45;
+        }
+
+        /* autonomous wander */
+        if ((z === 'far' || z === 'notice') &&
+            Date.now() - S.lastWander > S.nextWander) {
+          wander();
+        }
+
+        /* spring */
+        S.vx = S.vx * C.SD + (S.tx - S.x) * C.SK;
+        S.vy = S.vy * C.SD + (S.ty - S.y) * C.SK;
+
+        /* speed cap */
+        var sp = Math.hypot(S.vx, S.vy);
+        if (sp > C.MSP) { S.vx = (S.vx/sp)*C.MSP; S.vy = (S.vy/sp)*C.MSP; }
+
+        /* move + wall bounce */
+        var nx = S.x + S.vx, ny = S.y + S.vy;
+        var mxv = maxX(), myv = maxY();
+        if (nx < 4)   { S.vx *= -0.52; nx = 4;   S.sxv = -0.75; }
+        if (nx > mxv) { S.vx *= -0.52; nx = mxv; S.sxv = -0.75; }
+        if (ny < 4)   { S.vy *= -0.52; ny = 4;   S.syv = -0.75; }
+        if (ny > myv) { S.vy *= -0.52; ny = myv; S.syv = -0.75; }
+        S.x = nx; S.y = ny;
+
+        tickSquish(sp);
+
+        /* arrive callback */
+        if (S.onArrive && sp < 0.5 &&
+            Math.hypot(S.tx - S.x, S.ty - S.y) < 6) {
+          var fn = S.onArrive; S.onArrive = null; fn();
+        }
       }
 
-      /* Forces by zone */
-      if (z === 'flee' || z === 'panic') {
-        repulse();
-      } else if (z === 'notice' || z === 'tease') {
-        /* gently lean toward mouse */
-        var b  = ballCenter();
-        var dx = S.mx - b.x, dy = S.my - b.y;
-        var dd = Math.hypot(dx, dy) || 1;
-        S.vx += (dx / dd) * 0.055;
-        S.vy += (dy / dd) * 0.035;
-      } else if (z === 'alert') {
-        /* back off */
-        var ba  = ballCenter();
-        var adx = ba.x - S.mx, ady = ba.y - S.my;
-        var ad  = Math.hypot(adx, ady) || 1;
-        S.vx += (adx / ad) * 0.65;
-        S.vy += (ady / ad) * 0.45;
+      /* sleeping zzz */
+      if (S.sleeping && Date.now() - S.lastZzz > 2400) {
+        S.lastZzz = Date.now();
+        zzz();
       }
 
-      /* Autonomous wander when calm */
-      if ((z === 'far' || z === 'notice') &&
-          Date.now() - S.lastWander > S.wanderNext) {
-        S.wanderNext = rn(C.WI_MIN, C.WI_MAX); /* set NEXT interval now */
-        wander();
-      }
-
-      /* Spring to target */
-      S.vx = S.vx * C.SD + (S.tx - S.x) * C.SK;
-      S.vy = S.vy * C.SD + (S.ty - S.y) * C.SK;
-
-      /* Speed cap */
-      var sp = Math.hypot(S.vx, S.vy);
-      if (sp > C.MSP) {
-        S.vx = (S.vx / sp) * C.MSP;
-        S.vy = (S.vy / sp) * C.MSP;
-      }
-
-      /* Move */
-      var nx = S.x + S.vx;
-      var ny = S.y + S.vy;
-      var maxX = window.innerWidth  - C.WRAP - 4;
-      var maxY = window.innerHeight - C.WRAP - 4;
-
-      /* Wall bounce with squish */
-      if (nx < 4)    { S.vx *= -0.55; nx = 4;    S.sxv = -0.8; }
-      if (nx > maxX) { S.vx *= -0.55; nx = maxX; S.sxv = -0.8; }
-      if (ny < 4)    { S.vy *= -0.55; ny = 4;    S.syv = -0.8; }
-      if (ny > maxY) { S.vy *= -0.55; ny = maxY; S.syv = -0.8; }
-
-      S.x = nx; S.y = ny;
-
-      /* Squish based on velocity */
-      tickSquish(sp, S.vx, S.vy);
-
-      /* Arrive callback */
-      if (S.onArrive && sp < 0.5 && Math.hypot(S.tx - S.x, S.ty - S.y) < 6) {
-        var fn = S.onArrive; S.onArrive = null; fn();
-      }
+      applyDOM();
+      tickPupils();
+      tickPts();
+      if (S.rain) tickRain();
+      chkShelter();
+    } catch (e) {
+      /* swallow errors to keep RAF alive */
     }
-
-    /* Sleeping zzz particles */
-    if (S.mood === 'sleeping' && Date.now() - S.lastPt > 2200) {
-      S.lastPt = Date.now();
-      spawnPt('zzz', 1);
-    }
-
-    applyDOM();
-    tickPupils();
-    tickPts();
-    if (S.raining) tickRain();
-    checkShelter();
-
     requestAnimationFrame(tick);
   }
 
-  /* ── Drag ────────────────────────────────────────────────────── */
+  /* ── Drag ── */
   function initDrag() {
-    var dox, doy;
-
-    function dStart(mx, my) {
-      S.dragging = true;
-      dox = mx - S.x;
-      doy = my - S.y;
-      D.w.style.cursor = 'grabbing';
+    function ds(mx, my) {
+      S.drag = true;
+      S.dox  = mx - S.x;
+      S.doy  = my - S.y;
+      W.style.cursor = 'grabbing';
       S.sxv = -0.7; S.syv = 0.7;
     }
-    function dMove(mx, my) {
-      if (!S.dragging) return;
-      var maxX = window.innerWidth  - C.WRAP - 4;
-      var maxY = window.innerHeight - C.WRAP - 4;
-      S.x  = cl(mx - dox, 4, maxX);
-      S.y  = cl(my - doy, 4, maxY);
+    function dm(mx, my) {
+      if (!S.drag) return;
+      S.x  = cl(mx - S.dox, 4, maxX());
+      S.y  = cl(my - S.doy, 4, maxY());
       S.tx = S.x; S.ty = S.y;
       S.vx = 0; S.vy = 0;
     }
-    function dEnd() {
-      if (!S.dragging) return;
-      S.dragging = false;
-      D.w.style.cursor = 'pointer';
-      /* small bounce on release */
-      S.vy = -3;
-      S.sxv = 0.5; S.syv = -0.5;
+    function de() {
+      if (!S.drag) return;
+      S.drag = false;
+      W.style.cursor = 'pointer';
+      S.vy -= 3;
+      S.sxv = 0.6; S.syv = -0.6;
     }
-
-    D.w.addEventListener('mousedown', function (e) { e.preventDefault(); dStart(e.clientX, e.clientY); });
-    D.w.addEventListener('touchstart', function (e) {
-      e.preventDefault();
-      dStart(e.touches[0].clientX, e.touches[0].clientY);
-    }, { passive: false });
-
-    document.addEventListener('mousemove', function (e) { dMove(e.clientX, e.clientY); });
-    document.addEventListener('touchmove', function (e) {
-      dMove(e.touches[0].clientX, e.touches[0].clientY);
-    }, { passive: true });
-    document.addEventListener('mouseup',  dEnd);
-    document.addEventListener('touchend', dEnd);
+    W.addEventListener('mousedown',  function(e){ if (!e.target.closest('button,a')) { e.preventDefault(); ds(e.clientX, e.clientY); } });
+    W.addEventListener('touchstart', function(e){ e.preventDefault(); ds(e.touches[0].clientX, e.touches[0].clientY); }, { passive:false });
+    document.addEventListener('mousemove',  function(e){ dm(e.clientX, e.clientY); });
+    document.addEventListener('touchmove',  function(e){ if(S.drag) dm(e.touches[0].clientX, e.touches[0].clientY); }, { passive:true });
+    document.addEventListener('mouseup',  de);
+    document.addEventListener('touchend', de);
   }
 
-  /* ── Events ─────────────────────────────────────────────────── */
-  window.addEventListener('mousemove', function (e) {
-    S.mx = e.clientX;
-    S.my = e.clientY;
-    S.idleSince = Date.now();
-    if (S.sleeping) {
-      S.sleeping = false;
-      setMood('curious');
-      spawnPt('sp', 3);
+  /* ── Umbrella drag ── */
+  function initUmbDrag() {
+    if (!UMB) return;
+    UMB.addEventListener('mousedown', function(e){
+      e.preventDefault(); e.stopPropagation();
+      S.udrag = true; S.udox = e.clientX - S.ux; S.udoy = e.clientY - S.uy;
+      UMB.style.cursor = 'grabbing';
+    });
+    UMB.addEventListener('touchstart', function(e){
+      e.stopPropagation();
+      S.udrag = true;
+      S.udox = e.touches[0].clientX - S.ux;
+      S.udoy = e.touches[0].clientY - S.uy;
+    }, { passive:true });
+    document.addEventListener('mousemove', function(e){
+      if (!S.udrag) return;
+      S.ux = e.clientX - S.udox; S.uy = e.clientY - S.udoy;
+      UMB.style.left = S.ux + 'px'; UMB.style.top = S.uy + 'px';
+    });
+    document.addEventListener('touchmove', function(e){
+      if (!S.udrag) return;
+      S.ux = e.touches[0].clientX - S.udox; S.uy = e.touches[0].clientY - S.udoy;
+      UMB.style.left = S.ux + 'px'; UMB.style.top = S.uy + 'px';
+    }, { passive:true });
+    document.addEventListener('mouseup',  function(){ if(S.udrag){ S.udrag=false; UMB.style.cursor='grab'; }});
+    document.addEventListener('touchend', function(){ S.udrag = false; });
+  }
+
+  /* ── Stars ── */
+  function buildStars() {
+    if (!STARS) return;
+    for (var i = 0; i < 26; i++) {
+      var s  = document.createElement('div');
+      s.className = 'h-star';
+      var sz = rn(0.8, 2.6);
+      s.style.cssText =
+        'width:'+ sz +'px;height:'+ sz +'px;' +
+        'left:'+ rn(5,92) +'%;top:'+ rn(5,92) +'%;' +
+        'animation-delay:'+ rn(0,4) +'s;' +
+        'animation-duration:'+ rn(1.4,3.8) +'s;';
+      STARS.appendChild(s);
     }
-  }, { passive: true });
+  }
 
-  window.addEventListener('mouseleave', function () {
-    S.mx = -9999; S.my = -9999;
-  });
+  /* ── Events ── */
+  function initEvents() {
+    /* mouse tracking */
+    window.addEventListener('mousemove', function(e){
+      S.mx = e.clientX; S.my = e.clientY;
+      S.idleAt = Date.now();
+      if (S.sleeping) { S.sleeping = false; mood('curious'); spark(3); }
+    }, { passive:true });
+    window.addEventListener('mouseleave', function(){ S.mx = -9999; S.my = -9999; });
+    window.addEventListener('touchmove',  function(e){
+      S.mx = e.touches[0].clientX; S.my = e.touches[0].clientY; S.idleAt = Date.now();
+    }, { passive:true });
 
-  window.addEventListener('touchmove', function (e) {
-    S.mx = e.touches[0].clientX;
-    S.my = e.touches[0].clientY;
-    S.idleSince = Date.now();
-  }, { passive: true });
+    /* exit intent */
+    document.addEventListener('mouseleave', function(e){
+      if (e.clientY < 15 && ARM_W) {
+        mood('sad'); hearts(4);
+        ARM_W.classList.remove('h-wave');
+        void ARM_W.offsetWidth;
+        ARM_W.classList.add('h-wave');
+        setTimeout(function(){ ARM_W.classList.remove('h-wave'); mood('normal'); }, 2000);
+      }
+    });
 
-  /* Exit intent — mouse leaving through top of page */
-  document.addEventListener('mouseleave', function (e) {
-    if (e.clientY < 15) {
-      setMood('sad');
-      spawnPt('hrt', 4);
-      /* Wave arm */
-      if (D.ball) {
-        var arm = document.getElementById('h-wave-arm');
-        if (!arm) {
-          arm = document.createElement('div');
-          arm.id = 'h-wave-arm';
-          D.w.appendChild(arm);
-        }
-        arm.classList.remove('waving');
-        void arm.offsetWidth; /* reflow */
-        arm.classList.add('waving');
-        setTimeout(function () {
-          arm.classList.remove('waving');
-          setMood('normal');
-        }, 1800);
+    /* click ball */
+    W.addEventListener('click', function(e){
+      if (S.drag) return;
+      e.stopPropagation();
+      spark(7); hearts(2);
+      S.sxv = -1.0; S.syv = 1.0;
+      mood('happy');
+      setTimeout(function(){ mood('normal'); }, 1500);
+    });
+
+    /* scroll jiggle */
+    var lastSY = 0;
+    window.addEventListener('scroll', function(){
+      var sy = window.scrollY || 0;
+      if (Math.abs(sy - lastSY) > 110) {
+        S.sxv += (Math.random() - 0.5) * 0.9;
+        S.syv += (Math.random() - 0.5) * 0.9;
+      }
+      lastSY = sy;
+    }, { passive:true });
+
+    /* resize */
+    window.addEventListener('resize', function(){
+      S.tx = cl(S.tx, 4, maxX()); S.ty = cl(S.ty, 4, maxY());
+    });
+
+    /* idle sleep check */
+    setInterval(function(){
+      if (S.drag || S.rain || S.udrag) return;
+      if (Date.now() - S.idleAt > C.SLP && !S.sleeping) {
+        S.sleeping = true; mood('sleeping');
+      }
+    }, 5000);
+
+    /* page-specific reactions (key moments only) */
+    if (window.HC && window.HC.page) {
+      var pg = window.HC.page;
+      if (pg.is404) {
+        setTimeout(function(){ mood('sad'); S.sxv = -0.8; S.syv = 0.8; }, 1800);
+      } else if (pg.isProduct) {
+        setTimeout(function(){ mood('curious'); }, 2200);
       }
     }
-  });
 
-  /* Scroll reaction */
-  var lastSY = 0;
-  window.addEventListener('scroll', function () {
-    var sy = window.scrollY || document.documentElement.scrollTop;
-    var spd = Math.abs(sy - lastSY);
-    lastSY = sy;
-    if (spd > 100) {
-      S.sxv += (Math.random() - 0.5) * 0.8;
-      S.syv += (Math.random() - 0.5) * 0.8;
-    }
-  }, { passive: true });
-
-  /* Click on ball */
-  window.addEventListener('click', function (e) {
-    if (!D.w || !D.w.contains(e.target)) return;
-    if (S.dragging) return;
-    spawnPt('sp', 6);
-    spawnPt('hrt', 2);
-    S.sxv = -1.0; S.syv = 1.0;
-    setMood('happy');
-    setTimeout(function () { setMood('normal'); }, 1600);
-  });
-
-  /* Resize: clamp target */
-  window.addEventListener('resize', function () {
-    var maxX = window.innerWidth  - C.WRAP - 4;
-    var maxY = window.innerHeight - C.WRAP - 4;
-    S.tx = cl(S.tx, 4, maxX);
-    S.ty = cl(S.ty, 4, maxY);
-  });
-
-  /* Page-specific behaviors (key moments only, no speech) */
-  function pageReact() {
-    if (!window.HC) return;
-    var pg = window.HC.page;
-    if (pg.is404) {
-      /* confused squish loop on 404 */
-      setTimeout(function () {
-        S.sxv = -0.8; S.syv = 0.8;
-        setMood('sad');
-      }, 1500);
-    } else if (pg.isProduct) {
-      /* curious on product pages */
-      setTimeout(function () { setMood('curious'); }, 2000);
-    }
+    /* hourly time refresh */
+    setInterval(applyTime, 3600000);
   }
 
-  /* ── Star generation ─────────────────────────────────────────── */
-  function buildStars() {
-    if (!D.stars) return;
-    for (var i = 0; i < 24; i++) {
-      var s = document.createElement('div');
-      s.className = 'h-star';
-      var sz = rn(0.8, 2.5);
-      s.style.cssText =
-        'width:'     + sz       + 'px;' +
-        'height:'    + sz       + 'px;' +
-        'left:'      + rn(5,95) + '%;' +
-        'top:'       + rn(5,95) + '%;' +
-        'animation-delay:'    + rn(0, 4) + 's;' +
-        'animation-duration:' + rn(1.2, 3.5) + 's;';
-      D.stars.appendChild(s);
-    }
-  }
-
-  /* ── Boot ────────────────────────────────────────────────────── */
+  /* ── Boot ── */
   function boot() {
-    D.w     = document.getElementById('h-w');
-    D.ball  = document.getElementById('h-ball');
-    D.pl    = document.getElementById('h-pl');
-    D.pr    = document.getElementById('h-pr');
-    D.stars = document.getElementById('h-stars');
-    D.rain  = document.getElementById('h-rain');
-    D.umb   = document.getElementById('h-umb');
-    D.fx    = document.getElementById('h-fx');
+    W     = document.getElementById('h-w');
+    BALL  = document.getElementById('h-ball');
+    PL    = document.getElementById('h-pl');
+    PR    = document.getElementById('h-pr');
+    RAIN  = document.getElementById('h-rain');
+    UMB   = document.getElementById('h-umb');
+    FX    = document.getElementById('h-fx');
+    ARM_W = document.getElementById('h-arm-w');
+    STARS = document.getElementById('h-stars');
 
-    if (!D.w) return;
+    if (!W || !BALL) return;  /* safety: DOM not ready */
 
-    /* ── Position: bottom-right corner to start ── */
-    S.x = window.innerWidth  - C.WRAP - 28;
-    S.y = window.innerHeight - C.WRAP - 28;
+    /* Set initial position BEFORE making visible */
+    S.x  = window.innerWidth  - C.WRAP - 28;
+    S.y  = window.innerHeight - C.WRAP - 28;
     S.tx = S.x; S.ty = S.y;
-    D.w.style.transform = 'translate(' + S.x + 'px,' + S.y + 'px)';
+    W.style.transform = 'translate(' + S.x + 'px,' + S.y + 'px)';
+
+    /* Now reveal */
+    W.classList.add('h-ready');
 
     buildStars();
-    applyTimeStyle();
+    applyTime();
     initDrag();
-    initUmbrellaDrag();
-    pageReact();
-    scheduleRain();
-
-    /* Hourly time-style refresh */
-    setInterval(applyTimeStyle, 3600000);
+    initUmbDrag();
+    initEvents();
+    schedRain();
 
     requestAnimationFrame(tick);
   }
@@ -788,12 +569,7 @@
     boot();
   }
 
-  /* ── Public API ──────────────────────────────────────────────── */
-  window.HarfoAI = {
-    rain:  startRain,
-    park:  parkHome,
-    happy: function () { spawnPt('sp', 8); setMood('happy'); },
-    go:    moveTo,
-  };
+  /* ── Public API ── */
+  window.HarfoAI = { rain: startRain, park: parkHome, happy: function(){ spark(9); mood('happy'); } };
 
 })();
