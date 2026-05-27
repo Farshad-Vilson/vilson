@@ -1,0 +1,358 @@
+/* =============================================================================
+   harfo-ui.css  —  Harfo v7  HUD, Toast, TOC, Palette & UI Components
+   ============================================================================= */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   HUD / Speech Bubble
+   ───────────────────────────────────────────────────────────────────────────── */
+
+#h-hud {
+	position: absolute;
+	bottom: calc(100% + 8px);
+	left: 50%;
+	transform: translateX(-50%);
+	min-width: 160px;
+	max-width: 280px;
+	background: rgba(6, 18, 30, 0.94);
+	border: 1px solid rgba(91, 232, 218, 0.35);
+	border-radius: 14px;
+	padding: 10px 14px;
+	box-shadow:
+		0 4px 22px rgba(0, 30, 22, 0.55),
+		0 0 0 1px rgba(91, 232, 218, 0.1) inset;
+	display: none;
+	flex-direction: column;
+	gap: 6px;
+	pointer-events: auto;
+	animation: ha-hud-in 0.22s ease forwards;
+	z-index: 5;
+}
+
+#h-hud::after {
+	content: "";
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	transform: translateX(-50%);
+	border: 7px solid transparent;
+	border-top-color: rgba(6, 18, 30, 0.94);
+}
+
+#harfo-w.hv-talk #h-hud {
+	display: flex;
+}
+
+/* Typing indicator */
+#h-typing {
+	display: none;
+	gap: 5px;
+	align-items: center;
+	justify-content: center;
+	padding: 4px 0;
+}
+
+#h-typing.active {
+	display: flex;
+}
+
+#h-typing span {
+	display: inline-block;
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: rgba(91, 232, 218, 0.7);
+	animation: ha-typing-dot 1.1s ease-in-out infinite;
+}
+
+#h-typing span:nth-child(1) { animation-delay: 0s;     }
+#h-typing span:nth-child(2) { animation-delay: 0.18s;  }
+#h-typing span:nth-child(3) { animation-delay: 0.36s;  }
+
+/* Message text */
+#h-msg {
+	margin: 0;
+	padding: 0;
+	color: rgba(220, 255, 250, 0.92);
+	font-size: 13px;
+	line-height: 1.55;
+	text-align: center;
+	direction: rtl;
+	word-break: break-word;
+}
+
+/* Action buttons row */
+#h-acts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	justify-content: center;
+	margin-top: 2px;
+}
+
+#h-acts button {
+	padding: 5px 10px;
+	background: rgba(91, 232, 218, 0.12);
+	color: #5BE8DA;
+	border: 1px solid rgba(91, 232, 218, 0.4);
+	border-radius: 20px;
+	font-size: 12px;
+	cursor: pointer;
+	transition: background 0.15s ease, transform 0.1s ease;
+	direction: rtl;
+}
+
+#h-acts button:hover {
+	background: rgba(91, 232, 218, 0.24);
+	transform: scale(1.04);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Toast Notification
+   ───────────────────────────────────────────────────────────────────────────── */
+
+#h-toast {
+	position: fixed;
+	bottom: 28px;
+	left: 50%;
+	transform: translateX(-50%);
+	max-width: 320px;
+	background: rgba(6, 18, 30, 0.96);
+	color: rgba(220, 255, 250, 0.92);
+	border: 1px solid rgba(91, 232, 218, 0.3);
+	border-radius: 10px;
+	padding: 10px 18px;
+	font-size: 13px;
+	line-height: 1.5;
+	direction: rtl;
+	text-align: center;
+	box-shadow: 0 6px 24px rgba(0, 30, 22, 0.55);
+	pointer-events: none;
+	opacity: 0;
+	z-index: 2147483645;
+	transition: opacity 0.22s ease;
+}
+
+#h-toast.show {
+	opacity: 1;
+	animation: ha-toast-in 0.22s ease forwards;
+	pointer-events: auto;
+}
+
+#h-toast.hide {
+	animation: ha-toast-out 0.28s ease forwards;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Table of Contents Panel
+   ───────────────────────────────────────────────────────────────────────────── */
+
+#h-toc {
+	position: fixed;
+	top: 50%;
+	right: 14px;
+	transform: translateY(-50%);
+	display: none;
+	flex-direction: column;
+	gap: 5px;
+	padding: 10px 8px;
+	background: rgba(6, 18, 30, 0.92);
+	border: 1px solid rgba(91, 232, 218, 0.25);
+	border-radius: 12px;
+	box-shadow: 0 4px 20px rgba(0, 30, 22, 0.5);
+	max-height: 60vh;
+	overflow-y: auto;
+	z-index: 2147483642;
+	pointer-events: auto;
+	scrollbar-width: thin;
+	scrollbar-color: rgba(91, 232, 218, 0.3) transparent;
+}
+
+#h-toc.show {
+	display: flex;
+}
+
+#h-toc a {
+	display: block;
+	color: rgba(91, 232, 218, 0.82);
+	font-size: 12px;
+	line-height: 1.4;
+	text-decoration: none;
+	padding: 4px 8px;
+	border-radius: 6px;
+	border-right: 2px solid transparent;
+	direction: rtl;
+	transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+	max-width: 200px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+#h-toc a:hover,
+#h-toc a.active {
+	background: rgba(91, 232, 218, 0.1);
+	border-right-color: #5BE8DA;
+	color: rgba(220, 255, 250, 0.95);
+}
+
+#h-toc a[data-level="2"] { padding-right: 16px; font-size: 11px; opacity: 0.78; }
+#h-toc a[data-level="3"] { padding-right: 24px; font-size: 10px; opacity: 0.62; }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Palette / Search Panel
+   ───────────────────────────────────────────────────────────────────────────── */
+
+#h-palette {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 8, 16, 0.6);
+	display: none;
+	align-items: flex-start;
+	justify-content: center;
+	padding-top: 80px;
+	z-index: 2147483643;
+	pointer-events: auto;
+	backdrop-filter: blur(3px);
+	-webkit-backdrop-filter: blur(3px);
+}
+
+#h-palette.show {
+	display: flex;
+	animation: ha-palette-in 0.2s ease forwards;
+}
+
+#h-pal-box {
+	width: min(480px, calc(100vw - 32px));
+	background: rgba(6, 18, 30, 0.97);
+	border: 1px solid rgba(91, 232, 218, 0.35);
+	border-radius: 16px;
+	overflow: hidden;
+	box-shadow:
+		0 8px 40px rgba(0, 30, 22, 0.7),
+		0 0 0 1px rgba(91, 232, 218, 0.08) inset;
+}
+
+#h-pal-inp {
+	display: block;
+	width: 100%;
+	box-sizing: border-box;
+	padding: 16px 20px;
+	background: transparent;
+	color: rgba(220, 255, 250, 0.92);
+	border: none;
+	border-bottom: 1px solid rgba(91, 232, 218, 0.18);
+	outline: none;
+	font-size: 15px;
+	direction: ltr;
+	caret-color: #5BE8DA;
+}
+
+#h-pal-inp::placeholder {
+	color: rgba(91, 232, 218, 0.35);
+}
+
+#h-pal-hint {
+	padding: 8px 20px;
+	font-size: 11px;
+	color: rgba(91, 232, 218, 0.45);
+	border-bottom: 1px solid rgba(91, 232, 218, 0.1);
+	direction: rtl;
+}
+
+#h-pal-list {
+	max-height: 320px;
+	overflow-y: auto;
+	scrollbar-width: thin;
+	scrollbar-color: rgba(91, 232, 218, 0.3) transparent;
+}
+
+#h-pal-list .pal-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 11px 20px;
+	color: rgba(220, 255, 250, 0.88);
+	font-size: 13px;
+	cursor: pointer;
+	direction: rtl;
+	transition: background 0.12s ease;
+	border-bottom: 1px solid rgba(91, 232, 218, 0.06);
+}
+
+#h-pal-list .pal-item:last-child {
+	border-bottom: none;
+}
+
+#h-pal-list .pal-item:hover,
+#h-pal-list .pal-item.selected {
+	background: rgba(91, 232, 218, 0.1);
+}
+
+#h-pal-list .pal-item .pal-icon {
+	flex-shrink: 0;
+	width: 20px;
+	height: 20px;
+	color: rgba(91, 232, 218, 0.7);
+}
+
+#h-pal-list .pal-item .pal-title {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+#h-pal-list .pal-item .pal-sub {
+	font-size: 11px;
+	color: rgba(91, 232, 218, 0.4);
+	flex-shrink: 0;
+}
+
+#h-pal-list .pal-item mark {
+	background: transparent;
+	color: #5BE8DA;
+	font-weight: 700;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Scrollbar styling (WebKit)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+#h-toc::-webkit-scrollbar,
+#h-pal-list::-webkit-scrollbar {
+	width: 4px;
+}
+
+#h-toc::-webkit-scrollbar-track,
+#h-pal-list::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+#h-toc::-webkit-scrollbar-thumb,
+#h-pal-list::-webkit-scrollbar-thumb {
+	background: rgba(91, 232, 218, 0.3);
+	border-radius: 2px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Reduced motion
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+	#harfo-w,
+	#h-restore,
+	#h-zzz b,
+	.h-particle,
+	#h-fin-l,
+	#h-fin-r,
+	#h-shine,
+	#h-shadow,
+	#h-eyes ellipse,
+	#h-eyes circle {
+		animation: none !important;
+		transition: opacity 0.3s ease !important;
+	}
+}

@@ -1,0 +1,294 @@
+/* =============================================================================
+   harfo-core.css  —  Harfo v7 Core Layout & Structure
+   ============================================================================= */
+
+/* ── Root container ── */
+#harfo-root {
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	z-index: 2147483640;
+	font-family:
+		"IRANSans", "IRANSansWeb", system-ui, -apple-system,
+		BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+		Arial, sans-serif;
+	direction: rtl;
+}
+
+/* ── Widget wrapper ── */
+#harfo-w {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 122px;
+	height: 160px;
+	pointer-events: auto;
+	will-change: transform;
+	cursor: grab;
+	opacity: 0;
+	transition: opacity 0.55s ease;
+	-webkit-user-select: none;
+	user-select: none;
+	touch-action: none;
+}
+
+#harfo-w:active {
+	cursor: grabbing;
+}
+
+#harfo-w.hv-ready {
+	opacity: 1;
+}
+
+/* ── Character SVG ── */
+#h-char {
+	width: 100%;
+	height: 100%;
+	display: block;
+	overflow: visible;
+}
+
+/* ── Ambient glow ── */
+#h-aura {
+	position: absolute;
+	inset: -40px;
+	border-radius: 50%;
+	background: radial-gradient(
+		ellipse at center,
+		rgba(91, 232, 218, 0.18) 0%,
+		rgba(43, 207, 192, 0.08) 45%,
+		transparent 72%
+	);
+	pointer-events: none;
+	z-index: -1;
+}
+
+/* ── Speed lines (panic / flee) ── */
+#h-speed {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.15s ease;
+	overflow: visible;
+}
+
+#harfo-w.hv-panic #h-speed,
+#harfo-w.hv-flee  #h-speed {
+	opacity: 1;
+}
+
+/* Individual speed line */
+.sl {
+	position: absolute;
+	right: 100%;
+	height: 2px;
+	background: linear-gradient(
+		to right,
+		transparent 0%,
+		rgba(91, 232, 218, 0.85) 60%,
+		rgba(109, 238, 229, 0.6) 100%
+	);
+	border-radius: 1px;
+	animation: sl-flash 0.28s linear infinite;
+}
+
+.sl:nth-child(1) { top: 22%;  width: 38px; animation-delay: 0s;      }
+.sl:nth-child(2) { top: 38%;  width: 52px; animation-delay: -0.06s;  }
+.sl:nth-child(3) { top: 52%;  width: 44px; animation-delay: -0.12s;  }
+.sl:nth-child(4) { top: 64%;  width: 60px; animation-delay: -0.04s;  }
+.sl:nth-child(5) { top: 75%;  width: 36px; animation-delay: -0.18s;  }
+.sl:nth-child(6) { top: 14%;  width: 46px; animation-delay: -0.09s;  }
+
+/* ── Sleep ZZZ ── */
+#h-zzz {
+	position: absolute;
+	top: -12px;
+	left: 6px;
+	display: none;
+	pointer-events: none;
+}
+
+#harfo-w.hs-sleep #h-zzz {
+	display: block;
+}
+
+#h-zzz b {
+	position: absolute;
+	color: #5BE8DA;
+	font-weight: 700;
+	font-style: normal;
+	text-shadow:
+		0 0 8px rgba(91, 232, 218, 0.8),
+		0 0 16px rgba(91, 232, 218, 0.4);
+	animation: zzz 3.2s ease-in-out infinite;
+	opacity: 0;
+}
+
+#h-zzz b:nth-child(1) {
+	font-size: 14px;
+	left: 2px;
+	top: 10px;
+	animation-delay: 0s;
+}
+
+#h-zzz b:nth-child(2) {
+	font-size: 18px;
+	left: 14px;
+	top: 0px;
+	animation-delay: 0.9s;
+}
+
+#h-zzz b:nth-child(3) {
+	font-size: 24px;
+	left: 28px;
+	top: -12px;
+	animation-delay: 1.8s;
+}
+
+/* ── Exclamation mark ── */
+#h-exclaim {
+	position: absolute;
+	top: -28px;
+	left: 50%;
+	transform: translateX(-50%);
+	font: 700 30px/1 system-ui, sans-serif;
+	color: #FFD93D;
+	text-shadow:
+		0 0 10px rgba(255, 217, 61, 0.9),
+		0 0 22px rgba(255, 217, 61, 0.5);
+	opacity: 0;
+	pointer-events: none;
+}
+
+#harfo-w.hv-exclaim #h-exclaim {
+	animation: ha-exclaim 0.9s ease forwards;
+}
+
+/* ── Particles container ── */
+#h-particles {
+	position: absolute;
+	inset: -20px;
+	pointer-events: none;
+	overflow: visible;
+}
+
+/* ── Particle types ── */
+.h-particle {
+	position: absolute;
+	pointer-events: none;
+}
+
+.h-particle.spark {
+	animation: ha-spark-fly 0.85s ease-out forwards;
+}
+
+.h-particle.heart {
+	animation: ha-heart-float 1.0s ease-out forwards;
+}
+
+.h-particle.star {
+	animation: ha-star-pop 0.75s ease-out forwards;
+}
+
+.h-particle.text {
+	position: fixed;
+	font: 700 16px/1 system-ui, sans-serif;
+	color: #5BE8DA;
+	text-shadow:
+		0 0 8px rgba(91, 232, 218, 0.8),
+		0 0 18px rgba(91, 232, 218, 0.4);
+	animation: ha-text-pop 1.3s ease-out forwards;
+	white-space: nowrap;
+}
+
+/* ── SVG element animations (driven by CSS, referenced from SVG IDs) ── */
+
+/* Ground shadow breathe */
+#h-shadow {
+	animation: ha-shadow-breathe 3.2s ease-in-out infinite;
+	transform-origin: 100px 244px;
+}
+
+/* Fin left */
+#h-fin-l {
+	transform-origin: 85% 35%;
+	animation: ha-fin-l 2.8s ease-in-out infinite;
+}
+
+/* Fin right */
+#h-fin-r {
+	transform-origin: 15% 35%;
+	animation: ha-fin-r 2.8s ease-in-out infinite;
+	animation-delay: -1.4s;
+}
+
+/* Body shine shimmer */
+#h-shine {
+	animation: ha-shimmer 5s ease-in-out infinite;
+}
+
+/* Eye glow pulse */
+#h-eyes ellipse,
+#h-eyes circle {
+	animation: ha-eye-glow 3.8s ease-in-out infinite;
+}
+
+/* ── Close button ── */
+#h-close {
+	position: absolute;
+	top: 1px;
+	right: 1px;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	margin: 0;
+	background: rgba(6, 18, 30, 0.9);
+	color: #5BE8DA;
+	border: 1px solid rgba(91, 232, 218, 0.45);
+	border-radius: 50%;
+	font: 700 15px/24px system-ui, sans-serif;
+	text-align: center;
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity 0.2s ease, background 0.15s ease;
+	z-index: 10;
+}
+
+#h-close:hover {
+	background: rgba(91, 232, 218, 0.18);
+}
+
+#harfo-w:hover   #h-close,
+#harfo-w.hv-talk #h-close {
+	opacity: 1;
+}
+
+/* ── Restore button ── */
+#h-restore {
+	position: fixed;
+	right: 18px;
+	bottom: 18px;
+	width: 54px;
+	height: 54px;
+	border-radius: 50%;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	pointer-events: auto;
+	animation: ha-restore-pulse 2.6s ease-in-out infinite;
+	z-index: 2;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+#h-restore.show {
+	display: flex;
+}
+
+#h-restore svg {
+	width: 54px;
+	height: 54px;
+	display: block;
+}

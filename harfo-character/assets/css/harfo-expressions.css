@@ -1,0 +1,114 @@
+/* =============================================================================
+   harfo-expressions.css  —  Harfo v7  Eye & Mouth State Visibility
+   =============================================================================
+   Convention:
+     .he  = eye expression group
+     .hm  = mouth expression group
+   Default visible: .he-n (normal eyes), .hm-sm (small smile)
+   All others hidden by default; state classes on #harfo-w reveal them.
+   ============================================================================= */
+
+/* ── Hide all expression groups by default ── */
+.he,
+.hm {
+	display: none;
+}
+
+/* ── Show defaults ── */
+.he-n,
+.hm-sm {
+	display: inline;
+}
+
+/* ── Sweat drop: hidden by default ── */
+.h-sweat {
+	opacity: 0;
+	transition: opacity 0.2s ease;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Eye & pupil glow pulse (base – overrideable per state)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+#h-eyes ellipse,
+#h-eyes circle {
+	animation: ha-eye-pulse 3.8s ease-in-out infinite;
+}
+
+@keyframes ha-eye-pulse {
+	0%, 100% { filter: brightness(1);    }
+	50%       { filter: brightness(1.15); }
+}
+
+/* =============================================================================
+   STATE CLASSES ON #harfo-w
+   ============================================================================= */
+
+/* ── Sleep ── */
+#harfo-w.hs-sleep .he-n  { display: none;   }
+#harfo-w.hs-sleep .hm-sm { display: none;   }
+#harfo-w.hs-sleep .he-s  { display: inline; }
+#harfo-w.hs-sleep .hm-fl { display: inline; }
+
+/* ── Happy ── */
+#harfo-w.hs-happy .he-n  { display: none;   }
+#harfo-w.hs-happy .hm-sm { display: none;   }
+#harfo-w.hs-happy .he-h  { display: inline; }
+#harfo-w.hs-happy .hm-gr { display: inline; }
+
+/* ── Wow (surprised) ── */
+#harfo-w.hs-wow .he-n  { display: none;   }
+#harfo-w.hs-wow .hm-sm { display: none;   }
+#harfo-w.hs-wow .he-x  { display: inline; }
+#harfo-w.hs-wow .hm-o  { display: inline; }
+
+/* ── Scared / panic ── */
+#harfo-w.hs-scared .he-n  { display: none;   }
+#harfo-w.hs-scared .hm-sm { display: none;   }
+#harfo-w.hs-scared .he-sc { display: inline; }
+#harfo-w.hs-scared .hm-o  { display: inline; }
+#harfo-w.hs-scared .h-sweat {
+	opacity: 1;
+	animation: ha-sweat 1.4s ease-in-out infinite;
+}
+
+/* ── Tease ── */
+#harfo-w.hs-tease .he-n  { display: none;   }
+#harfo-w.hs-tease .hm-sm { display: none;   }
+#harfo-w.hs-tease .he-ts { display: inline; }
+#harfo-w.hs-tease .hm-tg { display: inline; }
+
+/* ── Wink ── */
+#harfo-w.hs-wink .he-n  { display: none;   }
+#harfo-w.hs-wink .he-wk { display: inline; }
+
+/* ── Love ── */
+#harfo-w.hs-love .he-n  { display: none;   }
+#harfo-w.hs-love .hm-sm { display: none;   }
+#harfo-w.hs-love .he-lv { display: inline; }
+#harfo-w.hs-love .hm-gr { display: inline; }
+
+/* ── Blink ── */
+#harfo-w.hs-blink .he-n  { display: none;   }
+#harfo-w.hs-blink .he-bl { display: inline; }
+
+/* ── Read ── */
+#harfo-w.hs-read .he-n  { display: none;   }
+#harfo-w.hs-read .hm-sm { display: none;   }
+#harfo-w.hs-read .he-rd { display: inline; }
+#harfo-w.hs-read .hm-fl { display: inline; }
+
+/* ── Dizzy ── */
+#harfo-w.hs-dizzy .he-n  { display: none;   }
+#harfo-w.hs-dizzy .hm-sm { display: none;   }
+#harfo-w.hs-dizzy .he-dz { display: inline; }
+#harfo-w.hs-dizzy .hm-o  { display: inline; }
+
+/* ── Alert ── */
+#harfo-w.hs-alert .he-sc { display: inline; }
+#harfo-w.hs-alert .he-n  { display: none;   }
+#harfo-w.hs-alert .hm-fl { display: inline; }
+#harfo-w.hs-alert .hm-sm { display: none;   }
+#harfo-w.hs-alert .h-sweat {
+	opacity: 0.7;
+}
