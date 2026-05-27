@@ -1,0 +1,253 @@
+/* ======================================================
+   حرفو v6 — Keyframe Animation Library
+   تمام انیمیشن‌ها در این فایل
+   ====================================================== */
+
+/* ── Body deformation ── */
+@keyframes ha-breathe {
+  0%,100% { transform: scaleY(1)    scaleX(1);    }
+  50%     { transform: scaleY(1.03) scaleX(0.985); }
+}
+@keyframes ha-idle-bob {
+  0%,100% { transform: translateY(0px); }
+  50%     { transform: translateY(-5px); }
+}
+@keyframes ha-bounce {
+  0%      { transform: translateY(0)    scaleY(1)   scaleX(1); }
+  30%     { transform: translateY(-22px) scaleY(1.1) scaleX(.92); }
+  55%     { transform: translateY(0)    scaleY(.82) scaleX(1.14); }
+  75%     { transform: translateY(-8px)  scaleY(1.04) scaleX(.97); }
+  100%    { transform: translateY(0)    scaleY(1)   scaleX(1); }
+}
+@keyframes ha-squish {
+  0%,100% { transform: scaleY(1)   scaleX(1); }
+  35%     { transform: scaleY(.72) scaleX(1.22); }
+  70%     { transform: scaleY(1.1) scaleX(.93); }
+}
+@keyframes ha-stretch-up {
+  0%,100% { transform: scaleY(1)   scaleX(1); }
+  40%     { transform: scaleY(1.35) scaleX(.82); }
+}
+@keyframes ha-wiggle {
+  0%,100% { transform: rotate(0deg)  scaleX(1); }
+  20%     { transform: rotate(-8deg) scaleX(1.04); }
+  50%     { transform: rotate(0deg)  scaleX(1); }
+  80%     { transform: rotate(8deg)  scaleX(1.04); }
+}
+@keyframes ha-spin {
+  0%   { transform: rotate(0deg)   scale(1); }
+  40%  { transform: rotate(200deg) scale(1.08); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+@keyframes ha-dance {
+  0%   { transform: rotate(0deg)   translateY(0); }
+  15%  { transform: rotate(-12deg) translateY(-6px); }
+  30%  { transform: rotate(0deg)   translateY(0); }
+  45%  { transform: rotate(12deg)  translateY(-6px); }
+  60%  { transform: rotate(0deg)   translateY(0); }
+  75%  { transform: rotate(-6deg)  translateY(-3px); }
+  100% { transform: rotate(0deg)   translateY(0); }
+}
+@keyframes ha-walk-r {
+  0%,100% { transform: scaleX(1)    scaleY(1)    rotate(0deg); }
+  25%     { transform: scaleX(1.06) scaleY(.94)  rotate(-2deg); }
+  75%     { transform: scaleX(.94)  scaleY(1.06) rotate(2deg); }
+}
+@keyframes ha-walk-l {
+  0%,100% { transform: scaleX(-1)    scaleY(1)    rotate(0deg); }
+  25%     { transform: scaleX(-1.06) scaleY(.94)  rotate(2deg); }
+  75%     { transform: scaleX(-.94)  scaleY(1.06) rotate(-2deg); }
+}
+@keyframes ha-panic {
+  0%   { transform: scaleX(1)    scaleY(1)    rotate(0deg); }
+  10%  { transform: scaleX(1.18) scaleY(.78)  rotate(-5deg); }
+  20%  { transform: scaleX(.78)  scaleY(1.18) rotate(5deg); }
+  30%  { transform: scaleX(1.18) scaleY(.78)  rotate(-5deg); }
+  40%  { transform: scaleX(.78)  scaleY(1.18) rotate(5deg); }
+  60%  { transform: scaleX(1.05) scaleY(.96)  rotate(-2deg); }
+  80%  { transform: scaleX(.96)  scaleY(1.05) rotate(2deg); }
+  100% { transform: scaleX(1)    scaleY(1)    rotate(0deg); }
+}
+@keyframes ha-tease-jiggle {
+  0%,100% { transform: rotate(0deg) scale(1); }
+  15%     { transform: rotate(-5deg) scale(1.06); }
+  30%     { transform: rotate(0deg)  scale(.96); }
+  45%     { transform: rotate(5deg)  scale(1.06); }
+  65%     { transform: rotate(-3deg) scale(1.03); }
+  80%     { transform: rotate(3deg)  scale(1.03); }
+}
+@keyframes ha-approach-creep {
+  0%,100% { transform: scaleX(1) scaleY(1); }
+  30%     { transform: scaleX(1.12) scaleY(.9) rotate(2deg); }
+  60%     { transform: scaleX(.9) scaleY(1.08) rotate(-1deg); }
+}
+@keyframes ha-peek-out {
+  0%   { clip-path: inset(0 100% 0 0); opacity: 1; }
+  100% { clip-path: inset(0 0% 0 0);   opacity: 1; }
+}
+@keyframes ha-shake {
+  0%,100% { transform: translateX(0); }
+  15%     { transform: translateX(-8px) rotate(-3deg); }
+  30%     { transform: translateX(8px)  rotate(3deg); }
+  45%     { transform: translateX(-6px) rotate(-2deg); }
+  60%     { transform: translateX(6px)  rotate(2deg); }
+  75%     { transform: translateX(-3px); }
+}
+@keyframes ha-tiny {
+  0%,100% { transform: scale(1); }
+  50%     { transform: scale(0.55); }
+}
+@keyframes ha-huge {
+  0%,100% { transform: scale(1); }
+  50%     { transform: scale(1.55); }
+}
+@keyframes ha-ghost {
+  0%,100% { opacity: 1; }
+  50%     { opacity: 0.12; transform: scale(1.15); }
+}
+@keyframes ha-float-high {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-40px) scale(1.06); }
+}
+@keyframes ha-wave-arm {
+  0%,100% { transform-origin: bottom center; transform: rotate(0deg); }
+  20%     { transform-origin: bottom center; transform: rotate(30deg); }
+  50%     { transform-origin: bottom center; transform: rotate(-10deg); }
+  75%     { transform-origin: bottom center; transform: rotate(25deg); }
+}
+@keyframes ha-nod {
+  0%,100% { transform: rotate(0deg); }
+  30%     { transform: rotate(-10deg) translateY(-4px); }
+  60%     { transform: rotate(6deg) translateY(-2px); }
+}
+
+/* ── Face expressions ── */
+@keyframes ha-eye-pulse {
+  0%,100% { opacity: 1;    filter: brightness(1);   }
+  50%     { opacity: 0.85; filter: brightness(1.5);  }
+}
+@keyframes ha-eye-grow {
+  from { transform: scale(0.4); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+@keyframes ha-sweat-drip {
+  0%   { transform: translateY(0)  scale(1); opacity: 0.9; }
+  100% { transform: translateY(22px) scale(.7); opacity: 0; }
+}
+
+/* ── Speech bubble ── */
+@keyframes ha-hud-in {
+  from { opacity: 0; transform: translate(-50%, 10px) scale(.88); }
+  to   { opacity: 1; transform: translate(-50%, 0)   scale(1); }
+}
+@keyframes ha-hud-out {
+  from { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  to   { opacity: 0; transform: translate(-50%, 10px) scale(.88); }
+}
+@keyframes ha-dot-bounce {
+  0%,80%,100% { transform: scale(0.5); opacity: 0.4; }
+  40%         { transform: scale(1.1); opacity: 1; }
+}
+
+/* ── Aura / Glow effects ── */
+@keyframes ha-aura-pulse {
+  0%,100% { opacity: 0.35; transform: scale(1); }
+  50%     { opacity: 0.6;  transform: scale(1.12); }
+}
+@keyframes ha-aura-flee {
+  0%,100% { opacity: 0.22; transform: scale(0.9); }
+  50%     { opacity: 0.55; transform: scale(1.25); background-color: rgba(255,100,80,0.4); }
+}
+
+/* ── Particle effects ── */
+@keyframes ha-spark-fly {
+  0%   { opacity: 1; transform: translate(0,0) scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: translate(var(--tx,20px), var(--ty,-40px)) scale(.3) rotate(180deg); }
+}
+@keyframes ha-heart-float {
+  0%   { opacity: 1; transform: translate(0,0) scale(1) rotate(-15deg); }
+  60%  { opacity: 1; transform: translate(var(--hx,10px), -35px) scale(1.2) rotate(0deg); }
+  100% { opacity: 0; transform: translate(var(--hx,10px), -60px) scale(.7) rotate(10deg); }
+}
+@keyframes ha-star-pop {
+  0%   { opacity: 0; transform: scale(0) rotate(0deg); }
+  30%  { opacity: 1; transform: scale(1.3) rotate(45deg); }
+  100% { opacity: 0; transform: scale(0.8) rotate(90deg) translate(var(--sx,0), var(--sy,-30px)); }
+}
+@keyframes ha-text-pop {
+  0%   { opacity: 0; transform: translateY(0) scale(.6); }
+  20%  { opacity: 1; transform: translateY(-8px) scale(1.1); }
+  80%  { opacity: 1; transform: translateY(-24px) scale(1); }
+  100% { opacity: 0; transform: translateY(-36px) scale(.9); }
+}
+
+/* ── Speed lines ── */
+@keyframes ha-sl-flash {
+  0%,100% { opacity: 0; transform: scaleX(0.4); }
+  50%     { opacity: 1; transform: scaleX(1); }
+}
+
+/* ── ZZZ ── */
+@keyframes ha-zzz {
+  0%   { opacity: 0; transform: translateY(0) scale(.55); }
+  25%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-36px) scale(1.15); }
+}
+
+/* ── Ground shadow ── */
+@keyframes ha-shadow-pulse {
+  0%,100% { rx: 52; ry: 9; opacity: 0.35; }
+  50%     { rx: 48; ry: 7; opacity: 0.2; }
+}
+
+/* ── Restore pill ── */
+@keyframes ha-restore-pulse {
+  0%,100% { transform: scale(1); box-shadow: 0 4px 14px rgba(22,168,154,0.4); }
+  50%     { transform: scale(1.07); box-shadow: 0 8px 24px rgba(22,168,154,0.6), 0 0 20px rgba(91,232,218,0.35); }
+}
+
+/* ── Progress ring ── */
+@keyframes ha-ring-fill {
+  from { stroke-dashoffset: 251; }
+  to   { stroke-dashoffset: var(--target-offset, 0); }
+}
+
+/* ── Exclamation pop ── */
+@keyframes ha-exclaim {
+  0%   { opacity: 0; transform: scale(0) translateY(6px); }
+  40%  { opacity: 1; transform: scale(1.4) translateY(-4px); }
+  70%  { opacity: 1; transform: scale(0.9) translateY(0); }
+  100% { opacity: 0; transform: scale(0.8) translateY(-8px); }
+}
+
+/* ── Fin wiggle ── */
+@keyframes ha-fin-l {
+  0%,100% { transform: rotate(0deg); }
+  50%     { transform: rotate(-12deg) scaleX(1.06); }
+}
+@keyframes ha-fin-r {
+  0%,100% { transform: rotate(0deg); }
+  50%     { transform: rotate(12deg) scaleX(1.06); }
+}
+
+/* ── Highlight pulse on elements ── */
+@keyframes ha-hl-pulse {
+  0%,100% { box-shadow: 0 0 0 2px rgba(91,232,218,0.45), 0 0 12px rgba(91,232,218,0.28); }
+  50%     { box-shadow: 0 0 0 4px rgba(91,232,218,0.7), 0 0 28px rgba(91,232,218,0.5); }
+}
+
+/* ── TOC panel slide ── */
+@keyframes ha-toc-in {
+  from { transform: translateX(100%) translateY(-50%); opacity: 0; }
+  to   { transform: translateX(0)    translateY(-50%); opacity: 1; }
+}
+@keyframes ha-toc-out {
+  from { transform: translateX(0)    translateY(-50%); opacity: 1; }
+  to   { transform: translateX(100%) translateY(-50%); opacity: 0; }
+}
+
+/* ── Search palette ── */
+@keyframes ha-palette-in {
+  from { opacity: 0; transform: scale(.94) translateY(-12px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0); }
+}
