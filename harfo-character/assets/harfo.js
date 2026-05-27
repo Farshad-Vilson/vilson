@@ -1,554 +1,653 @@
-/* ================================================================
-   حرفو v8 — H1 Mascot Intelligence Engine
-   Self-contained, no external dependencies.
-   ================================================================ */
+/* ════════════════════════════════════════════════════════════════
+   حرفو v9 — Galaxy Jelly Ball · Intelligence Engine
+   Physics + Squish + Pupil tracking + Rain + Umbrella + Behaviors
+   Zero external dependencies.
+   ════════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
 
-  /* ── Config ── */
-  var CFG = {
-    W: 90, H: 107,
-    SPRING_K:  0.065,
-    SPRING_D:  0.78,
-    MAX_SPEED: 22,
-    ZONE_TEASE: 460,
-    ZONE_ALERT: 250,
-    ZONE_FLEE:  155,
-    ZONE_PANIC: 85,
-    FLEE_F:  5.2,
-    PANIC_F: 9.5,
-    SPEECH_CD: 7000,
-    NAP_AFTER: 50000
+  /* ── Config ─────────────────────────────────────────────────── */
+  var C = {
+    WRAP:     120,   /* wrapper px                        */
+    BALL:      80,   /* ball diameter                     */
+    BALL_OFF:  20,   /* ball top/left offset in wrapper   */
+
+    /* Spring physics */
+    SK:  0.058,   /* spring stiffness  */
+    SD:  0.80,    /* spring damping    */
+    MSP: 20,      /* max speed         */
+
+    /* Squish spring */
+    SQK: 0.16,   /* squish stiffness  */
+    SQD: 0.68,   /* squish damping    */
+    SQA: 0.30,   /* max squish amount */
+
+    /* Mouse zones (distance from ball CENTER) */
+    Z_NOTICE: 420,
+    Z_TEASE:  280,
+    Z_ALERT:  180,
+    Z_FLEE:   120,
+    Z_PANIC:   68,
+
+    /* Forces */
+    FF: 6.0,    /* flee force   */
+    PF: 10.5,   /* panic force  */
+
+    /* Wander */
+    WI_MIN: 3500,   /* min ms between wanders */
+    WI_MAX: 7000,   /* max ms between wanders */
+
+    /* Sleep */
+    SLEEP_AFTER: 50000,  /* ms idle → sleep */
+
+    /* Rain */
+    RAIN_MIN:  4 * 60 * 1000,
+    RAIN_MAX: 12 * 60 * 1000,
+    RAIN_DUR:  18000,
   };
 
-  /* ── State ── */
+  /* ── State ──────────────────────────────────────────────────── */
   var S = {
-    x: -300, y: 600,
+    /* position of wrapper top-left */
+    x: 0, y: 0,
     vx: 0, vy: 0,
-    tx: 0,  ty: 0,
+    tx: 0, ty: 0,
+
+    /* squish scale */
+    sx: 1, sy: 1,
+    sxv: 0, syv: 0,
+
+    /* mouse */
     mx: -9999, my: -9999,
-    zone: 'far',
-    lastZone: 'far',
-    walking: false,
-    dragging: false,
-    facing: 1,
-    napping: false,
-    idleSince: Date.now(),
-    lastSpeech: 0,
-    onArrive: null,
-    menuOpen: false,
-    fleeCount: 0
+
+    /* pupils (offset from center of eye) */
+    plx: 0, ply: 0,
+    prx: 0, pry: 0,
+
+    /* state */
+    zone:  'far',
+    mood:  'normal',
+
+    /* flags */
+    dragging:   false,
+    raining:    false,
+    sheltered:  false,
+    sleeping:   false,
+
+    /* timers */
+    idleSince:    Date.now(),
+    lastWander:   0,
+    wanderNext:   1200,  /* first wander after 1.2s */
+    lastPt:       0,
+    onArrive:     null,
+
+    /* umbrella */
+    umbX: 0, umbY: 0,
+    umbDragging: false,
+    umbDOX: 0, umbDOY: 0,
   };
 
-  /* ── DOM ── */
-  var wrap, bubble, menu, toast, selPop;
+  /* ── DOM ─────────────────────────────────────────────────────── */
+  var D = {};
 
-  /* ── Phrases (Persian) ── */
-  var P = {
-    greet:    ['سلام! منم حرفو 👋', 'خوش اومدید!', 'بفرمایید، چطور می‌تونم کمک کنم؟'],
-    greetBack:['خوش برگشتی! 😊', 'دوباره سلام!', 'دیدنت خوشحالم 😄'],
-    tease:    ['نزدیک‌تر... 😏', 'بیا بازی کنیم!', 'فکر کردی می‌تونی منو بگیری؟', 'هوی! داری نگام می‌کنی؟'],
-    alert:    ['آروم باش...', 'داری نزدیک میشی ها!', 'هی هی...'],
-    flee:     ['آآآه فرار! 😱', 'دنبالم نکن!', 'برو اونور لطفاً!', 'کمک کمک!'],
-    panic:    ['خیلی نزدیکی!!! 😨', 'آآآ!!!', 'بیا عقب!'],
-    escaped:  ['جستم! 😅', 'فرار کردم ینجا امنه!', 'هوف... رفتی دنبالم!', 'نفس نفس... '],
-    idle6:    ['یه چیز جالب بخونی؟', 'می‌خوای کمکت کنم؟', 'هنوز اینجام! 👀'],
-    idle15:   ['می‌خوای خلاصه صفحه رو بگم؟', 'سوال داری بپرس!'],
-    summary:  ['بذار خلاصه‌ات کنم...', 'در حال خواندن صفحه...'],
-    noContent:['این صفحه محتوای خاصی نداشت.', 'چیز زیادی پیدا نکردم!']
-  };
+  /* ── Helpers ─────────────────────────────────────────────────── */
+  function cl(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function lr(a, b, t)   { return a + (b - a) * t; }
+  function rn(lo, hi)    { return lo + Math.random() * (hi - lo); }
+  function ri(arr)       { return arr[Math.floor(Math.random() * arr.length)]; }
 
-  function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-
-  /* ═══════════════════════════════════════
-     SPEECH
-     ═══════════════════════════════════════ */
-  function say(text, ms, force) {
-    if (!bubble) return;
-    var now = Date.now();
-    if (!force && now - S.lastSpeech < CFG.SPEECH_CD) return;
-    S.lastSpeech = now;
-    bubble.innerHTML = text;
-    bubble.classList.add('hb-visible');
-    clearTimeout(bubble._t);
-    bubble._t = setTimeout(function () {
-      bubble.classList.remove('hb-visible');
-    }, ms || 4500);
-  }
-
-  function sayForce(text, ms) { say(text, ms, true); }
-
-  function hideSay() {
-    if (bubble) bubble.classList.remove('hb-visible');
-  }
-
-  function showToast(text, ms) {
-    if (!toast) return;
-    toast.textContent = text;
-    toast.classList.add('ht-show');
-    clearTimeout(toast._t);
-    toast._t = setTimeout(function () { toast.classList.remove('ht-show'); }, ms || 3000);
-  }
-
-  /* ═══════════════════════════════════════
-     PHYSICS HELPERS
-     ═══════════════════════════════════════ */
-  function center() {
-    return { x: S.x + CFG.W / 2, y: S.y + CFG.H / 2 };
+  function ballCenter() {
+    return {
+      x: S.x + C.WRAP / 2,
+      y: S.y + C.WRAP / 2
+    };
   }
 
   function distMouse() {
     if (S.mx < 0) return Infinity;
-    var c = center();
-    return Math.hypot(S.mx - c.x, S.my - c.y);
+    var b = ballCenter();
+    return Math.hypot(S.mx - b.x, S.my - b.y);
   }
 
-  function zone(d) {
-    if (d < CFG.ZONE_PANIC) return 'panic';
-    if (d < CFG.ZONE_FLEE)  return 'flee';
-    if (d < CFG.ZONE_ALERT) return 'alert';
-    if (d < CFG.ZONE_TEASE) return 'tease';
+  function getZone(d) {
+    if (d < C.Z_PANIC)  return 'panic';
+    if (d < C.Z_FLEE)   return 'flee';
+    if (d < C.Z_ALERT)  return 'alert';
+    if (d < C.Z_TEASE)  return 'tease';
+    if (d < C.Z_NOTICE) return 'notice';
     return 'far';
   }
 
-  function repulse() {
-    var c = center();
-    var dx = c.x - S.mx, dy = c.y - S.my;
-    var d = Math.hypot(dx, dy);
-    if (d < 1) return;
-    if (d < CFG.ZONE_PANIC) {
-      var t = Math.pow((CFG.ZONE_PANIC - d) / CFG.ZONE_PANIC, 1.2);
-      S.vx += (dx / d) * t * CFG.PANIC_F;
-      S.vy += (dy / d) * t * CFG.PANIC_F * 0.6;
-    } else {
-      var t2 = Math.pow((CFG.ZONE_FLEE - d) / CFG.ZONE_FLEE, 1.5);
-      S.vx += (dx / d) * t2 * CFG.FLEE_F;
-      S.vy += (dy / d) * t2 * CFG.FLEE_F * 0.5;
-    }
-  }
-
-  /* ═══════════════════════════════════════
-     MOVEMENT
-     ═══════════════════════════════════════ */
-  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
-
+  /* ── Movement ───────────────────────────────────────────────── */
   function moveTo(x, y, cb) {
-    S.tx = clamp(x, 4, window.innerWidth  - CFG.W - 4);
-    S.ty = clamp(y, 4, window.innerHeight - CFG.H - 4);
+    var maxX = window.innerWidth  - C.WRAP - 4;
+    var maxY = window.innerHeight - C.WRAP - 4;
+    S.tx = cl(x, 4, maxX);
+    S.ty = cl(y, 4, maxY);
     S.onArrive = cb || null;
-    S.walking = true;
-    setClass('hv-walking', true);
-    setClass('hv-idle', false);
   }
 
   function parkHome(cb) {
-    moveTo(window.innerWidth - CFG.W - 32, window.innerHeight - CFG.H - 32, cb);
+    moveTo(
+      window.innerWidth  - C.WRAP - 28,
+      window.innerHeight - C.WRAP - 28,
+      cb
+    );
   }
 
-  function setClass(cls, on) {
-    if (!wrap) return;
-    if (on) wrap.classList.add(cls); else wrap.classList.remove(cls);
+  /* Autonomous wander — picks a random screen position */
+  function wander() {
+    if (S.dragging || S.zone === 'flee' || S.zone === 'panic') return;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var x = rn(vw * 0.12, vw * 0.82) - C.WRAP / 2;
+    var y = rn(vh * 0.12, vh * 0.82) - C.WRAP / 2;
+    moveTo(x, y);
+    S.lastWander = Date.now();  /* reset timer */
   }
 
-  /* ═══════════════════════════════════════
-     ZONE REACTIONS
-     ═══════════════════════════════════════ */
+  /* ── Repulsion forces ────────────────────────────────────────── */
+  function repulse() {
+    var b  = ballCenter();
+    var dx = b.x - S.mx, dy = b.y - S.my;
+    var d  = Math.hypot(dx, dy) || 1;
+    var nx = dx / d, ny = dy / d;
+
+    if (d < C.Z_PANIC) {
+      var t = Math.pow((C.Z_PANIC - d) / C.Z_PANIC, 1.2);
+      S.vx += nx * t * C.PF;
+      S.vy += ny * t * C.PF * 0.65;
+    } else {
+      var t2 = Math.pow((C.Z_FLEE - d) / C.Z_FLEE, 1.5);
+      S.vx += nx * t2 * C.FF;
+      S.vy += ny * t2 * C.FF * 0.55;
+    }
+    /* Squish burst on flee */
+    S.sxv += ny * 0.7;
+    S.syv += nx * 0.7;
+  }
+
+  /* ── Squish physics ─────────────────────────────────────────── */
+  function tickSquish(sp, vx, vy) {
+    var ux = sp > 0.2 ? vx / sp : 0;
+    var uy = sp > 0.2 ? vy / sp : 0;
+    var k  = cl(sp * 0.024, 0, C.SQA);
+
+    /* elongate in direction of motion, compress perpendicular */
+    var txs = 1 + (ux * ux - uy * uy * 0.55) * k;
+    var tys = 1 + (uy * uy - ux * ux * 0.55) * k;
+
+    S.sxv = S.sxv * C.SQD + (txs - S.sx) * C.SQK;
+    S.syv = S.syv * C.SQD + (tys - S.sy) * C.SQK;
+    S.sx += S.sxv;
+    S.sy += S.syv;
+    S.sx = cl(S.sx, 0.62, 1.52);
+    S.sy = cl(S.sy, 0.62, 1.52);
+  }
+
+  /* ── Pupil tracking ─────────────────────────────────────────── */
+  function tickPupils() {
+    if (S.mood === 'sleeping' || S.mx < 0) {
+      S.plx = lr(S.plx, 0, 0.1);
+      S.ply = lr(S.ply, 0, 0.1);
+      S.prx = lr(S.prx, 0, 0.1);
+      S.pry = lr(S.pry, 0, 0.1);
+      return;
+    }
+    var b  = ballCenter();
+    var dx = S.mx - b.x, dy = S.my - b.y;
+    var d  = Math.hypot(dx, dy) || 1;
+    var r  = Math.min(d / 100, 1) * 5;
+    var tx = (dx / d) * r;
+    var ty = (dy / d) * r;
+
+    S.plx = lr(S.plx, tx, 0.13);
+    S.ply = lr(S.ply, ty, 0.13);
+    S.prx = lr(S.prx, tx, 0.13);
+    S.pry = lr(S.pry, ty, 0.13);
+  }
+
+  /* ── Mood / expression ──────────────────────────────────────── */
+  function setMood(m) {
+    if (S.mood === m) return;
+    S.mood = m;
+    if (D.ball) D.ball.setAttribute('data-mood', m);
+  }
+
+  /* ── Zone change reactions ──────────────────────────────────── */
   function onZoneChange(prev, cur) {
-    /* entering danger */
-    if (cur === 'flee' || cur === 'panic') {
-      setClass('hv-idle', false);
-      setClass('hv-tease', false);
-      setClass('hv-flee', cur === 'flee');
-      setClass('hv-panic', cur === 'panic');
-      setClass('hv-walking', true);
-      if (prev !== 'flee' && prev !== 'panic') {
-        sayForce(rand(cur === 'panic' ? P.panic : P.flee), 3000);
-        S.fleeCount++;
+    if (cur === 'panic' || cur === 'flee') {
+      setMood('scared');
+      if (cur === 'panic') { S.sxv = -1.0; S.syv = 1.0; } /* panic squish */
+    } else if (cur === 'tease' || cur === 'notice') {
+      setMood('curious');
+    } else if (cur === 'alert') {
+      setMood('curious');
+    } else if (cur === 'far') {
+      if (prev === 'flee' || prev === 'panic') {
+        /* escaped! celebrate */
+        setMood('happy');
+        spawnPt('sp', 7);
+        spawnPt('hrt', 2);
+        S.sxv = -0.9; S.syv = 0.9;
+        setTimeout(function () { setMood('normal'); }, 2500);
+      } else {
+        setMood('normal');
       }
     }
-    /* escaped */
-    else if (prev === 'flee' || prev === 'panic') {
-      setClass('hv-flee', false);
-      setClass('hv-panic', false);
-      setTimeout(function () {
-        if (S.zone !== 'flee' && S.zone !== 'panic') {
-          setClass('hv-idle', true);
-          setClass('hv-walking', false);
-        }
-      }, 400);
-      sayForce(rand(P.escaped), 4000);
-    }
-    /* tease */
-    else if (cur === 'tease' && prev === 'far') {
-      setClass('hv-tease', true);
-      if (Math.random() < 0.4) say(rand(P.tease));
-    }
-    else if (cur === 'far' && prev === 'tease') {
-      setClass('hv-tease', false);
-    }
-    /* alert */
-    else if (cur === 'alert') {
-      if (Math.random() < 0.25) say(rand(P.alert));
+  }
+
+  /* ── Time of day ─────────────────────────────────────────────── */
+  function timeState() {
+    var h = new Date().getHours();
+    if (h >= 6  && h < 12) return 'morning';
+    if (h >= 12 && h < 18) return 'afternoon';
+    if (h >= 18 && h < 22) return 'evening';
+    return 'night';
+  }
+
+  function applyTimeStyle() {
+    var ts = timeState();
+    if (D.ball) D.ball.setAttribute('data-time', ts);
+    /* night: slower, dreamier */
+    if (ts === 'night') {
+      C.MSP      = 12;
+      C.WI_MIN   = 7000;
+      C.WI_MAX   = 14000;
+    } else if (ts === 'morning') {
+      C.MSP      = 24;
+      C.WI_MIN   = 2500;
+      C.WI_MAX   = 5000;
+    } else {
+      C.MSP      = 20;
+      C.WI_MIN   = 3500;
+      C.WI_MAX   = 7000;
     }
   }
 
-  /* ═══════════════════════════════════════
-     MAIN TICK (RAF)
-     ═══════════════════════════════════════ */
+  /* ── Particles ───────────────────────────────────────────────── */
+  var pts = [];
+
+  var PT_MAP = {
+    sp:  { chars: ['✦','✧','⋆','·'], cls: 'h-pt-sp' },
+    hrt: { chars: ['♥','♡'],         cls: 'h-pt-hrt' },
+    zzz: { chars: ['z','Z','ᶻ'],      cls: 'h-pt-zzz' },
+    str: { chars: ['·','*'],          cls: 'h-pt-str' },
+    drp: { chars: ['💧','·'],         cls: 'h-pt-drp' },
+  };
+
+  function spawnPt(type, count) {
+    if (!D.fx) return;
+    var b  = ballCenter();
+    var pm = PT_MAP[type] || PT_MAP.sp;
+    for (var i = 0; i < count; i++) {
+      var el = document.createElement('div');
+      el.className = 'h-pt ' + pm.cls;
+      el.textContent = ri(pm.chars);
+      var angle = rn(0, Math.PI * 2);
+      var spd   = rn(1.2, 3.5);
+      var life  = rn(500, 1100);
+      el.style.left = (b.x - 6) + 'px';
+      el.style.top  = (b.y - 6) + 'px';
+      el._vx = Math.cos(angle) * spd;
+      el._vy = Math.sin(angle) * spd - 1.5;
+      el._life = life;
+      el._born = Date.now();
+      D.fx.appendChild(el);
+      pts.push(el);
+    }
+  }
+
+  function tickPts() {
+    var now = Date.now();
+    pts = pts.filter(function (p) {
+      var age = now - p._born;
+      if (age > p._life) { p.remove(); return false; }
+      var t = age / p._life;
+      p._vy += 0.07;  /* gravity */
+      p.style.left    = (parseFloat(p.style.left) + p._vx) + 'px';
+      p.style.top     = (parseFloat(p.style.top)  + p._vy) + 'px';
+      p.style.opacity = (1 - t * t).toFixed(2);
+      p.style.transform = 'scale(' + (1 - t * 0.5).toFixed(2) + ')';
+      return true;
+    });
+  }
+
+  /* ── Rain system ─────────────────────────────────────────────── */
+  var rainDrops  = [];
+  var rainIntId  = null;
+
+  function startRain() {
+    if (S.raining) return;
+    S.raining = true;
+    if (S.mood !== 'scared') setMood('sad');
+
+    rainIntId = setInterval(spawnRainDrop, 55);
+
+    /* Show umbrella 2s after rain starts */
+    setTimeout(function () {
+      if (S.raining) showUmbrella();
+    }, 2000);
+
+    /* Auto stop */
+    setTimeout(stopRain, C.RAIN_DUR);
+  }
+
+  function stopRain() {
+    if (!S.raining) return;
+    S.raining = false;
+    clearInterval(rainIntId);
+    rainIntId = null;
+    rainDrops.forEach(function (d) { d.remove(); });
+    rainDrops = [];
+    hideUmbrella();
+    if (S.mood === 'sad' || S.mood === 'sheltered') {
+      setMood('happy');
+      spawnPt('sp', 5);
+      setTimeout(function () { setMood('normal'); }, 2000);
+    }
+  }
+
+  function spawnRainDrop() {
+    if (!D.rain || S.sheltered) return;
+    var drop = document.createElement('div');
+    drop.className = 'h-rdrop';
+    var h  = rn(8, 16);
+    drop.style.height = h + 'px';
+    drop.style.left   = rn(0, 78) + 'px';
+    drop.style.top    = '0px';
+    drop._vy = rn(4, 7);
+    D.rain.appendChild(drop);
+    rainDrops.push(drop);
+  }
+
+  function tickRain() {
+    rainDrops = rainDrops.filter(function (d) {
+      var y = parseFloat(d.style.top) + d._vy;
+      if (y > 80) { d.remove(); return false; }
+      d.style.top = y + 'px';
+      return true;
+    });
+  }
+
+  /* ── Umbrella ─────────────────────────────────────────────────── */
+  function showUmbrella() {
+    if (!D.umb) return;
+    var b = ballCenter();
+    /* Place umbrella ~130px to the right of ball */
+    S.umbX = cl(b.x + 130, 10, window.innerWidth  - 80);
+    S.umbY = cl(b.y - 40,  10, window.innerHeight - 60);
+    D.umb.style.left    = S.umbX + 'px';
+    D.umb.style.top     = S.umbY + 'px';
+    D.umb.style.display = 'block';
+    D.umb.style.opacity = '0';
+    D.umb.style.transition = 'opacity .4s';
+    setTimeout(function () { D.umb.style.opacity = '1'; }, 30);
+  }
+
+  function hideUmbrella() {
+    if (!D.umb) return;
+    D.umb.style.opacity = '0';
+    setTimeout(function () {
+      if (!S.raining) D.umb.style.display = 'none';
+    }, 400);
+    S.sheltered = false;
+  }
+
+  function checkShelter() {
+    if (!S.raining || !D.umb || D.umb.style.display === 'none') return;
+    var b  = ballCenter();
+    /* umbrella center is roughly (umbX+36, umbY+26) */
+    var ux = S.umbX + 36;
+    var uy = S.umbY + 26;
+    var d  = Math.hypot(ux - b.x, uy - b.y);
+    if (d < 58) {
+      if (!S.sheltered) {
+        S.sheltered = true;
+        D.umb.classList.add('sheltering');
+        setMood('sheltered');
+        spawnPt('hrt', 3);
+        /* stop rain drops */
+        rainDrops.forEach(function(d){ d.remove(); });
+        rainDrops = [];
+      }
+    } else {
+      if (S.sheltered) {
+        S.sheltered = false;
+        D.umb.classList.remove('sheltering');
+        if (S.raining) setMood('sad');
+      }
+    }
+  }
+
+  function initUmbrellaDrag() {
+    if (!D.umb) return;
+
+    D.umb.addEventListener('mousedown', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      S.umbDragging = true;
+      S.umbDOX = e.clientX - S.umbX;
+      S.umbDOY = e.clientY - S.umbY;
+      D.umb.style.cursor = 'grabbing';
+    });
+
+    D.umb.addEventListener('touchstart', function (e) {
+      e.stopPropagation();
+      var t = e.touches[0];
+      S.umbDragging = true;
+      S.umbDOX = t.clientX - S.umbX;
+      S.umbDOY = t.clientY - S.umbY;
+    }, { passive: true });
+
+    document.addEventListener('mousemove', function (e) {
+      if (!S.umbDragging) return;
+      S.umbX = e.clientX - S.umbDOX;
+      S.umbY = e.clientY - S.umbDOY;
+      D.umb.style.left = S.umbX + 'px';
+      D.umb.style.top  = S.umbY + 'px';
+    });
+
+    document.addEventListener('touchmove', function (e) {
+      if (!S.umbDragging) return;
+      var t = e.touches[0];
+      S.umbX = t.clientX - S.umbDOX;
+      S.umbY = t.clientY - S.umbDOY;
+      D.umb.style.left = S.umbX + 'px';
+      D.umb.style.top  = S.umbY + 'px';
+    }, { passive: true });
+
+    document.addEventListener('mouseup', function () {
+      if (S.umbDragging) { S.umbDragging = false; D.umb.style.cursor = 'grab'; }
+    });
+
+    document.addEventListener('touchend', function () {
+      S.umbDragging = false;
+    });
+  }
+
+  /* ── Schedule rain ───────────────────────────────────────────── */
+  function scheduleRain() {
+    var delay = rn(C.RAIN_MIN, C.RAIN_MAX);
+    setTimeout(function () {
+      startRain();
+      scheduleRain(); /* reschedule */
+    }, delay);
+  }
+
+  /* ── Sleep management ────────────────────────────────────────── */
+  var sleepCheckId = setInterval(function () {
+    if (S.dragging || S.raining || S.umbDragging) return;
+    var idle = Date.now() - S.idleSince;
+    if (idle > C.SLEEP_AFTER && !S.sleeping) {
+      S.sleeping = true;
+      setMood('sleeping');
+    }
+  }, 5000);
+
+  /* ── Apply DOM updates each frame ───────────────────────────── */
+  function applyDOM() {
+    if (!D.w) return;
+
+    /* Idle float on wrapper (doesn't conflict with ball squish transform) */
+    var sp2    = Math.hypot(S.vx, S.vy);
+    var floatY = (sp2 < 0.6 && !S.dragging)
+      ? Math.sin(Date.now() / 1350) * 3.5
+      : 0;
+
+    D.w.style.transform =
+      'translate(' + Math.round(S.x) + 'px,' +
+      (Math.round(S.y) + floatY).toFixed(1) + 'px)';
+
+    /* Ball squish */
+    if (D.ball) {
+      D.ball.style.transform =
+        'scaleX(' + S.sx.toFixed(3) + ') scaleY(' + S.sy.toFixed(3) + ')';
+    }
+
+    /* Pupils */
+    if (D.pl) D.pl.style.transform = 'translate(' + S.plx.toFixed(1) + 'px,' + S.ply.toFixed(1) + 'px)';
+    if (D.pr) D.pr.style.transform = 'translate(' + S.prx.toFixed(1) + 'px,' + S.pry.toFixed(1) + 'px)';
+  }
+
+  /* ── Main RAF tick ───────────────────────────────────────────── */
   function tick() {
     if (!S.dragging) {
-      var d = distMouse();
-      var z = zone(d);
+      var d  = distMouse();
+      var z  = getZone(d);
 
+      /* Zone change */
       if (z !== S.zone) {
         onZoneChange(S.zone, z);
         S.zone = z;
       }
 
-      /* repulsion */
-      if (z === 'flee' || z === 'panic') repulse();
-
-      /* tease creep toward mouse */
-      if (z === 'far' && S.mx > 0 && !S.napping && Math.random() < 0.018) {
-        var c  = center();
-        var dx = S.mx - c.x, dy = S.my - c.y;
-        var td = Math.hypot(dx, dy);
-        if (td < CFG.ZONE_TEASE + 180) {
-          S.vx += (dx / td) * 0.042;
-          S.vy += (dy / td) * 0.026;
-        }
+      /* Forces by zone */
+      if (z === 'flee' || z === 'panic') {
+        repulse();
+      } else if (z === 'notice' || z === 'tease') {
+        /* gently lean toward mouse */
+        var b  = ballCenter();
+        var dx = S.mx - b.x, dy = S.my - b.y;
+        var dd = Math.hypot(dx, dy) || 1;
+        S.vx += (dx / dd) * 0.055;
+        S.vy += (dy / dd) * 0.035;
+      } else if (z === 'alert') {
+        /* back off */
+        var ba  = ballCenter();
+        var adx = ba.x - S.mx, ady = ba.y - S.my;
+        var ad  = Math.hypot(adx, ady) || 1;
+        S.vx += (adx / ad) * 0.65;
+        S.vy += (ady / ad) * 0.45;
       }
 
-      /* alert: backing away slowly */
-      if (z === 'alert') {
-        var ca = center();
-        var adx = ca.x - S.mx, ady = ca.y - S.my;
-        var ad = Math.hypot(adx, ady) || 1;
-        S.vx += (adx / ad) * 0.5;
-        S.vy += (ady / ad) * 0.3;
+      /* Autonomous wander when calm */
+      if ((z === 'far' || z === 'notice') &&
+          Date.now() - S.lastWander > S.wanderNext) {
+        S.wanderNext = rn(C.WI_MIN, C.WI_MAX); /* set NEXT interval now */
+        wander();
       }
 
-      /* spring */
-      S.vx = S.vx * CFG.SPRING_D + (S.tx - S.x) * CFG.SPRING_K;
-      S.vy = S.vy * CFG.SPRING_D + (S.ty - S.y) * CFG.SPRING_K;
+      /* Spring to target */
+      S.vx = S.vx * C.SD + (S.tx - S.x) * C.SK;
+      S.vy = S.vy * C.SD + (S.ty - S.y) * C.SK;
 
-      /* speed cap */
+      /* Speed cap */
       var sp = Math.hypot(S.vx, S.vy);
-      if (sp > CFG.MAX_SPEED) {
-        S.vx = (S.vx / sp) * CFG.MAX_SPEED;
-        S.vy = (S.vy / sp) * CFG.MAX_SPEED;
+      if (sp > C.MSP) {
+        S.vx = (S.vx / sp) * C.MSP;
+        S.vy = (S.vy / sp) * C.MSP;
       }
 
-      S.x += S.vx;
-      S.y += S.vy;
+      /* Move */
+      var nx = S.x + S.vx;
+      var ny = S.y + S.vy;
+      var maxX = window.innerWidth  - C.WRAP - 4;
+      var maxY = window.innerHeight - C.WRAP - 4;
 
-      S.x = clamp(S.x, 4, window.innerWidth  - CFG.W - 4);
-      S.y = clamp(S.y, 4, window.innerHeight - CFG.H - 4);
+      /* Wall bounce with squish */
+      if (nx < 4)    { S.vx *= -0.55; nx = 4;    S.sxv = -0.8; }
+      if (nx > maxX) { S.vx *= -0.55; nx = maxX; S.sxv = -0.8; }
+      if (ny < 4)    { S.vy *= -0.55; ny = 4;    S.syv = -0.8; }
+      if (ny > maxY) { S.vy *= -0.55; ny = maxY; S.syv = -0.8; }
 
-      /* facing */
-      if (Math.abs(S.vx) > 0.5) {
-        var f = S.vx > 0 ? 1 : -1;
-        if (f !== S.facing) {
-          S.facing = f;
-          setClass('hv-flip', f === -1);
-        }
-      }
+      S.x = nx; S.y = ny;
 
-      /* walking → idle transition */
-      var speed = Math.hypot(S.vx, S.vy);
-      var dist  = Math.hypot(S.tx - S.x, S.ty - S.y);
-      if (S.walking && speed > 0.8) {
-        if (!wrap.classList.contains('hv-walking')) {
-          setClass('hv-walking', true);
-          setClass('hv-idle', false);
-        }
-      } else if (speed < 0.5 && dist < 5 &&
-                 z !== 'flee' && z !== 'panic') {
-        if (S.walking || wrap.classList.contains('hv-walking')) {
-          S.walking = false;
-          setClass('hv-walking', false);
-          setClass('hv-idle', true);
-          if (S.onArrive) { var fn = S.onArrive; S.onArrive = null; fn(); }
-        }
+      /* Squish based on velocity */
+      tickSquish(sp, S.vx, S.vy);
+
+      /* Arrive callback */
+      if (S.onArrive && sp < 0.5 && Math.hypot(S.tx - S.x, S.ty - S.y) < 6) {
+        var fn = S.onArrive; S.onArrive = null; fn();
       }
     }
 
-    /* apply transform */
-    if (wrap) {
-      wrap.style.transform =
-        'translate(' + Math.round(S.x) + 'px,' + Math.round(S.y) + 'px)';
+    /* Sleeping zzz particles */
+    if (S.mood === 'sleeping' && Date.now() - S.lastPt > 2200) {
+      S.lastPt = Date.now();
+      spawnPt('zzz', 1);
     }
+
+    applyDOM();
+    tickPupils();
+    tickPts();
+    if (S.raining) tickRain();
+    checkShelter();
 
     requestAnimationFrame(tick);
   }
 
-  /* ═══════════════════════════════════════
-     DRAG
-     ═══════════════════════════════════════ */
+  /* ── Drag ────────────────────────────────────────────────────── */
   function initDrag() {
-    var sx, sy, smx, smy;
+    var dox, doy;
 
-    function dragStart(mx, my) {
+    function dStart(mx, my) {
       S.dragging = true;
-      sx = S.x; sy = S.y;
-      smx = mx; smy = my;
-      setClass('hv-dragging', true);
-      hideSay();
-      closeMenu();
+      dox = mx - S.x;
+      doy = my - S.y;
+      D.w.style.cursor = 'grabbing';
+      S.sxv = -0.7; S.syv = 0.7;
     }
-    function dragMove(mx, my) {
+    function dMove(mx, my) {
       if (!S.dragging) return;
-      S.x = clamp(sx + (mx - smx), 4, window.innerWidth  - CFG.W - 4);
-      S.y = clamp(sy + (my - smy), 4, window.innerHeight - CFG.H - 4);
+      var maxX = window.innerWidth  - C.WRAP - 4;
+      var maxY = window.innerHeight - C.WRAP - 4;
+      S.x  = cl(mx - dox, 4, maxX);
+      S.y  = cl(my - doy, 4, maxY);
       S.tx = S.x; S.ty = S.y;
       S.vx = 0; S.vy = 0;
     }
-    function dragEnd() {
+    function dEnd() {
       if (!S.dragging) return;
       S.dragging = false;
-      setClass('hv-dragging', false);
-      setClass('hv-idle', true);
+      D.w.style.cursor = 'pointer';
+      /* small bounce on release */
+      S.vy = -3;
+      S.sxv = 0.5; S.syv = -0.5;
     }
 
-    wrap.addEventListener('mousedown', function (e) {
-      if (e.target.closest('button')) return;
+    D.w.addEventListener('mousedown', function (e) { e.preventDefault(); dStart(e.clientX, e.clientY); });
+    D.w.addEventListener('touchstart', function (e) {
       e.preventDefault();
-      dragStart(e.clientX, e.clientY);
-    });
-    wrap.addEventListener('touchstart', function (e) {
-      if (e.target.closest('button')) return;
-      e.preventDefault();
-      var t = e.touches[0];
-      dragStart(t.clientX, t.clientY);
+      dStart(e.touches[0].clientX, e.touches[0].clientY);
     }, { passive: false });
 
-    document.addEventListener('mousemove', function (e) { dragMove(e.clientX, e.clientY); });
+    document.addEventListener('mousemove', function (e) { dMove(e.clientX, e.clientY); });
     document.addEventListener('touchmove', function (e) {
-      var t = e.touches[0];
-      dragMove(t.clientX, t.clientY);
+      dMove(e.touches[0].clientX, e.touches[0].clientY);
     }, { passive: true });
-    document.addEventListener('mouseup',  dragEnd);
-    document.addEventListener('touchend', dragEnd);
+    document.addEventListener('mouseup',  dEnd);
+    document.addEventListener('touchend', dEnd);
   }
 
-  /* ═══════════════════════════════════════
-     CONTEXT MENU
-     ═══════════════════════════════════════ */
-  function openMenu() {
-    S.menuOpen = true;
-    setClass('hm-visible', false); /* reset */
-    menu.classList.add('hm-visible');
-  }
-  function closeMenu() {
-    S.menuOpen = false;
-    if (menu) menu.classList.remove('hm-visible');
-  }
-
-  function buildMenu() {
-    var items = [
-      { i: '📝', t: 'خلاصه صفحه', fn: doSummary },
-      { i: '🔍', t: 'جستجو',       fn: doSearch  },
-      { i: '🌙', t: 'حالت تاریک',  fn: toggleDark },
-      { i: '🔡', t: 'فونت بزرگ‌تر', fn: fontUp    },
-      { i: '🏠', t: 'برگرد خونه',  fn: parkHome  }
-    ];
-    menu.innerHTML = '';
-    items.forEach(function (item, i) {
-      if (i === 3) { /* separator before font */
-        var sep = document.createElement('div');
-        sep.className = 'hm-sep';
-        menu.appendChild(sep);
-      }
-      var btn = document.createElement('button');
-      btn.className = 'hm-btn';
-      btn.innerHTML = '<span style="font-size:16px">' + item.i + '</span>' + item.t;
-      btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        closeMenu();
-        item.fn();
-      });
-      menu.appendChild(btn);
-    });
-  }
-
-  wrap.addEventListener('click', function (e) {
-    if (S.dragging) return;
-    if (S.menuOpen) { closeMenu(); return; }
-    openMenu();
-    sayForce(rand(P.tease), 3000);
-  });
-
-  document.addEventListener('click', function (e) {
-    if (S.menuOpen && !wrap.contains(e.target)) closeMenu();
-  });
-
-  /* ═══════════════════════════════════════
-     PAGE INTELLIGENCE
-     ═══════════════════════════════════════ */
-  function doSummary() {
-    sayForce(rand(P.summary), 2000);
-    setTimeout(function () {
-      var content = '';
-      var selectors = [
-        'article .entry-content p',
-        '.post-content p',
-        'main p',
-        '.content p',
-        'p'
-      ];
-      var paras = [];
-      for (var si = 0; si < selectors.length; si++) {
-        paras = Array.from(document.querySelectorAll(selectors[si]));
-        if (paras.length > 2) break;
-      }
-      var sentences = paras
-        .map(function (p) { return p.textContent.trim(); })
-        .filter(function (t) { return t.length > 50; })
-        .slice(0, 2);
-
-      if (sentences.length) {
-        content = sentences.map(function (s) {
-          return s.length > 90 ? s.substring(0, 88) + '…' : s;
-        }).join('<br>');
-      }
-
-      sayForce(content || rand(P.noContent), 7000);
-    }, 2200);
-  }
-
-  function doSearch() {
-    closeMenu();
-    var q = window.prompt('دنبال چی می‌گردی؟');
-    if (q && q.trim()) {
-      window.location.href = '?s=' + encodeURIComponent(q.trim());
-    }
-  }
-
-  function toggleDark() {
-    var html = document.documentElement;
-    var isDark = html.classList.toggle('dark-mode');
-    /* also try common dark-mode class names used by WP themes */
-    document.body.classList.toggle('dark-mode');
-    document.body.style.filter = isDark ? 'invert(1) hue-rotate(180deg)' : '';
-    showToast(isDark ? 'حالت تاریک فعال شد 🌙' : 'حالت روشن فعال شد ☀️');
-  }
-
-  function fontUp() {
-    var curr = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-    document.documentElement.style.fontSize = (curr + 1.5) + 'px';
-    showToast('اندازه فونت بزرگ‌تر شد 🔡');
-  }
-
-  /* ═══════════════════════════════════════
-     TEXT SELECTION POPUP
-     ═══════════════════════════════════════ */
-  function initSelectionPop() {
-    selPop = document.getElementById('harfo-sel-pop');
-    if (!selPop) return;
-
-    document.addEventListener('mouseup', function (e) {
-      if (wrap.contains(e.target)) return;
-      setTimeout(function () {
-        var sel = window.getSelection();
-        var txt = sel && sel.toString().trim();
-        if (txt && txt.length > 5) {
-          var r = sel.getRangeAt(0).getBoundingClientRect();
-          selPop.style.left = (r.left + r.width / 2 - 80) + 'px';
-          selPop.style.top  = (r.top  + window.scrollY - 44) + 'px';
-          selPop.style.display = 'flex';
-        } else {
-          selPop.style.display = 'none';
-        }
-      }, 10);
-    });
-
-    document.addEventListener('mousedown', function (e) {
-      if (selPop && !selPop.contains(e.target)) selPop.style.display = 'none';
-    });
-
-    selPop.querySelector('[data-act="copy"]') &&
-      selPop.querySelector('[data-act="copy"]').addEventListener('click', function () {
-        var txt = window.getSelection().toString();
-        navigator.clipboard && navigator.clipboard.writeText(txt);
-        showToast('کپی شد ✓');
-        selPop.style.display = 'none';
-      });
-
-    selPop.querySelector('[data-act="read"]') &&
-      selPop.querySelector('[data-act="read"]').addEventListener('click', function () {
-        var txt = window.getSelection().toString().trim();
-        if (txt) {
-          var u = new SpeechSynthesisUtterance(txt);
-          u.lang = 'fa-IR';
-          window.speechSynthesis.speak(u);
-        }
-        selPop.style.display = 'none';
-      });
-  }
-
-  /* ═══════════════════════════════════════
-     IDLE MONITORING
-     ═══════════════════════════════════════ */
-  setInterval(function () {
-    if (S.dragging || S.menuOpen) return;
-    var idle = Date.now() - S.idleSince;
-
-    if (idle > 15000 && idle < 16000) {
-      say(rand(P.idle6));
-    } else if (idle > 35000 && idle < 36000) {
-      say(rand(P.idle15));
-    } else if (idle > CFG.NAP_AFTER && !S.napping) {
-      S.napping = true;
-      setClass('hv-idle', true);
-    }
-  }, 1000);
-
-  /* ═══════════════════════════════════════
-     PAGE VISIT BEHAVIOR
-     ═══════════════════════════════════════ */
-  function detectPageContext() {
-    var url  = window.location.href;
-    var body = document.body;
-
-    /* WooCommerce product page */
-    if (body.classList.contains('single-product')) {
-      setTimeout(function () {
-        say('این محصول رو می‌خوای؟ نگاهی به قیمتش بنداز 😉', 5000);
-      }, 3500);
-      return;
-    }
-    /* Search results */
-    if (body.classList.contains('search-results')) {
-      setTimeout(function () {
-        say('دنبال چیزی می‌گردی؟ کمک کنم؟ 🔍', 4000);
-      }, 2000);
-      return;
-    }
-    /* 404 */
-    if (body.classList.contains('error404')) {
-      setTimeout(function () {
-        sayForce('اوه! این صفحه وجود نداره 😅 برگردیم؟', 6000);
-      }, 1000);
-      return;
-    }
-    /* Blog post / article */
-    if (body.classList.contains('single-post')) {
-      setTimeout(function () {
-        say('مقاله جالبیه! می‌خوای خلاصه‌اش کنم؟ 📖', 5000);
-      }, 4000);
-    }
-  }
-
-  /* ═══════════════════════════════════════
-     MOUSE / TOUCH EVENTS
-     ═══════════════════════════════════════ */
+  /* ── Events ─────────────────────────────────────────────────── */
   window.addEventListener('mousemove', function (e) {
     S.mx = e.clientX;
     S.my = e.clientY;
     S.idleSince = Date.now();
-    if (S.napping) {
-      S.napping = false;
-      sayForce('بیدار شدم! 😴', 3000);
+    if (S.sleeping) {
+      S.sleeping = false;
+      setMood('curious');
+      spawnPt('sp', 3);
     }
   }, { passive: true });
 
@@ -562,87 +661,139 @@
     S.idleSince = Date.now();
   }, { passive: true });
 
-  window.addEventListener('resize', function () {
-    S.tx = clamp(S.tx, 4, window.innerWidth  - CFG.W - 4);
-    S.ty = clamp(S.ty, 4, window.innerHeight - CFG.H - 4);
-  });
-
-  /* keyboard shortcut: Alt+H → park home */
-  document.addEventListener('keydown', function (e) {
-    if (e.altKey && e.key === 'h') parkHome();
-  });
-
-  /* ═══════════════════════════════════════
-     BOOT
-     ═══════════════════════════════════════ */
-  function boot() {
-    wrap   = document.getElementById('harfo-w');
-    bubble = document.getElementById('harfo-bubble');
-    menu   = document.getElementById('harfo-menu');
-
-    /* create toast */
-    toast = document.createElement('div');
-    toast.id = 'harfo-toast';
-    document.body.appendChild(toast);
-
-    /* create selection popover */
-    selPop = document.createElement('div');
-    selPop.id = 'harfo-sel-pop';
-    selPop.style.display = 'none';
-    selPop.innerHTML =
-      '<button data-act="copy">📋 کپی</button>' +
-      '<button data-act="read">🔊 بخون</button>';
-    document.body.appendChild(selPop);
-
-    if (!wrap) return; /* safety */
-
-    /* initial position: bottom-right */
-    S.x = window.innerWidth  - CFG.W - 32;
-    S.y = window.innerHeight - CFG.H - 32;
-    S.tx = S.x; S.ty = S.y;
-    wrap.style.transform =
-      'translate(' + S.x + 'px,' + S.y + 'px)';
-    setClass('hv-idle', true);
-
-    initDrag();
-    buildMenu();
-    initSelectionPop();
-    detectPageContext();
-
-    /* greeting */
-    var visits = parseInt(localStorage.getItem('harfo_v') || '0', 10) + 1;
-    localStorage.setItem('harfo_v', visits);
-    setTimeout(function () {
-      sayForce(rand(visits > 1 ? P.greetBack : P.greet), 5000);
-    }, 1400);
-
-    /* walk in from the right edge */
-    setTimeout(function () {
-      if (S.zone !== 'flee' && S.zone !== 'panic') {
-        moveTo(
-          window.innerWidth  - CFG.W - 40,
-          window.innerHeight - CFG.H - 40
-        );
+  /* Exit intent — mouse leaving through top of page */
+  document.addEventListener('mouseleave', function (e) {
+    if (e.clientY < 15) {
+      setMood('sad');
+      spawnPt('hrt', 4);
+      /* Wave arm */
+      if (D.ball) {
+        var arm = document.getElementById('h-wave-arm');
+        if (!arm) {
+          arm = document.createElement('div');
+          arm.id = 'h-wave-arm';
+          D.w.appendChild(arm);
+        }
+        arm.classList.remove('waving');
+        void arm.offsetWidth; /* reflow */
+        arm.classList.add('waving');
+        setTimeout(function () {
+          arm.classList.remove('waving');
+          setMood('normal');
+        }, 1800);
       }
-    }, 300);
+    }
+  });
+
+  /* Scroll reaction */
+  var lastSY = 0;
+  window.addEventListener('scroll', function () {
+    var sy = window.scrollY || document.documentElement.scrollTop;
+    var spd = Math.abs(sy - lastSY);
+    lastSY = sy;
+    if (spd > 100) {
+      S.sxv += (Math.random() - 0.5) * 0.8;
+      S.syv += (Math.random() - 0.5) * 0.8;
+    }
+  }, { passive: true });
+
+  /* Click on ball */
+  window.addEventListener('click', function (e) {
+    if (!D.w || !D.w.contains(e.target)) return;
+    if (S.dragging) return;
+    spawnPt('sp', 6);
+    spawnPt('hrt', 2);
+    S.sxv = -1.0; S.syv = 1.0;
+    setMood('happy');
+    setTimeout(function () { setMood('normal'); }, 1600);
+  });
+
+  /* Resize: clamp target */
+  window.addEventListener('resize', function () {
+    var maxX = window.innerWidth  - C.WRAP - 4;
+    var maxY = window.innerHeight - C.WRAP - 4;
+    S.tx = cl(S.tx, 4, maxX);
+    S.ty = cl(S.ty, 4, maxY);
+  });
+
+  /* Page-specific behaviors (key moments only, no speech) */
+  function pageReact() {
+    if (!window.HC) return;
+    var pg = window.HC.page;
+    if (pg.is404) {
+      /* confused squish loop on 404 */
+      setTimeout(function () {
+        S.sxv = -0.8; S.syv = 0.8;
+        setMood('sad');
+      }, 1500);
+    } else if (pg.isProduct) {
+      /* curious on product pages */
+      setTimeout(function () { setMood('curious'); }, 2000);
+    }
+  }
+
+  /* ── Star generation ─────────────────────────────────────────── */
+  function buildStars() {
+    if (!D.stars) return;
+    for (var i = 0; i < 24; i++) {
+      var s = document.createElement('div');
+      s.className = 'h-star';
+      var sz = rn(0.8, 2.5);
+      s.style.cssText =
+        'width:'     + sz       + 'px;' +
+        'height:'    + sz       + 'px;' +
+        'left:'      + rn(5,95) + '%;' +
+        'top:'       + rn(5,95) + '%;' +
+        'animation-delay:'    + rn(0, 4) + 's;' +
+        'animation-duration:' + rn(1.2, 3.5) + 's;';
+      D.stars.appendChild(s);
+    }
+  }
+
+  /* ── Boot ────────────────────────────────────────────────────── */
+  function boot() {
+    D.w     = document.getElementById('h-w');
+    D.ball  = document.getElementById('h-ball');
+    D.pl    = document.getElementById('h-pl');
+    D.pr    = document.getElementById('h-pr');
+    D.stars = document.getElementById('h-stars');
+    D.rain  = document.getElementById('h-rain');
+    D.umb   = document.getElementById('h-umb');
+    D.fx    = document.getElementById('h-fx');
+
+    if (!D.w) return;
+
+    /* ── Position: bottom-right corner to start ── */
+    S.x = window.innerWidth  - C.WRAP - 28;
+    S.y = window.innerHeight - C.WRAP - 28;
+    S.tx = S.x; S.ty = S.y;
+    D.w.style.transform = 'translate(' + S.x + 'px,' + S.y + 'px)';
+
+    buildStars();
+    applyTimeStyle();
+    initDrag();
+    initUmbrellaDrag();
+    pageReact();
+    scheduleRain();
+
+    /* Hourly time-style refresh */
+    setInterval(applyTimeStyle, 3600000);
 
     requestAnimationFrame(tick);
   }
-
-  /* ── expose minimal public API ── */
-  window.HarfoAI = {
-    say:     sayForce,
-    toast:   showToast,
-    park:    parkHome,
-    moveTo:  moveTo,
-    summary: doSummary,
-    search:  doSearch
-  };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);
   } else {
     boot();
   }
+
+  /* ── Public API ──────────────────────────────────────────────── */
+  window.HarfoAI = {
+    rain:  startRain,
+    park:  parkHome,
+    happy: function () { spawnPt('sp', 8); setMood('happy'); },
+    go:    moveTo,
+  };
 
 })();

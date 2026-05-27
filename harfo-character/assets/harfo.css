@@ -1,11 +1,9 @@
-/* ================================================
-   حرفو v8 — H1 Mascot Stylesheet
-   ================================================ */
-
-*, *::before, *::after { box-sizing: border-box; }
+/* ═══════════════════════════════════════════════════════
+   حرفو v9 — Galaxy Jelly Ball
+   ═══════════════════════════════════════════════════════ */
 
 /* ── Root overlay ── */
-#harfo-root {
+#h-root {
   position: fixed;
   inset: 0;
   pointer-events: none;
@@ -13,322 +11,341 @@
   overflow: hidden;
 }
 
-/* ── Character wrapper ── */
-#harfo-w {
+/* ── Character wrapper (120×120, physics-positioned) ── */
+#h-w {
   position: absolute;
-  left: 0; top: 0;
-  width: 90px; height: 107px;
+  width: 120px; height: 120px;
   pointer-events: all;
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
-  will-change: transform;
   touch-action: none;
 }
 
-/* ── SVG character ── */
-#h1-char {
-  display: block;
+/* ── Outer glow (does NOT squish) ── */
+#h-glow {
+  position: absolute;
+  width: 100px; height: 100px;
+  top: 10px; left: 10px;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow:
+    0 0 18px 6px  rgba(109,40,217,.55),
+    0 0 45px 14px rgba(109,40,217,.22),
+    0 0 80px 22px rgba(43,207,192,.12);
+  animation: glowPulse 3.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes glowPulse {
+  0%,100% { opacity: .8;  box-shadow: 0 0 18px 6px rgba(109,40,217,.55), 0 0 45px 14px rgba(109,40,217,.22), 0 0 80px 22px rgba(43,207,192,.12); }
+  50%     { opacity: 1; box-shadow: 0 0 24px 10px rgba(109,40,217,.75), 0 0 60px 20px rgba(109,40,217,.35), 0 0 100px 28px rgba(43,207,192,.18); }
+}
+
+/* ── Jelly ball (80×80, squishes via transform) ── */
+#h-ball {
+  position: absolute;
+  width: 80px; height: 80px;
+  top: 20px; left: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%,
+    #7C3AED 0%,
+    #2D1B6E 38%,
+    #0D0A28 75%,
+    #050714 100%);
+  overflow: hidden;
+  will-change: transform;
+  transform-origin: center center;
+  border: 1px solid rgba(139,92,246,.5);
+}
+
+/* ── Galaxy rotating arm ── */
+#h-arm {
+  position: absolute;
+  inset: -15%;
+  width: 130%; height: 130%;
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    transparent         0deg,
+    rgba(139,92,246,.5) 40deg,
+    rgba(167,139,250,.3)70deg,
+    transparent         110deg,
+    rgba(236,72,153,.3) 180deg,
+    transparent         220deg,
+    rgba(96,165,250,.25)280deg,
+    transparent         320deg,
+    rgba(139,92,246,.4) 340deg,
+    transparent         360deg
+  );
+  border-radius: 50%;
+  animation: armSpin 20s linear infinite;
+  mix-blend-mode: screen;
+}
+
+@keyframes armSpin {
+  from { transform: rotate(0deg);   }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Stars container ── */
+#h-stars {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.h-star {
+  position: absolute;
+  border-radius: 50%;
+  background: white;
+  animation: starTwinkle 2s ease-in-out infinite alternate;
+}
+
+@keyframes starTwinkle {
+  from { opacity: .9; transform: scale(1); }
+  to   { opacity: .1; transform: scale(.4); }
+}
+
+/* ── Nebula blobs ── */
+#h-neb {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 25% 60%, rgba(236,72,153,.22) 0%, transparent 45%),
+    radial-gradient(circle at 75% 35%, rgba(96,165,250,.20) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(167,139,250,.18) 0%, transparent 55%);
+  mix-blend-mode: screen;
+  animation: nebFloat 8s ease-in-out infinite alternate;
+}
+
+@keyframes nebFloat {
+  from { transform: translate(0,0)    rotate(0deg);   }
+  to   { transform: translate(3px,2px) rotate(15deg); }
+}
+
+/* ── Glossy sheen (top-left highlight) ── */
+#h-sheen {
+  position: absolute;
+  width: 30px; height: 20px;
+  top: 10px; left: 12px;
+  background: radial-gradient(ellipse, rgba(255,255,255,.28) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: rotate(-20deg);
+}
+
+/* ── Face ── */
+#h-face {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.h-eye {
+  position: absolute;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: white;
   overflow: visible;
-  filter: drop-shadow(0 4px 12px rgba(11,34,64,.25));
-  transition: filter .2s;
+  box-shadow: 0 0 6px rgba(255,255,255,.6);
+  transition: width .2s, height .2s, transform .15s;
 }
-#harfo-w:hover #h1-char {
-  filter: drop-shadow(0 6px 18px rgba(11,34,64,.38));
-}
+#h-el { left: 12px; top: 26px; }
+#h-er { left: 48px; top: 26px; }
 
-/* ── Left–right flip ── */
-#harfo-w.hv-flip #h1-char {
-  transform: scaleX(-1);
-  transform-origin: 45px 53px; /* horizontal center of combined H+1 */
-}
-
-/* ── Arm & leg animation pivot setup ── */
-.leg-l, .leg-r, .leg-one,
-.arm-l, .arm-r {
-  transform-box: fill-box;
-}
-.leg-l  { transform-origin: center top; }
-.leg-r  { transform-origin: center top; }
-.leg-one{ transform-origin: center top; }
-.arm-l  { transform-origin: right  center; }
-.arm-r  { transform-origin: left   center; }
-
-
-/* ══════════════════════════════
-   WALKING
-   ══════════════════════════════ */
-#harfo-w.hv-walking .leg-l {
-  animation: legSwingL .5s ease-in-out infinite;
-}
-#harfo-w.hv-walking .leg-r {
-  animation: legSwingR .5s ease-in-out infinite;
-}
-#harfo-w.hv-walking .leg-one {
-  animation: legSwingOne .5s ease-in-out infinite;
-}
-#harfo-w.hv-walking .arm-l {
-  animation: armSwingL .5s ease-in-out infinite;
-}
-#harfo-w.hv-walking .arm-r {
-  animation: armSwingR .5s ease-in-out infinite;
-}
-/* Slight body bob while walking */
-#harfo-w.hv-walking #h1-char {
-  animation: walkBob .25s ease-in-out infinite;
-}
-
-@keyframes legSwingL {
-  0%,100% { transform: rotate(-20deg); }
-  50%     { transform: rotate( 20deg); }
-}
-@keyframes legSwingR {
-  0%,100% { transform: rotate( 20deg); }
-  50%     { transform: rotate(-20deg); }
-}
-@keyframes legSwingOne {
-  0%,100% { transform: rotate(-12deg); }
-  50%     { transform: rotate( 12deg); }
-}
-@keyframes armSwingL {
-  0%,100% { transform: rotate( 18deg); }
-  50%     { transform: rotate(-18deg); }
-}
-@keyframes armSwingR {
-  0%,100% { transform: rotate(-18deg); }
-  50%     { transform: rotate( 18deg); }
-}
-@keyframes walkBob {
-  0%,100% { transform: translateY(0); }
-  50%     { transform: translateY(-2px); }
-}
-
-
-/* ══════════════════════════════
-   IDLE — gentle float
-   ══════════════════════════════ */
-#harfo-w.hv-idle #h1-char {
-  animation: idleFloat 3.2s ease-in-out infinite;
-}
-@keyframes idleFloat {
-  0%,100% { transform: translateY(0px) rotate(0deg); }
-  30%     { transform: translateY(-4px) rotate(.8deg); }
-  70%     { transform: translateY(-3px) rotate(-.6deg); }
-}
-
-/* ══════════════════════════════
-   FLEE — speed lines + scale
-   ══════════════════════════════ */
-#harfo-w.hv-flee #h1-char {
-  animation: fleeScurry .3s ease-in-out infinite;
-}
-@keyframes fleeScurry {
-  0%,100% { transform: skewX(0deg) scaleY(1); }
-  50%     { transform: skewX(-6deg) scaleY(.94); }
-}
-
-/* ══════════════════════════════
-   PANIC — full shake
-   ══════════════════════════════ */
-#harfo-w.hv-panic #h1-char {
-  animation: panicShake .12s linear infinite;
-}
-@keyframes panicShake {
-  0%,100% { transform: translateX(0) rotate(0); }
-  25%     { transform: translateX(-4px) rotate(-7deg); }
-  75%     { transform: translateX( 4px) rotate( 7deg); }
-}
-
-/* ══════════════════════════════
-   TEASE — curious lean
-   ══════════════════════════════ */
-#harfo-w.hv-tease #h1-char {
-  animation: teaseLean 1.8s ease-in-out infinite;
-}
-@keyframes teaseLean {
-  0%,100% { transform: rotate(0deg); }
-  40%     { transform: rotate(5deg); }
-  70%     { transform: rotate(-4deg); }
-}
-
-/* ══════════════════════════════
-   DRAG
-   ══════════════════════════════ */
-#harfo-w.hv-dragging {
-  cursor: grabbing !important;
-}
-#harfo-w.hv-dragging #h1-char {
-  animation: none !important;
-  transform: rotate(-8deg) scale(1.06) !important;
-  filter: drop-shadow(0 12px 24px rgba(11,34,64,.4)) !important;
-}
-
-
-/* ══════════════════════════════
-   SPEECH BUBBLE
-   ══════════════════════════════ */
-#harfo-bubble {
+.h-pu {
   position: absolute;
-  bottom: 112px;
-  left: 50%;
-  transform: translateX(-50%) scale(.9);
-  opacity: 0;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #4C1D95, #0D0A28);
+  top: 5px; left: 5px;
+  will-change: transform;
+}
+
+.h-sh {
+  position: absolute;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: white;
+  top: 3px; left: 3px;
   pointer-events: none;
-  background: #fff;
-  color: #0B2240;
-  font-family: Tahoma, 'Segoe UI', 'Vazir', Arial, sans-serif;
-  font-size: 13px;
-  line-height: 1.6;
-  padding: 9px 14px;
-  border-radius: 14px;
-  box-shadow: 0 5px 22px rgba(0,0,0,.18);
-  white-space: normal;
-  text-align: center;
-  direction: rtl;
-  min-width: 130px;
-  max-width: 230px;
-  transition: opacity .22s, transform .22s cubic-bezier(.34,1.56,.64,1);
-  z-index: 10;
 }
-#harfo-bubble::after {
-  content: '';
+
+/* ── Mouth ── */
+#h-mo {
   position: absolute;
-  bottom: -9px; left: 50%;
+  left: 50%; bottom: 15px;
   transform: translateX(-50%);
-  border: 9px solid transparent;
-  border-top-color: #fff;
+  width: 22px; height: 10px;
+  border-bottom: 3px solid rgba(30,27,78,.8);
+  border-left:   1.5px solid transparent;
+  border-right:  1.5px solid transparent;
+  border-radius: 0 0 11px 11px;
+  transition: all .3s cubic-bezier(.34,1.56,.64,1);
+}
+
+/* ═══ MOOD STATES ═══ */
+
+/* curious */
+#h-ball[data-mood="curious"] .h-eye {
+  width: 22px; height: 22px;
+}
+#h-ball[data-mood="curious"] #h-el { left: 11px; top: 25px; }
+#h-ball[data-mood="curious"] #h-er { left: 47px; top: 25px; }
+
+/* happy */
+#h-ball[data-mood="happy"] #h-mo {
+  width: 30px; height: 14px;
+  border-radius: 0 0 15px 15px;
+  bottom: 12px;
+}
+#h-ball[data-mood="happy"] #h-arm {
+  animation-duration: 8s;
+}
+#h-ball[data-mood="happy"] #h-glow { /* compensate since glow is outside ball */ }
+
+/* scared */
+#h-ball[data-mood="scared"] .h-eye {
+  width: 24px; height: 24px;
+}
+#h-ball[data-mood="scared"] #h-el { left: 10px; top: 24px; }
+#h-ball[data-mood="scared"] #h-er { left: 46px; top: 24px; }
+#h-ball[data-mood="scared"] #h-mo {
+  width: 14px; height: 6px;
+  border-radius: 50%;
+  border-bottom: 3px solid rgba(30,27,78,.8);
+}
+
+/* sad */
+#h-ball[data-mood="sad"] #h-mo {
   border-bottom: none;
-  filter: drop-shadow(0 2px 2px rgba(0,0,0,.08));
+  border-top: 3px solid rgba(30,27,78,.8);
+  border-radius: 11px 11px 0 0;
+  bottom: 13px; height: 8px;
 }
-#harfo-bubble.hb-visible {
-  opacity: 1;
-  transform: translateX(-50%) scale(1);
+
+/* sleeping */
+#h-ball[data-mood="sleeping"] .h-eye {
+  height: 8px;
+  border-radius: 50% 50% 0 0;
 }
-/* Action buttons inside bubble */
-.hb-actions {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  margin-top: 8px;
-  flex-wrap: wrap;
+#h-ball[data-mood="sleeping"] .h-pu { top: 0; }
+#h-ball[data-mood="sleeping"] #h-mo {
+  width: 18px; height: 0;
+  border-radius: 0;
+  bottom: 17px;
 }
-.hb-btn {
-  background: #0B2240;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 5px 10px;
-  font-size: 12px;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background .15s;
+#h-ball[data-mood="sleeping"] #h-arm {
+  animation-duration: 35s;
 }
-.hb-btn:hover { background: #2BCFC0; color: #0B2240; }
+
+/* sheltered (umbrella over head) */
+#h-ball[data-mood="sheltered"] #h-mo {
+  width: 28px; height: 13px;
+  border-radius: 0 0 14px 14px;
+  bottom: 12px;
+}
+
+/* ── Idle float is handled by JS on the wrapper (#h-w) to avoid
+   conflicting with the squish transform on #h-ball ── */
 
 
-/* ══════════════════════════════
-   CONTEXT MENU
-   ══════════════════════════════ */
-#harfo-menu {
+/* ═══ TIME OF DAY ═══ */
+#h-ball[data-time="morning"] {
+  background: radial-gradient(circle at 38% 32%,
+    #A855F7 0%, #4C1D95 38%, #1E1B4B 75%, #0D0A28 100%);
+}
+#h-ball[data-time="evening"] {
+  background: radial-gradient(circle at 38% 32%,
+    #9333EA 0%, #3B1C6E 38%, #1E1029 75%, #0A0514 100%);
+}
+#h-ball[data-time="night"] {
+  background: radial-gradient(circle at 38% 32%,
+    #4C1D95 0%, #1E1B4B 38%, #080B1A 75%, #020408 100%);
+}
+#h-ball[data-time="night"] .h-star { animation-duration: 1s; }
+
+/* ═══ RAIN ═══ */
+#h-rain {
   position: absolute;
-  bottom: 115px;
-  left: 50%;
-  transform: translateX(-50%) translateY(6px);
-  opacity: 0;
+  inset: 0;
   pointer-events: none;
-  background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 10px 36px rgba(0,0,0,.22);
-  padding: 6px;
-  min-width: 190px;
-  z-index: 20;
-  direction: rtl;
-  transition: opacity .18s, transform .18s cubic-bezier(.34,1.56,.64,1);
-}
-#harfo-menu.hm-visible {
-  opacity: 1;
-  pointer-events: all;
-  transform: translateX(-50%) translateY(0);
-}
-.hm-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 9px 13px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  border-radius: 9px;
-  font-size: 13.5px;
-  color: #0B2240;
-  font-family: Tahoma, 'Segoe UI', 'Vazir', Arial, sans-serif;
-  text-align: right;
-  direction: rtl;
-  transition: background .15s;
-  white-space: nowrap;
-}
-.hm-btn:hover { background: #f0fbfa; color: #2BCFC0; }
-.hm-sep {
-  height: 1px;
-  background: #eef2f7;
-  margin: 4px 8px;
+  overflow: hidden;
+  border-radius: 50%;
+  top: 20px; left: 20px;
+  width: 80px; height: 80px;
 }
 
-
-/* ══════════════════════════════
-   TOAST NOTIFICATION
-   ══════════════════════════════ */
-#harfo-toast {
-  position: fixed;
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  opacity: 0;
-  background: #0B2240;
-  color: #fff;
-  font-family: Tahoma, 'Segoe UI', 'Vazir', Arial, sans-serif;
-  font-size: 13px;
-  padding: 10px 20px;
-  border-radius: 30px;
-  box-shadow: 0 4px 20px rgba(0,0,0,.2);
-  direction: rtl;
+.h-rdrop {
+  position: absolute;
+  width: 1.5px;
+  background: linear-gradient(to bottom, transparent, rgba(147,197,253,.75));
+  border-radius: 0 0 2px 2px;
   pointer-events: none;
-  transition: opacity .25s, transform .25s;
-  z-index: 2147483641;
-}
-#harfo-toast.ht-show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
 }
 
-
-/* ══════════════════════════════
-   SELECTION POPOVER
-   ══════════════════════════════ */
-#harfo-sel-pop {
+/* ═══ UMBRELLA ═══ */
+#h-umb {
   position: fixed;
-  background: #0B2240;
-  border-radius: 10px;
-  box-shadow: 0 4px 16px rgba(0,0,0,.25);
-  padding: 4px 6px;
-  display: flex;
-  gap: 4px;
-  z-index: 2147483639;
-  pointer-events: all;
-  direction: rtl;
+  width: 72px; height: 55px;
+  cursor: grab;
   display: none;
+  z-index: 2147483641;
+  pointer-events: all;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,.3));
+  transition: filter .2s;
+  -webkit-user-select: none;
+  user-select: none;
 }
-#harfo-sel-pop button {
-  background: none;
-  border: none;
-  color: #fff;
+#h-umb:hover {
+  filter: drop-shadow(0 4px 16px rgba(43,207,192,.6));
+  cursor: grab;
+}
+#h-umb.sheltering {
+  filter: drop-shadow(0 4px 20px rgba(43,207,192,.9));
+}
+
+/* ═══ PARTICLES ═══ */
+#h-fx {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2147483639;
+  overflow: visible;
+}
+
+.h-pt {
+  position: absolute;
+  pointer-events: none;
+  line-height: 1;
   font-size: 13px;
-  padding: 5px 9px;
-  cursor: pointer;
-  border-radius: 6px;
-  font-family: Tahoma, 'Segoe UI', sans-serif;
-  white-space: nowrap;
-  transition: background .15s;
+  will-change: transform, opacity;
 }
-#harfo-sel-pop button:hover { background: rgba(255,255,255,.15); }
+.h-pt-sp  { color: #FBBF24; text-shadow: 0 0 6px #FCD34D; }
+.h-pt-hrt { color: #F472B6; }
+.h-pt-zzz { color: rgba(167,139,250,.9); font-weight: 700; font-size: 11px; }
+.h-pt-str { color: white; font-size: 8px; }
+.h-pt-drp { color: rgba(147,197,253,.8); font-size: 9px; }
+
+/* ═══ WAVE / EXIT INTENT ARM ═══ */
+#h-wave-arm {
+  position: absolute;
+  width: 20px; height: 8px;
+  top: 12px; left: 50%;
+  transform: translateX(-50%) rotate(-30deg);
+  transform-origin: right center;
+  background: #7C3AED;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+}
+#h-wave-arm.waving {
+  opacity: 1;
+  animation: waveArm .5s ease-in-out 3;
+}
+@keyframes waveArm {
+  0%,100% { transform: translateX(-50%) rotate(-30deg); }
+  50%     { transform: translateX(-50%) rotate(10deg);  }
+}
