@@ -1,487 +1,334 @@
-/* ======================================================
-   حرفو v6 — Main Stylesheet
-   ====================================================== */
-#harfo-root, #harfo-root * { box-sizing: border-box; }
+/* ================================================
+   حرفو v8 — H1 Mascot Stylesheet
+   ================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* ── Root overlay ── */
 #harfo-root {
-  position: fixed; inset: 0;
+  position: fixed;
+  inset: 0;
   pointer-events: none;
   z-index: 2147483640;
-  font-family: -apple-system, "Segoe UI", Tahoma, "IRANSans", "Vazirmatn", "Noto Sans Arabic", sans-serif;
-  direction: rtl;
+  overflow: hidden;
 }
 
-/* ═══════════════════════ WRAPPER ═══════════════════════ */
+/* ── Character wrapper ── */
 #harfo-w {
   position: absolute;
   left: 0; top: 0;
-  width: 120px; height: 156px;
-  pointer-events: auto;
+  width: 90px; height: 107px;
+  pointer-events: all;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
   will-change: transform;
-  cursor: grab;
-  opacity: 0;
-  transition: opacity .55s ease;
-  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
 }
-#harfo-w.hv-ready { opacity: 1; }
-#harfo-w:active   { cursor: grabbing; }
 
-/* ═══════════════════════ CHARACTER SVG ═══════════════════════ */
-#h-char {
-  width: 100%; height: 100%;
+/* ── SVG character ── */
+#h1-char {
   display: block;
   overflow: visible;
-  transform-origin: 50% 96%;
+  filter: drop-shadow(0 4px 12px rgba(11,34,64,.25));
+  transition: filter .2s;
+}
+#harfo-w:hover #h1-char {
+  filter: drop-shadow(0 6px 18px rgba(11,34,64,.38));
 }
 
-/* Default gentle idle bob */
-#harfo-w.hv-idle #h-char { animation: ha-idle-bob 4.8s ease-in-out infinite; }
+/* ── Left–right flip ── */
+#harfo-w.hv-flip #h1-char {
+  transform: scaleX(-1);
+  transform-origin: 45px 53px; /* horizontal center of combined H+1 */
+}
 
-/* Walking */
-#harfo-w.hv-walk-r #h-char { animation: ha-walk-r .52s ease-in-out infinite; }
-#harfo-w.hv-walk-l #h-char { animation: ha-walk-l .52s ease-in-out infinite; }
+/* ── Arm & leg animation pivot setup ── */
+.leg-l, .leg-r, .leg-one,
+.arm-l, .arm-r {
+  transform-box: fill-box;
+}
+.leg-l  { transform-origin: center top; }
+.leg-r  { transform-origin: center top; }
+.leg-one{ transform-origin: center top; }
+.arm-l  { transform-origin: right  center; }
+.arm-r  { transform-origin: left   center; }
 
-/* One-shot deformations */
-#harfo-w.hv-bounce  #h-char { animation: ha-bounce  .85s cubic-bezier(.34,1.56,.64,1) forwards; }
-#harfo-w.hv-squish  #h-char { animation: ha-squish  .5s  cubic-bezier(.34,1.6,.64,1) forwards; }
-#harfo-w.hv-wiggle  #h-char { animation: ha-wiggle  .9s  ease-in-out forwards; }
-#harfo-w.hv-spin    #h-char { animation: ha-spin    1.0s ease-in-out forwards; }
-#harfo-w.hv-dance   #h-char { animation: ha-dance   1.8s ease-in-out forwards; }
-#harfo-w.hv-shake   #h-char { animation: ha-shake   .65s ease-in-out forwards; }
-#harfo-w.hv-tiny    #h-char { animation: ha-tiny    .9s  ease-in-out forwards; }
-#harfo-w.hv-huge    #h-char { animation: ha-huge    .9s  ease-in-out forwards; }
-#harfo-w.hv-ghost   #h-char { animation: ha-ghost   1.4s ease-in-out forwards; }
-#harfo-w.hv-float   #h-char { animation: ha-float-high 2.0s ease-in-out forwards; }
-#harfo-w.hv-nod     #h-char { animation: ha-nod     .8s  ease-in-out forwards; }
-#harfo-w.hv-tease   #h-char { animation: ha-tease-jiggle 1.2s ease-in-out infinite; }
-#harfo-w.hv-panic   #h-char { animation: ha-panic  .55s ease-in-out infinite; }
 
-/* ═══════════════════════ FACE EXPRESSIONS ═══════════════════════ */
-.he, .hm { display: none; }
-.he-n, .hm-sm { display: inline; }  /* defaults */
+/* ══════════════════════════════
+   WALKING
+   ══════════════════════════════ */
+#harfo-w.hv-walking .leg-l {
+  animation: legSwingL .5s ease-in-out infinite;
+}
+#harfo-w.hv-walking .leg-r {
+  animation: legSwingR .5s ease-in-out infinite;
+}
+#harfo-w.hv-walking .leg-one {
+  animation: legSwingOne .5s ease-in-out infinite;
+}
+#harfo-w.hv-walking .arm-l {
+  animation: armSwingL .5s ease-in-out infinite;
+}
+#harfo-w.hv-walking .arm-r {
+  animation: armSwingR .5s ease-in-out infinite;
+}
+/* Slight body bob while walking */
+#harfo-w.hv-walking #h1-char {
+  animation: walkBob .25s ease-in-out infinite;
+}
 
-/* States control which eyes/mouth are visible */
-#harfo-w.hs-sleep   .he-n,  #harfo-w.hs-sleep   .hm-sm { display: none; }
-#harfo-w.hs-sleep   .he-s,  #harfo-w.hs-sleep   .hm-fl { display: inline; }
+@keyframes legSwingL {
+  0%,100% { transform: rotate(-20deg); }
+  50%     { transform: rotate( 20deg); }
+}
+@keyframes legSwingR {
+  0%,100% { transform: rotate( 20deg); }
+  50%     { transform: rotate(-20deg); }
+}
+@keyframes legSwingOne {
+  0%,100% { transform: rotate(-12deg); }
+  50%     { transform: rotate( 12deg); }
+}
+@keyframes armSwingL {
+  0%,100% { transform: rotate( 18deg); }
+  50%     { transform: rotate(-18deg); }
+}
+@keyframes armSwingR {
+  0%,100% { transform: rotate(-18deg); }
+  50%     { transform: rotate( 18deg); }
+}
+@keyframes walkBob {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-2px); }
+}
 
-#harfo-w.hs-happy   .he-n,  #harfo-w.hs-happy   .hm-sm { display: none; }
-#harfo-w.hs-happy   .he-h,  #harfo-w.hs-happy   .hm-gr { display: inline; }
 
-#harfo-w.hs-wow     .he-n,  #harfo-w.hs-wow     .hm-sm { display: none; }
-#harfo-w.hs-wow     .he-x,  #harfo-w.hs-wow     .hm-o  { display: inline; }
+/* ══════════════════════════════
+   IDLE — gentle float
+   ══════════════════════════════ */
+#harfo-w.hv-idle #h1-char {
+  animation: idleFloat 3.2s ease-in-out infinite;
+}
+@keyframes idleFloat {
+  0%,100% { transform: translateY(0px) rotate(0deg); }
+  30%     { transform: translateY(-4px) rotate(.8deg); }
+  70%     { transform: translateY(-3px) rotate(-.6deg); }
+}
 
-#harfo-w.hs-scared  .he-n,  #harfo-w.hs-scared  .hm-sm { display: none; }
-#harfo-w.hs-scared  .he-sc, #harfo-w.hs-scared  .hm-o  { display: inline; }
+/* ══════════════════════════════
+   FLEE — speed lines + scale
+   ══════════════════════════════ */
+#harfo-w.hv-flee #h1-char {
+  animation: fleeScurry .3s ease-in-out infinite;
+}
+@keyframes fleeScurry {
+  0%,100% { transform: skewX(0deg) scaleY(1); }
+  50%     { transform: skewX(-6deg) scaleY(.94); }
+}
 
-#harfo-w.hs-tease   .he-n,  #harfo-w.hs-tease   .hm-sm { display: none; }
-#harfo-w.hs-tease   .he-ts, #harfo-w.hs-tease   .hm-tg { display: inline; }
+/* ══════════════════════════════
+   PANIC — full shake
+   ══════════════════════════════ */
+#harfo-w.hv-panic #h1-char {
+  animation: panicShake .12s linear infinite;
+}
+@keyframes panicShake {
+  0%,100% { transform: translateX(0) rotate(0); }
+  25%     { transform: translateX(-4px) rotate(-7deg); }
+  75%     { transform: translateX( 4px) rotate( 7deg); }
+}
 
-#harfo-w.hs-wink    .he-n  { display: none; }
-#harfo-w.hs-wink    .he-wk { display: inline; }
+/* ══════════════════════════════
+   TEASE — curious lean
+   ══════════════════════════════ */
+#harfo-w.hv-tease #h1-char {
+  animation: teaseLean 1.8s ease-in-out infinite;
+}
+@keyframes teaseLean {
+  0%,100% { transform: rotate(0deg); }
+  40%     { transform: rotate(5deg); }
+  70%     { transform: rotate(-4deg); }
+}
 
-#harfo-w.hs-love    .he-n,  #harfo-w.hs-love    .hm-sm { display: none; }
-#harfo-w.hs-love    .he-lv, #harfo-w.hs-love    .hm-gr { display: inline; }
+/* ══════════════════════════════
+   DRAG
+   ══════════════════════════════ */
+#harfo-w.hv-dragging {
+  cursor: grabbing !important;
+}
+#harfo-w.hv-dragging #h1-char {
+  animation: none !important;
+  transform: rotate(-8deg) scale(1.06) !important;
+  filter: drop-shadow(0 12px 24px rgba(11,34,64,.4)) !important;
+}
 
-#harfo-w.hs-blink   .he-n  { display: none; }
-#harfo-w.hs-blink   .he-bl { display: inline; }
 
-#harfo-w.hs-read    .he-n,  #harfo-w.hs-read    .hm-sm { display: none; }
-#harfo-w.hs-read    .he-rd, #harfo-w.hs-read    .hm-fl { display: inline; }
-
-#harfo-w.hs-dizzy   .he-n,  #harfo-w.hs-dizzy   .hm-sm { display: none; }
-#harfo-w.hs-dizzy   .he-dz, #harfo-w.hs-dizzy   .hm-o  { display: inline; }
-
-/* Eye glow ambient pulse */
-#h-eyes .he-n ellipse,
-#h-eyes .he-n circle { animation: ha-eye-pulse 3.8s ease-in-out infinite; }
-
-/* Sweat drop — shown when nervous/scared */
-#harfo-w.hs-scared .h-sweat,
-#harfo-w.hs-alert  .h-sweat { opacity: 1; animation: ha-sweat-drip 1.4s ease-in infinite; }
-
-/* ═══════════════════════ AURA ═══════════════════════ */
-#h-aura {
+/* ══════════════════════════════
+   SPEECH BUBBLE
+   ══════════════════════════════ */
+#harfo-bubble {
   position: absolute;
-  inset: -36px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(91,232,218,0.22) 0%, transparent 70%);
-  pointer-events: none;
-  animation: ha-aura-pulse 3.5s ease-in-out infinite;
-  will-change: transform, opacity;
-}
-#harfo-w.hv-panic #h-aura,
-#harfo-w.hv-scared #h-aura {
-  animation: ha-aura-flee 0.6s ease-in-out infinite;
-  background: radial-gradient(circle, rgba(255,100,80,0.25) 0%, transparent 70%);
-}
-
-/* ═══════════════════════ SPEED LINES ═══════════════════════ */
-#h-speedlines {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity .18s;
-}
-#harfo-w.hv-panic #h-speedlines,
-#harfo-w.hv-flee  #h-speedlines { opacity: 1; }
-.sl {
-  position: absolute;
-  right: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(91,232,218,0.7));
-  border-radius: 2px;
-  animation: ha-sl-flash .35s ease-in-out infinite;
-  transform-origin: right center;
-}
-.sl:nth-child(1) { top: 22%; width: 48px; animation-delay: 0s; }
-.sl:nth-child(2) { top: 38%; width: 70px; animation-delay: .06s; }
-.sl:nth-child(3) { top: 52%; width: 55px; animation-delay: .12s; }
-.sl:nth-child(4) { top: 65%; width: 38px; animation-delay: .05s; }
-.sl:nth-child(5) { top: 78%; width: 62px; animation-delay: .09s; }
-
-/* ═══════════════════════ FINS ═══════════════════════ */
-#h-fin-l { transform-origin: 85% 40%; animation: ha-fin-l 2.6s ease-in-out infinite; }
-#h-fin-r { transform-origin: 15% 40%; animation: ha-fin-r 2.6s ease-in-out infinite; animation-delay: -1.3s; }
-#harfo-w.hv-walk-r #h-fin-l,
-#harfo-w.hv-walk-l #h-fin-r { animation-duration: 0.5s; }
-
-/* ═══════════════════════ HUD SPEECH BUBBLE ═══════════════════════ */
-#h-hud {
-  position: absolute;
-  bottom: calc(100% + 10px);
+  bottom: 112px;
   left: 50%;
-  transform: translate(-50%, 10px) scale(.88);
-  min-width: 188px; max-width: 300px;
-  padding: 13px 15px 11px;
-  background: linear-gradient(145deg, rgba(8,22,34,0.97), rgba(14,38,56,0.97));
-  border: 1px solid rgba(91,232,218,0.38);
-  border-radius: 16px;
-  color: #E8FBFA;
-  font-size: 13.5px;
-  line-height: 1.75;
-  text-align: right;
-  direction: rtl;
-  box-shadow:
-    0 14px 32px rgba(0,0,0,0.38),
-    0 0 22px rgba(91,232,218,0.16),
-    inset 0 1px 0 rgba(255,255,255,0.07);
-  backdrop-filter: blur(12px);
+  transform: translateX(-50%) scale(.9);
   opacity: 0;
   pointer-events: none;
-  transition: opacity .25s ease, transform .28s cubic-bezier(.34,1.56,.64,1);
-  white-space: pre-wrap;
-}
-#h-hud::after {
-  content: "";
-  position: absolute; bottom: -8px; left: 50%;
-  margin-left: -7px;
-  width: 14px; height: 14px;
-  background: linear-gradient(145deg, rgba(12,28,46,0.97), rgba(14,38,56,0.97));
-  border-right: 1px solid rgba(91,232,218,0.38);
-  border-bottom: 1px solid rgba(91,232,218,0.38);
-  transform: rotate(45deg);
-}
-#harfo-w.hv-talk #h-hud {
-  opacity: 1;
-  transform: translate(-50%, 0) scale(1);
-  pointer-events: auto;
-  animation: ha-hud-in .28s cubic-bezier(.34,1.56,.64,1) forwards;
-}
-
-/* Typing indicator */
-#h-typing { display: none; gap: 5px; align-items: center; justify-content: flex-start; height: 18px; }
-#h-typing.show { display: flex; }
-#h-typing.show ~ #h-msg { display: none; }
-#h-typing.show ~ #h-acts { display: none; }
-#h-typing span {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: #5BE8DA;
-  animation: ha-dot-bounce 1.05s ease-in-out infinite;
-}
-#h-typing span:nth-child(2) { animation-delay: .16s; }
-#h-typing span:nth-child(3) { animation-delay: .32s; }
-
-#h-msg { margin: 0; }
-
-/* Action buttons in HUD */
-#h-acts {
-  margin-top: 10px;
-  display: none; flex-wrap: wrap; gap: 6px;
-  justify-content: flex-end;
-}
-#h-acts.show { display: flex; }
-#h-acts button {
-  font: inherit; font-size: 12.5px;
-  padding: 6px 11px;
-  background: linear-gradient(135deg, #5BE8DA, #2BCFC0);
-  color: #062028;
-  border: 0; border-radius: 9px;
-  cursor: pointer;
-  transition: transform .14s ease, filter .14s ease;
-  box-shadow: 0 3px 8px rgba(22,168,154,0.38);
-}
-#h-acts button:hover { transform: translateY(-1px); filter: brightness(1.1); }
-#h-acts button:active { transform: scale(.96); }
-#h-acts button.alt {
-  background: transparent;
-  color: rgba(91,232,218,0.85);
-  border: 1px solid rgba(91,232,218,0.38);
-  box-shadow: none;
-}
-#h-acts button.alt:hover { background: rgba(91,232,218,0.1); }
-
-/* ═══════════════════════ ZZZ ═══════════════════════ */
-#h-zzz {
-  position: absolute; top: -10px; left: 4px;
-  width: 56px; height: 56px;
-  display: none; pointer-events: none;
-}
-#harfo-w.hs-sleep #h-zzz { display: block; }
-#h-zzz b {
-  position: absolute;
-  color: #5BE8DA; font-weight: 700; font-style: normal;
-  text-shadow: 0 0 8px rgba(91,232,218,0.7);
-  animation: ha-zzz 3.2s ease-in-out infinite;
-  opacity: 0;
-}
-#h-zzz b:nth-child(1) { font-size: 14px; left: 0;   animation-delay: 0s; }
-#h-zzz b:nth-child(2) { font-size: 19px; left: 12px; animation-delay: .75s; }
-#h-zzz b:nth-child(3) { font-size: 24px; left: 26px; animation-delay: 1.5s; }
-
-/* ═══════════════════════ EXCLAMATION ═══════════════════════ */
-#h-exclaim {
-  position: absolute; top: -24px; left: 50%;
-  transform: translateX(-50%);
-  font: 700 28px sans-serif;
-  color: #FFD93D;
-  text-shadow: 0 0 12px rgba(255,210,60,0.8);
-  pointer-events: none;
-  opacity: 0;
-}
-#harfo-w.hv-exclaim #h-exclaim { animation: ha-exclaim .9s ease-out forwards; }
-
-/* ═══════════════════════ PARTICLES ═══════════════════════ */
-#h-particles { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
-.h-particle {
-  position: absolute;
-  pointer-events: none;
-  animation-fill-mode: both;
-}
-.h-particle.spark { animation: ha-spark-fly .8s ease-out forwards; }
-.h-particle.heart { animation: ha-heart-float 1.0s ease-out forwards; }
-.h-particle.star  { animation: ha-star-pop .7s ease-out forwards; }
-.h-particle.text  {
-  font: 700 15px sans-serif; white-space: nowrap;
-  color: #5BE8DA; text-shadow: 0 0 8px rgba(91,232,218,0.8);
-  animation: ha-text-pop 1.2s ease-out forwards;
-}
-
-/* ═══════════════════════ CLOSE BUTTON ═══════════════════════ */
-#h-close {
-  position: absolute; top: 0; right: 0;
-  width: 24px; height: 24px;
-  background: rgba(6,18,30,.9);
-  color: rgba(91,232,218,.9);
-  border: 1px solid rgba(91,232,218,.42);
-  border-radius: 50%;
-  font: 700 15px/1 sans-serif;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity .2s, transform .14s;
-}
-#harfo-w:hover #h-close,
-#harfo-w.hv-talk #h-close { opacity: 1; }
-#h-close:hover { transform: scale(1.18); }
-
-/* ═══════════════════════ RESTORE PILL ═══════════════════════ */
-#h-restore {
-  position: fixed; right: 18px; bottom: 18px;
-  width: 52px; height: 52px;
-  border-radius: 50%;
-  display: none;
-  align-items: center; justify-content: center;
-  cursor: pointer;
-  pointer-events: auto;
-  animation: ha-restore-pulse 2.6s ease-in-out infinite;
-  z-index: 2;
-}
-#h-restore.show { display: flex; }
-#h-restore svg { width: 52px; height: 52px; }
-
-/* ═══════════════════════ TOAST ═══════════════════════ */
-#h-toast {
-  position: fixed; top: 20px; left: 50%;
-  transform: translateX(-50%) translateY(-32px);
-  background: linear-gradient(135deg, rgba(8,22,34,0.97), rgba(14,38,56,0.97));
-  border: 1px solid rgba(91,232,218,.42);
-  color: #5BE8DA;
-  padding: 9px 16px;
-  border-radius: 12px;
+  background: #fff;
+  color: #0B2240;
+  font-family: Tahoma, 'Segoe UI', 'Vazir', Arial, sans-serif;
   font-size: 13px;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity .3s, transform .3s cubic-bezier(.34,1.56,.64,1);
-  z-index: 4;
-  box-shadow: 0 10px 24px rgba(0,0,0,.38);
-  white-space: nowrap;
-  max-width: 90vw;
+  line-height: 1.6;
+  padding: 9px 14px;
+  border-radius: 14px;
+  box-shadow: 0 5px 22px rgba(0,0,0,.18);
+  white-space: normal;
+  text-align: center;
+  direction: rtl;
+  min-width: 130px;
+  max-width: 230px;
+  transition: opacity .22s, transform .22s cubic-bezier(.34,1.56,.64,1);
+  z-index: 10;
 }
-#h-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-/* ═══════════════════════ FLOATING TOC ═══════════════════════ */
-#h-toc {
-  position: fixed;
-  right: 16px; top: 50%;
-  transform: translateY(-50%) translateX(calc(100% + 20px));
-  width: 260px; max-height: 68vh;
-  background: linear-gradient(145deg, rgba(8,22,34,0.97), rgba(14,38,56,0.97));
-  border: 1px solid rgba(91,232,218,.38);
-  border-radius: 16px;
-  padding: 14px 0;
-  overflow: auto;
-  pointer-events: auto;
-  z-index: 3;
-  box-shadow: 0 16px 36px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
-  opacity: 0;
-  transition: transform .4s cubic-bezier(.34,1.56,.64,1), opacity .3s ease;
+#harfo-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -9px; left: 50%;
+  transform: translateX(-50%);
+  border: 9px solid transparent;
+  border-top-color: #fff;
+  border-bottom: none;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,.08));
 }
-#h-toc.show {
-  transform: translateY(-50%) translateX(0);
+#harfo-bubble.hb-visible {
   opacity: 1;
+  transform: translateX(-50%) scale(1);
 }
-#h-toc-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 14px 10px;
-  border-bottom: 1px solid rgba(91,232,218,.16);
-  margin-bottom: 4px;
+/* Action buttons inside bubble */
+.hb-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 8px;
+  flex-wrap: wrap;
 }
-#h-toc-header span { color: #5BE8DA; font: 700 13px sans-serif; }
-#h-toc-close {
-  background: none; border: 0; color: rgba(91,232,218,.7);
-  font-size: 18px; cursor: pointer; line-height: 1;
-  transition: color .15s;
-}
-#h-toc-close:hover { color: #5BE8DA; }
-#h-toc a {
-  display: block; padding: 8px 14px;
-  color: rgba(232,251,250,.85);
-  text-decoration: none; font-size: 13px;
-  direction: rtl; text-align: right;
-  border-right: 2px solid transparent;
-  transition: background .18s, border-color .18s, color .18s;
-}
-#h-toc a:hover { background: rgba(91,232,218,.1); color: #5BE8DA; border-right-color: rgba(91,232,218,.4); }
-#h-toc a.active { background: rgba(91,232,218,.18); color: #5BE8DA; border-right-color: #5BE8DA; }
-#h-toc a.h3 { padding-right: 26px; font-size: 12px; opacity: .82; }
-
-/* ═══════════════════════ SEARCH PALETTE ═══════════════════════ */
-#h-palette {
-  position: fixed; inset: 0;
-  background: rgba(2,8,18,.68);
-  backdrop-filter: blur(8px);
-  display: none;
-  align-items: flex-start; justify-content: center;
-  padding-top: 12vh;
-  z-index: 5;
-  pointer-events: auto;
-}
-#h-palette.show { display: flex; animation: ha-palette-in .22s ease forwards; }
-#h-pal-box {
-  width: min(580px, 94vw);
-  background: linear-gradient(145deg, #0A1C2C, #06121E);
-  border: 1px solid rgba(91,232,218,.38);
-  border-radius: 18px;
-  overflow: hidden;
-  box-shadow: 0 24px 56px rgba(0,0,0,.55), 0 0 30px rgba(91,232,218,.12);
-}
-#h-pal-inp {
-  width: 100%; padding: 16px 18px;
-  background: transparent; color: #E8FBFA;
-  border: 0; border-bottom: 1px solid rgba(91,232,218,.22);
-  font: 15px inherit; direction: rtl;
-  outline: none;
-}
-#h-pal-inp::placeholder { color: rgba(232,251,250,.4); }
-#h-pal-hint { padding: 6px 18px; font-size: 11.5px; color: rgba(91,232,218,.5); direction: rtl; }
-#h-pal-list { max-height: 52vh; overflow-y: auto; }
-#h-pal-list a {
-  display: flex; align-items: center; gap: 10px;
-  padding: 11px 18px;
-  color: rgba(232,251,250,.88); text-decoration: none;
-  font-size: 13.5px; direction: rtl; text-align: right;
-  border-bottom: 1px solid rgba(91,232,218,.07);
+.hb-btn {
+  background: #0B2240;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
   transition: background .15s;
 }
-#h-pal-list a:hover, #h-pal-list a.sel { background: rgba(91,232,218,.14); color: #5BE8DA; }
-#h-pal-list .h-pal-icon { font-size: 16px; opacity: .7; }
-#h-pal-list .no-r { padding: 18px; color: rgba(232,251,250,.45); text-align: center; font-size: 13px; }
+.hb-btn:hover { background: #2BCFC0; color: #0B2240; }
 
-/* ═══════════════════════ SELECTION POPOVER ═══════════════════════ */
-.h-sel-pop {
+
+/* ══════════════════════════════
+   CONTEXT MENU
+   ══════════════════════════════ */
+#harfo-menu {
   position: absolute;
-  z-index: 2147483641;
-  background: linear-gradient(145deg, #0A1C2C, #06121E);
-  border: 1px solid rgba(91,232,218,.45);
-  border-radius: 14px; padding: 8px;
-  display: flex; gap: 6px;
-  box-shadow: 0 12px 28px rgba(0,0,0,.45);
-  pointer-events: auto;
-  animation: ha-palette-in .18s ease forwards;
-}
-.h-sel-pop button {
-  font: 12.5px/1 inherit; padding: 6px 12px;
-  background: linear-gradient(135deg, #5BE8DA, #2BCFC0);
-  color: #062028;
-  border: 0; border-radius: 8px; cursor: pointer;
-  transition: transform .12s, filter .12s;
-}
-.h-sel-pop button:hover { transform: translateY(-1px); filter: brightness(1.1); }
-
-/* ═══════════════════════ DOM HIGHLIGHT ═══════════════════════ */
-.harfo-hl {
-  outline: 2px solid rgba(91,232,218,.65) !important;
-  outline-offset: 3px !important;
-  animation: ha-hl-pulse 1.5s ease-in-out infinite !important;
-  position: relative !important;
-}
-
-/* ═══════════════════════ PROGRESS BADGE ═══════════════════════ */
-#h-prog {
-  position: fixed; left: 18px; bottom: 18px;
-  width: 50px; height: 50px;
-  border-radius: 50%;
-  background: conic-gradient(#5BE8DA var(--pp,0%), rgba(91,232,218,.18) 0%);
-  display: flex; align-items: center; justify-content: center;
-  pointer-events: auto;
-  cursor: pointer;
-  z-index: 3;
+  bottom: 115px;
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
   opacity: 0;
-  transition: opacity .3s, transform .2s;
-  box-shadow: 0 6px 16px rgba(0,0,0,.32);
+  pointer-events: none;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 10px 36px rgba(0,0,0,.22);
+  padding: 6px;
+  min-width: 190px;
+  z-index: 20;
+  direction: rtl;
+  transition: opacity .18s, transform .18s cubic-bezier(.34,1.56,.64,1);
 }
-#h-prog.show { opacity: 1; }
-#h-prog:hover { transform: scale(1.08); }
-#h-prog::after {
-  content: attr(data-p) "%";
-  width: 38px; height: 38px;
-  background: #06121E;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font: 700 11px sans-serif;
-  color: #5BE8DA;
+#harfo-menu.hm-visible {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateX(-50%) translateY(0);
+}
+.hm-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 13px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 9px;
+  font-size: 13.5px;
+  color: #0B2240;
+  font-family: Tahoma, 'Segoe UI', 'Vazir', Arial, sans-serif;
+  text-align: right;
+  direction: rtl;
+  transition: background .15s;
+  white-space: nowrap;
+}
+.hm-btn:hover { background: #f0fbfa; color: #2BCFC0; }
+.hm-sep {
+  height: 1px;
+  background: #eef2f7;
+  margin: 4px 8px;
 }
 
-/* ═══════════════════════ SCROLLBAR (TOC/palette) ═══════════════════════ */
-#h-toc::-webkit-scrollbar,
-#h-pal-list::-webkit-scrollbar { width: 4px; }
-#h-toc::-webkit-scrollbar-track,
-#h-pal-list::-webkit-scrollbar-track { background: rgba(91,232,218,.06); }
-#h-toc::-webkit-scrollbar-thumb,
-#h-pal-list::-webkit-scrollbar-thumb { background: rgba(91,232,218,.3); border-radius: 4px; }
 
-/* ═══════════════════════ REDUCED MOTION ═══════════════════════ */
-@media (prefers-reduced-motion: reduce) {
-  #harfo-w, #h-char, #h-fin-l, #h-fin-r, #h-aura,
-  #h-eyes ellipse, #h-eyes circle, #h-restore, #h-zzz b { animation: none !important; }
+/* ══════════════════════════════
+   TOAST NOTIFICATION
+   ══════════════════════════════ */
+#harfo-toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  opacity: 0;
+  background: #0B2240;
+  color: #fff;
+  font-family: Tahoma, 'Segoe UI', 'Vazir', Arial, sans-serif;
+  font-size: 13px;
+  padding: 10px 20px;
+  border-radius: 30px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.2);
+  direction: rtl;
+  pointer-events: none;
+  transition: opacity .25s, transform .25s;
+  z-index: 2147483641;
 }
+#harfo-toast.ht-show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+
+/* ══════════════════════════════
+   SELECTION POPOVER
+   ══════════════════════════════ */
+#harfo-sel-pop {
+  position: fixed;
+  background: #0B2240;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.25);
+  padding: 4px 6px;
+  display: flex;
+  gap: 4px;
+  z-index: 2147483639;
+  pointer-events: all;
+  direction: rtl;
+  display: none;
+}
+#harfo-sel-pop button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 13px;
+  padding: 5px 9px;
+  cursor: pointer;
+  border-radius: 6px;
+  font-family: Tahoma, 'Segoe UI', sans-serif;
+  white-space: nowrap;
+  transition: background .15s;
+}
+#harfo-sel-pop button:hover { background: rgba(255,255,255,.15); }
