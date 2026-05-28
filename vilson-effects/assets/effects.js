@@ -1,329 +1,331 @@
 /* ════════════════════════════════════════════════════════
-   Vilson Effects v1.0
-   Ghost Cursor + Wormhole Portal
-   Zero external dependencies.
+   Vilson Effects v2.0 — Murmuration + Mycelium
+   ════════════════════════════════════════════════════════
+   220 particles live on the page.
+   They flock like starlings — separation, alignment, cohesion.
+   Page headings / images / CTAs act as gravity wells.
+   Between close particles: mycelium threads form.
+   White background optimised: deep purple on white.
    ════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
 
-  var GHOST_DELAY      = 1600;   /* ms ghost lags behind cursor */
-  var TRAIL_COUNT      = 5;      /* dots trailing behind the ghost */
-  var TRAIL_SPREAD     = 280;    /* ms between trail samples */
-  var DISCOVERY_HOLD   = 900;    /* ms stationary to trigger ring */
-  var DISCOVERY_RADIUS = 44;     /* px — how close ghost must be to element */
-  var WORM_DELAY       = 28000;  /* ms before wormhole appears */
-  var WORM_AUTO_CLOSE  = 22000;  /* ms of no-hover before it closes */
-  var HISTORY_SIZE     = 600;    /* cursor position history entries */
+  var isMobile   = window.innerWidth < 768;
+  var COUNT      = isMobile ? 130 : 220;
+  var CELL       = 85;          /* spatial-grid cell size px        */
 
-  /* ── DOM ── */
-  var orb, ring, trailEl, worm, wormDest, wormClose;
+  /* ── Flocking radii & weights ── */
+  var SEP_R = 30,  SEP_W = 0.055;   /* separation  */
+  var ALI_R = 65,  ALI_W = 0.032;   /* alignment   */
+  var COH_R = 95,  COH_W = 0.00035; /* cohesion    */
+  var ANC_R = 210, ANC_W = 0.0038;  /* anchor pull */
+  var CUR_R = 115, CUR_W = 0.055;   /* cursor push */
+  var MAX_V = 1.9, MIN_V = 0.35;
 
-  /* ── Cursor history ring buffer ── */
-  var hist = new Array(HISTORY_SIZE);
-  var histHead = 0, histLen = 0;
+  /* ── Mycelium ── */
+  var MYC_DIST   = 70;    /* px — thread appears below this distance  */
+  var MYC_ALPHA  = 0.072; /* base thread opacity                       */
 
-  function histPush(x, y, t) {
-    hist[histHead] = { x: x, y: y, t: t };
-    histHead = (histHead + 1) % HISTORY_SIZE;
-    if (histLen < HISTORY_SIZE) histLen++;
+  /* ── Colours (deep purple/indigo on white) ── */
+  var COLORS = [
+    { r:55,  g:15,  b:130, a:0.28 },   /* 55% — deep purple     */
+    { r:28,  g:50,  b:135, a:0.20 },   /* 25% — deep blue       */
+    { r:124, g:58,  b:237, a:0.32 },   /* 12% — bright violet   */
+    { r:17,  g:94,  b:89,  a:0.18 },   /*  8% — teal accent     */
+  ];
+  var COLOR_WEIGHTS = [0.55, 0.25, 0.12, 0.08];
+
+  /* ── Anchor selectors ── */
+  var ANCHOR_SEL = [
+    'h1','h2','h3',
+    '.elementor-heading-title',
+    '.elementor-widget-image img',
+    '.elementor-button',
+    '.elementor-icon-box-title',
+    '.elementor-widget-counter .elementor-counter-number',
+    '.elementor-widget-image-box img',
+    '.woocommerce-loop-product__title',
+    '.wp-post-image',
+  ].join(',');
+
+  /* ═══════════════════════════════════════════════════════
+     STATE
+     ═══════════════════════════════════════════════════════ */
+  var canvas, ctx;
+  var W = window.innerWidth, H = window.innerHeight;
+  var boids  = [];
+  var anchors = [];
+  var mx = -2000, my = -2000;
+
+  /* Spatial grid — pre-allocated, cleared each frame */
+  var gridW, gridH, grid;
+
+  function buildGrid() {
+    gridW = Math.ceil(W / CELL) + 2;
+    gridH = Math.ceil(H / CELL) + 2;
+    grid  = new Array(gridW * gridH);
+    for (var i = 0; i < grid.length; i++) grid[i] = [];
   }
 
-  /* Binary-search for entry closest to targetTime */
-  function histAt(targetTime) {
-    if (histLen === 0) return null;
-    var start = (histHead - histLen + HISTORY_SIZE) % HISTORY_SIZE;
-    var lo = 0, hi = histLen - 1;
-    while (lo < hi) {
-      var mid = (lo + hi) >> 1;
-      var idx = (start + mid) % HISTORY_SIZE;
-      if (hist[idx].t < targetTime) lo = mid + 1;
-      else hi = mid;
+  function fillGrid() {
+    for (var i = 0; i < grid.length; i++) grid[i].length = 0;
+    for (var i = 0; i < boids.length; i++) {
+      var b  = boids[i];
+      var gx = (b.x / CELL) | 0;
+      var gy = (b.y / CELL) | 0;
+      if (gx >= 0 && gy >= 0 && gx < gridW && gy < gridH)
+        grid[gy * gridW + gx].push(i);
     }
-    return hist[(start + lo) % HISTORY_SIZE];
   }
 
-  /* ════════════════════════════════════════════════════════
-     GHOST CURSOR
-     ════════════════════════════════════════════════════════ */
-  var Ghost = (function () {
-    var dots = [];
-    var gx = -300, gy = -300;
-    var prevGx = -300, prevGy = -300;
-    var stationaryMs = 0;
-    var discovered = false;
-    var isVisible = false;
-    var cursorInWindow = false;
-
-    /* Important element selectors for discovery detection */
-    var DISCOVERY_SELS = 'h1,h2,h3,img,.elementor-button,.elementor-widget-image,.elementor-heading-title,.woocommerce-loop-product__title,.wp-post-image';
-
-    function init() {
-      orb   = document.getElementById('vfx-ghost-orb');
-      ring  = document.getElementById('vfx-ghost-ring');
-      trailEl = document.getElementById('vfx-ghost-trail');
-      if (!orb || !ring || !trailEl) return;
-
-      /* Build trail dots */
-      for (var i = 0; i < TRAIL_COUNT; i++) {
-        var d = document.createElement('div');
-        d.className = 'vfx-tdot';
-        d.style.cssText = 'position:fixed;left:0;top:0;width:5px;height:5px;margin-left:-2.5px;margin-top:-2.5px;opacity:0;border-radius:50%;';
-        trailEl.appendChild(d);
-        dots.push(d);
-      }
-    }
-
-    function show() {
-      if (!orb || isVisible) return;
-      isVisible = true;
-      orb.classList.add('vfx-visible');
-    }
-
-    function hide() {
-      if (!orb || !isVisible) return;
-      isVisible = false;
-      orb.classList.remove('vfx-visible');
-      dots.forEach(function (d) { d.style.opacity = 0; });
-    }
-
-    function triggerDiscovery(x, y) {
-      if (discovered || !ring) return;
-      discovered = true;
-
-      /* Check if ghost is near something meaningful */
-      var els = document.querySelectorAll(DISCOVERY_SELS);
-      var near = false;
-      for (var i = 0; i < els.length; i++) {
-        var r = els[i].getBoundingClientRect();
-        if (r.width < 30 || r.height < 10) continue;
-        var cx = r.left + r.width / 2;
-        var cy = r.top + r.height / 2;
-        var dx = x - cx, dy = y - cy;
-        if (Math.sqrt(dx * dx + dy * dy) < r.width * 0.55 + DISCOVERY_RADIUS) {
-          near = true;
-          break;
-        }
-      }
-      if (!near) return;
-
-      ring.style.transform = 'translate(' + x + 'px,' + y + 'px)';
-      ring.classList.remove('vfx-ring-pop');
-      /* Force reflow */
-      void ring.offsetWidth;
-      ring.classList.add('vfx-ring-pop');
-      setTimeout(function () {
-        ring.classList.remove('vfx-ring-pop');
-        discovered = false;
-      }, 900);
-    }
-
-    function update() {
-      if (!orb) return;
-      var now = Date.now();
-      var ghostPos = histAt(now - GHOST_DELAY);
-      if (!ghostPos) return;
-
-      gx = ghostPos.x;
-      gy = ghostPos.y;
-
-      orb.style.transform = 'translate(' + gx + 'px,' + gy + 'px)';
-
-      /* Trail dots — sampled between ghost time and ghost+TRAIL_SPREAD*count */
-      for (var i = 0; i < TRAIL_COUNT; i++) {
-        var sampleTime = now - GHOST_DELAY - (i + 1) * TRAIL_SPREAD;
-        var pos = histAt(sampleTime);
-        if (!pos) { dots[i].style.opacity = 0; continue; }
-        var fraction = (i + 1) / TRAIL_COUNT;       /* 0 = near ghost, 1 = oldest */
-        var sz = Math.max(1.5, 5 - fraction * 3.2);
-        var op = Math.max(0, 0.28 - fraction * 0.26);
-        dots[i].style.width  = sz + 'px';
-        dots[i].style.height = sz + 'px';
-        dots[i].style.marginLeft = (-sz / 2) + 'px';
-        dots[i].style.marginTop  = (-sz / 2) + 'px';
-        dots[i].style.opacity = op;
-        dots[i].style.transform = 'translate(' + pos.x + 'px,' + pos.y + 'px)';
-      }
-
-      /* Stationary detection */
-      var moved = Math.sqrt(Math.pow(gx - prevGx, 2) + Math.pow(gy - prevGy, 2));
-      if (moved < 6) {
-        stationaryMs += 16;
-        if (stationaryMs > DISCOVERY_HOLD) triggerDiscovery(gx, gy);
-      } else {
-        stationaryMs = 0;
-        discovered = false;
-      }
-      prevGx = gx; prevGy = gy;
-    }
-
-    return { init: init, show: show, hide: hide, update: update };
-  })();
-
-  /* ════════════════════════════════════════════════════════
-     WORMHOLE PORTAL
-     ════════════════════════════════════════════════════════ */
-  var Wormhole = (function () {
-    var shown = false;
-    var dismissed = false;
-    var lastHover = 0;
-    var destination = null;
-    var autoCloseTimer = null;
-
-    function findDestination() {
-      /* 1. Use PHP-passed nav links */
-      var vfx = (typeof VFX !== 'undefined') ? VFX : {};
-      if (vfx.navLinks && vfx.navLinks.length) {
-        var filtered = vfx.navLinks.filter(function (l) {
-          return l.url && l.title && l.title.length > 0;
-        });
-        if (filtered.length) {
-          return filtered[Math.floor(Math.random() * Math.min(filtered.length, 5))];
-        }
-      }
-
-      /* 2. Fallback: scan page links */
-      var origin = window.location.origin;
-      var current = window.location.href;
-      var candidates = [];
-      var seen = new Set();
-
-      document.querySelectorAll('a[href]').forEach(function (el) {
-        var href = el.href;
-        if (!href || seen.has(href)) return;
-        if (!href.startsWith(origin)) return;
-        if (href === current || href.indexOf('#') !== -1) return;
-        var title = (el.textContent || el.title || '').trim().replace(/\s+/g, ' ');
-        if (title.length < 2 || title.length > 40) return;
-        /* Prefer nav/menu links */
-        var priority = el.closest('nav, [class*="menu"], [class*="nav"]') ? 2 : 1;
-        seen.add(href);
-        candidates.push({ url: href, title: title, priority: priority });
-      });
-
-      candidates.sort(function (a, b) { return b.priority - a.priority; });
-      if (!candidates.length) return null;
-      return candidates[Math.floor(Math.random() * Math.min(candidates.length, 6))];
-    }
-
-    function init() {
-      worm     = document.getElementById('vfx-worm');
-      wormDest = document.getElementById('vfx-worm-dest');
-      wormClose = document.getElementById('vfx-worm-close');
-      if (!worm) return;
-
-      destination = findDestination();
-      if (!destination) return; /* No internal links — don't show */
-
-      if (wormDest) wormDest.textContent = destination.title;
-
-      /* Show after delay */
-      setTimeout(show, WORM_DELAY);
-
-      /* Click — navigate */
-      worm.addEventListener('click', function (e) {
-        if (e.target === wormClose) return;
-        if (!destination) return;
-        /* Spin-out then navigate */
-        worm.style.transition = 'transform .5s cubic-bezier(.4,0,.6,1), opacity .5s ease';
-        worm.style.transform = 'scale(2) rotate(360deg)';
-        worm.style.opacity = '0';
-        setTimeout(function () {
-          window.location.href = destination.url;
-        }, 480);
-      });
-
-      /* Hover tracking for auto-close */
-      worm.addEventListener('mouseenter', function () {
-        lastHover = Date.now();
-        clearTimeout(autoCloseTimer);
-      });
-      worm.addEventListener('mouseleave', function () {
-        lastHover = Date.now();
-        startAutoClose();
-      });
-
-      /* Close button */
-      if (wormClose) {
-        wormClose.addEventListener('click', function (e) {
-          e.stopPropagation();
-          dismiss();
-        });
-      }
-    }
-
-    function show() {
-      if (!worm || shown || dismissed) return;
-      shown = true;
-      worm.classList.add('vfx-worm-show');
-      lastHover = Date.now();
-      startAutoClose();
-    }
-
-    function startAutoClose() {
-      clearTimeout(autoCloseTimer);
-      autoCloseTimer = setTimeout(function () {
-        if (Date.now() - lastHover > WORM_AUTO_CLOSE - 1000) {
-          dismiss();
-        }
-      }, WORM_AUTO_CLOSE);
-    }
-
-    function dismiss() {
-      if (!worm || dismissed) return;
-      dismissed = true;
-      worm.style.transition = 'opacity .8s ease, transform .8s ease';
-      worm.style.opacity = '0';
-      worm.style.transform = 'scale(0) rotate(-120deg)';
-      setTimeout(function () { if (worm) worm.style.display = 'none'; }, 850);
-    }
-
-    return { init: init };
-  })();
-
-  /* ════════════════════════════════════════════════════════
-     MOUSE EVENTS
-     ════════════════════════════════════════════════════════ */
-  var mouseInWindow = false;
-  var firstMove = false;
-
-  document.addEventListener('mousemove', function (e) {
-    histPush(e.clientX, e.clientY, Date.now());
-    mouseInWindow = true;
-    if (!firstMove) {
-      firstMove = true;
-      setTimeout(function () { Ghost.show(); }, 200);
-    }
-  }, { passive: true });
-
-  document.addEventListener('mouseleave', function () {
-    mouseInWindow = false;
-    setTimeout(function () {
-      if (!mouseInWindow) Ghost.hide();
-    }, GHOST_DELAY + 100);
-  });
-
-  /* ════════════════════════════════════════════════════════
-     RAF LOOP
-     ════════════════════════════════════════════════════════ */
-  function loop() {
-    try { Ghost.update(); } catch (e) {}
-    requestAnimationFrame(loop);
+  function cell(gx, gy) {
+    if (gx < 0 || gy < 0 || gx >= gridW || gy >= gridH) return null;
+    return grid[gy * gridW + gx];
   }
 
-  /* ════════════════════════════════════════════════════════
-     BOOT — skip on touch-only devices
-     ════════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════
+     BOIDS
+     ═══════════════════════════════════════════════════════ */
+  function pickColor() {
+    var r = Math.random(), acc = 0;
+    for (var i = 0; i < COLOR_WEIGHTS.length; i++) {
+      acc += COLOR_WEIGHTS[i];
+      if (r < acc) return COLORS[i];
+    }
+    return COLORS[0];
+  }
+
+  function initBoids() {
+    boids = [];
+    for (var i = 0; i < COUNT; i++) {
+      var ang = Math.random() * Math.PI * 2;
+      var spd = MIN_V + Math.random() * (MAX_V - MIN_V);
+      var c   = pickColor();
+      boids.push({
+        x:  Math.random() * W,
+        y:  Math.random() * H,
+        vx: Math.cos(ang) * spd,
+        vy: Math.sin(ang) * spd,
+        r: c.r, g: c.g, b: c.b,
+        a: c.a * (0.7 + Math.random() * 0.6),
+        sz: 1.3 + Math.random() * 1.3,
+        born: i,   /* staggered reveal */
+      });
+    }
+  }
+
+  function stepBoid(idx) {
+    var b  = boids[idx];
+    var gx = (b.x / CELL) | 0;
+    var gy = (b.y / CELL) | 0;
+
+    var sepX = 0, sepY = 0, sepN = 0;
+    var aliX = 0, aliY = 0, aliN = 0;
+    var cohX = 0, cohY = 0, cohN = 0;
+
+    var span = Math.ceil(COH_R / CELL);
+
+    for (var dy = -span; dy <= span; dy++) {
+      for (var dx = -span; dx <= span; dx++) {
+        var c = cell(gx + dx, gy + dy);
+        if (!c) continue;
+        for (var k = 0; k < c.length; k++) {
+          var j = c[k];
+          if (j === idx) continue;
+          var o  = boids[j];
+          var ex = b.x - o.x, ey = b.y - o.y;
+          var d2 = ex * ex + ey * ey;
+
+          if (d2 < SEP_R * SEP_R && d2 > 0.01) {
+            var d = Math.sqrt(d2), f = 1 - d / SEP_R;
+            sepX += ex / d * f; sepY += ey / d * f; sepN++;
+          }
+          if (d2 < ALI_R * ALI_R) { aliX += o.vx; aliY += o.vy; aliN++; }
+          if (d2 < COH_R * COH_R) { cohX += o.x;  cohY += o.y;  cohN++; }
+        }
+      }
+    }
+
+    var ax = 0, ay = 0;
+
+    if (sepN) { ax += sepX / sepN * SEP_W; ay += sepY / sepN * SEP_W; }
+    if (aliN) { ax += (aliX / aliN - b.vx) * ALI_W; ay += (aliY / aliN - b.vy) * ALI_W; }
+    if (cohN) { ax += (cohX / cohN - b.x)  * COH_W; ay += (cohY / cohN - b.y)  * COH_W; }
+
+    /* Anchor gravity wells */
+    for (var ai = 0; ai < anchors.length; ai++) {
+      var a  = anchors[ai];
+      var ex = a.x - b.x, ey = a.y - b.y;
+      var d2 = ex * ex + ey * ey;
+      if (d2 < ANC_R * ANC_R && d2 > 0.01) {
+        var d = Math.sqrt(d2);
+        var f = ANC_W * (1 - d / ANC_R);
+        ax += ex / d * f; ay += ey / d * f;
+      }
+    }
+
+    /* Cursor repulsion */
+    var cx = b.x - mx, cy = b.y - my;
+    var cd = cx * cx + cy * cy;
+    if (cd < CUR_R * CUR_R && cd > 0.01) {
+      var d = Math.sqrt(cd);
+      var f = CUR_W * (1 - d / CUR_R);
+      ax += cx / d * f; ay += cy / d * f;
+    }
+
+    b.vx += ax; b.vy += ay;
+
+    var spd = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
+    if (spd > MAX_V) { b.vx = b.vx / spd * MAX_V; b.vy = b.vy / spd * MAX_V; }
+    if (spd < MIN_V && spd > 0.01) { b.vx = b.vx / spd * MIN_V; b.vy = b.vy / spd * MIN_V; }
+
+    b.x += b.vx; b.y += b.vy;
+
+    /* Soft wrap — reappear on opposite edge */
+    var M = 40;
+    if (b.x < -M)  b.x += W + M * 2;
+    if (b.x > W+M) b.x -= W + M * 2;
+    if (b.y < -M)  b.y += H + M * 2;
+    if (b.y > H+M) b.y -= H + M * 2;
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     RENDER
+     ═══════════════════════════════════════════════════════ */
+  var startTime = Date.now();
+
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+
+    /* Staggered reveal over first 4 seconds */
+    var elapsed    = (Date.now() - startTime) / 4000;
+    var maxVisible = Math.min(boids.length, Math.ceil(elapsed * boids.length * 1.1));
+
+    /* ── MYCELIUM THREADS ── */
+    /* Single path, uniform colour — fast */
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(91,33,182,' + MYC_ALPHA + ')';
+    ctx.lineWidth   = 0.38;
+
+    for (var i = 0; i < maxVisible; i++) {
+      var b  = boids[i];
+      var gx = (b.x / CELL) | 0;
+      var gy = (b.y / CELL) | 0;
+
+      /* Only check ±1 cell — MYC_DIST ≤ CELL so this is sufficient */
+      for (var dy = -1; dy <= 1; dy++) {
+        for (var dx = -1; dx <= 1; dx++) {
+          var c = cell(gx + dx, gy + dy);
+          if (!c) continue;
+          for (var k = 0; k < c.length; k++) {
+            var j = c[k];
+            if (j <= i || j >= maxVisible) continue;
+            var o  = boids[j];
+            var ex = b.x - o.x, ey = b.y - o.y;
+            if (ex * ex + ey * ey < MYC_DIST * MYC_DIST) {
+              ctx.moveTo(b.x, b.y);
+              ctx.lineTo(o.x, o.y);
+            }
+          }
+        }
+      }
+    }
+    ctx.stroke();
+
+    /* ── PARTICLES ── */
+    for (var i = 0; i < maxVisible; i++) {
+      var b = boids[i];
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.sz, 0, 6.2832);
+      ctx.fillStyle = 'rgba(' + b.r + ',' + b.g + ',' + b.b + ',' + b.a + ')';
+      ctx.fill();
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     ANCHORS — viewport-relative, updated on scroll/resize
+     ═══════════════════════════════════════════════════════ */
+  function updateAnchors() {
+    anchors = [];
+    try {
+      document.querySelectorAll(ANCHOR_SEL).forEach(function (el) {
+        var r = el.getBoundingClientRect();
+        if (r.width < 40 || r.height < 10) return;
+        if (r.bottom < -200 || r.top > H + 200) return;
+        anchors.push({ x: r.left + r.width * 0.5, y: r.top + r.height * 0.5 });
+      });
+    } catch (e) {}
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     MAIN LOOP
+     ═══════════════════════════════════════════════════════ */
+  var frame = 0;
+
+  function tick() {
+    fillGrid();
+    for (var i = 0; i < boids.length; i++) stepBoid(i);
+    render();
+    /* Refresh anchors every ~52 frames (~0.87s) */
+    if (++frame % 52 === 0) updateAnchors();
+    requestAnimationFrame(tick);
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     BOOT
+     ═══════════════════════════════════════════════════════ */
   function boot() {
-    /* Don't init ghost on pure touch devices — no cursor */
-    var hasPointer = window.matchMedia('(pointer: fine)').matches;
+    canvas = document.createElement('canvas');
+    canvas.width  = W;
+    canvas.height = H;
+    canvas.style.cssText =
+      'position:fixed;inset:0;width:100%;height:100%;' +
+      'pointer-events:none;z-index:2147483630;';
+    document.body.appendChild(canvas);
+    ctx = canvas.getContext('2d');
 
-    if (hasPointer) {
-      Ghost.init();
-      requestAnimationFrame(loop);
+    buildGrid();
+    initBoids();
+    updateAnchors();
+
+    /* Events */
+    window.addEventListener('mousemove', function (e) {
+      mx = e.clientX; my = e.clientY;
+    }, { passive: true });
+
+    window.addEventListener('touchmove', function (e) {
+      if (e.touches.length) { mx = e.touches[0].clientX; my = e.touches[0].clientY; }
+    }, { passive: true });
+
+    /* On touch: no cursor — push particles away from first touch */
+    window.addEventListener('touchstart', function (e) {
+      if (e.touches.length) { mx = e.touches[0].clientX; my = e.touches[0].clientY; }
+      setTimeout(function () { mx = -2000; my = -2000; }, 800);
+    }, { passive: true });
+
+    window.addEventListener('scroll', function () {
+      updateAnchors();
+    }, { passive: true });
+
+    window.addEventListener('resize', function () {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+      buildGrid();
+      updateAnchors();
+    });
+
+    /* Elementor late render */
+    document.addEventListener('elementor/frontend/init', function () {
+      setTimeout(updateAnchors, 700);
+    });
+
+    /* Reduced motion — skip animation entirely */
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      canvas.style.display = 'none';
+      return;
     }
 
-    /* Wormhole shows on all devices (tappable on mobile) */
-    Wormhole.init();
+    requestAnimationFrame(tick);
   }
 
   if (document.readyState === 'loading') {
