@@ -1,85 +1,120 @@
 /* ════════════════════════════════════════════════════════
-   حرفو v9.1 — Galaxy Jelly Ball
+   حرفو v10 — Intelligent Galaxy Mascot
    ════════════════════════════════════════════════════════ */
 
-/* ── Root overlay ── */
 #h-root {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 2147483640;
-  overflow: visible;   /* must be visible — overflow:hidden clips the glow */
+  overflow: visible;
+  /* CSS vars adjusted by JS based on site theme */
+  --hcol-a: #7C3AED;
+  --hcol-b: #2D1B6E;
+  --hcol-c: #0D0A28;
+  --hcol-glow: rgba(109,40,217,.55);
 }
 
-/* ── Character wrapper ── */
+/* ── Wrapper ── */
 #h-w {
   position: absolute;
-  width: 120px;
-  height: 120px;
+  width: 100px; height: 100px;
   pointer-events: all;
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
   touch-action: none;
-  /* hidden until JS sets position — prevents flash at (0,0) */
   opacity: 0;
-  transition: opacity .4s ease;
+  transition: opacity .5s ease;
 }
 #h-w.h-ready { opacity: 1; }
 
-/* ── Outer glow (separate element so squish doesn't affect it) ── */
+/* ── Glow ── */
 #h-glow {
   position: absolute;
-  width: 100px; height: 100px;
+  width: 80px; height: 80px;
   top: 10px; left: 10px;
   border-radius: 50%;
-  background: transparent;
   pointer-events: none;
   animation: glowPulse 3.6s ease-in-out infinite;
 }
 @keyframes glowPulse {
-  0%,100% { box-shadow: 0 0 16px 5px rgba(109,40,217,.55), 0 0 44px 14px rgba(109,40,217,.2),  0 0 75px 20px rgba(43,207,192,.1);  }
-  50%     { box-shadow: 0 0 24px 9px rgba(109,40,217,.78), 0 0 60px 20px rgba(109,40,217,.35), 0 0 100px 28px rgba(43,207,192,.18); }
+  0%,100% { box-shadow: 0 0 14px 4px var(--hcol-glow), 0 0 38px 10px rgba(109,40,217,.18); }
+  50%     { box-shadow: 0 0 22px 7px var(--hcol-glow), 0 0 56px 16px rgba(109,40,217,.32); }
 }
 
-/* ── Jelly Ball ── */
+/* ── Ball (galaxy, the "rest" shape) ── */
 #h-ball {
   position: absolute;
-  width: 80px; height: 80px;
-  top: 20px; left: 20px;
+  width: 64px; height: 64px;
+  top: 18px; left: 18px;
   border-radius: 50%;
   background: radial-gradient(circle at 38% 32%,
-    #7C3AED 0%, #2D1B6E 38%, #0D0A28 76%, #050714 100%);
+    var(--hcol-a) 0%,
+    var(--hcol-b) 38%,
+    var(--hcol-c) 76%,
+    #050714 100%);
   border: 1px solid rgba(139,92,246,.45);
   overflow: hidden;
   transform-origin: center center;
   will-change: transform;
+  transition: border-radius .35s, background .8s;
 }
 
-/* ── Rotating galaxy arm ── */
+/* ── Shapes (morphs via data-shape) ── */
+#h-ball[data-shape="ball"]      { border-radius: 50%; }
+#h-ball[data-shape="eye"]       { border-radius: 50% 50% 45% 45% / 50% 50% 60% 60%; }
+#h-ball[data-shape="pill"]      { border-radius: 32px; }
+#h-ball[data-shape="square"]    { border-radius: 14px; }
+#h-ball[data-shape="diamond"]   { border-radius: 8px; }
+#h-ball[data-shape="droplet"]   { border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+#h-ball[data-shape="reader"]    { border-radius: 14px; width: 52px; height: 72px; top: 14px; left: 24px; }
+
+/* Hide face on icon-only shapes */
+#h-ball[data-shape="arrow"]    #h-face,
+#h-ball[data-shape="magnify"]  #h-face,
+#h-ball[data-shape="cart"]     #h-face,
+#h-ball[data-shape="heart"]    #h-face,
+#h-ball[data-shape="bulb"]     #h-face { opacity: .15; }
+
+/* Icon overlay (visible on icon shapes) */
+#h-icon {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .25s;
+}
+#h-ball[data-shape="arrow"]    #h-icon,
+#h-ball[data-shape="magnify"]  #h-icon,
+#h-ball[data-shape="cart"]     #h-icon,
+#h-ball[data-shape="heart"]    #h-icon,
+#h-ball[data-shape="bulb"]     #h-icon { opacity: 1; }
+
+/* ── Galaxy arm ── */
 #h-arm {
   position: absolute;
   inset: -15%;
   border-radius: 50%;
   background: conic-gradient(
     from 0deg,
-    transparent         0deg,
+    transparent 0deg,
     rgba(139,92,246,.55) 40deg,
     rgba(167,139,250,.35) 70deg,
-    transparent         110deg,
-    rgba(236,72,153,.3)  180deg,
-    transparent         220deg,
+    transparent 110deg,
+    rgba(236,72,153,.3) 180deg,
+    transparent 220deg,
     rgba(96,165,250,.28) 280deg,
-    transparent         320deg,
+    transparent 320deg,
     rgba(139,92,246,.45) 345deg,
-    transparent         360deg
+    transparent 360deg
   );
-  animation: armSpin 20s linear infinite;
+  animation: armSpin 22s linear infinite;
   mix-blend-mode: screen;
 }
-@keyframes armSpin {
-  to { transform: rotate(360deg); }
-}
+@keyframes armSpin { to { transform: rotate(360deg); } }
 
 /* ── Stars ── */
 #h-stars { position: absolute; inset: 0; border-radius: 50%; }
@@ -90,7 +125,7 @@
   animation: twinkle 2.2s ease-in-out infinite alternate;
 }
 @keyframes twinkle {
-  from { opacity: .85; transform: scale(1);   }
+  from { opacity: .85; transform: scale(1); }
   to   { opacity: .08; transform: scale(.35); }
 }
 
@@ -101,22 +136,21 @@
   border-radius: 50%;
   background:
     radial-gradient(circle at 25% 62%, rgba(236,72,153,.22) 0%, transparent 48%),
-    radial-gradient(circle at 74% 34%, rgba(96,165,250,.20) 0%, transparent 42%),
-    radial-gradient(circle at 50% 50%, rgba(167,139,250,.16) 0%, transparent 55%);
+    radial-gradient(circle at 74% 34%, rgba(96,165,250,.20) 0%, transparent 42%);
   mix-blend-mode: screen;
   animation: nebDrift 9s ease-in-out infinite alternate;
 }
 @keyframes nebDrift {
-  from { transform: translate(0,0) rotate(0deg);    }
+  from { transform: translate(0,0) rotate(0deg); }
   to   { transform: translate(3px,2px) rotate(14deg); }
 }
 
-/* ── Sheen / highlight ── */
+/* ── Sheen ── */
 #h-sheen {
   position: absolute;
-  width: 28px; height: 18px;
-  top: 10px; left: 13px;
-  background: radial-gradient(ellipse, rgba(255,255,255,.3) 0%, transparent 70%);
+  width: 22px; height: 14px;
+  top: 8px; left: 11px;
+  background: radial-gradient(ellipse, rgba(255,255,255,.32) 0%, transparent 70%);
   border-radius: 50%;
   transform: rotate(-18deg);
   pointer-events: none;
@@ -127,121 +161,101 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
+  transition: opacity .25s;
 }
 
 .h-eye {
   position: absolute;
-  width: 20px; height: 20px;
+  width: 17px; height: 17px;
   border-radius: 50%;
   background: white;
   box-shadow: 0 0 5px rgba(255,255,255,.7);
   transition: width .25s, height .25s, top .25s, left .25s;
 }
-#h-el { left: 12px; top: 26px; }
-#h-er { left: 48px; top: 26px; }
+#h-el { left: 10px; top: 21px; }
+#h-er { left: 37px; top: 21px; }
 
 .h-pu {
   position: absolute;
-  width: 10px; height: 10px;
+  width: 9px; height: 9px;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, #4C1D95, #0D0A28);
-  top: 5px; left: 5px;
+  top: 4px; left: 4px;
   will-change: transform;
 }
 .h-sh {
   position: absolute;
-  width: 5px; height: 5px;
+  width: 4px; height: 4px;
   border-radius: 50%;
   background: white;
-  top: 3px; left: 3px;
+  top: 2px; left: 2px;
 }
 
 #h-mo {
   position: absolute;
-  left: 50%;
+  left: 50%; bottom: 12px;
   transform: translateX(-50%);
-  bottom: 14px;
-  width: 22px; height: 10px;
-  border-bottom: 3px solid rgba(20,10,60,.75);
-  border-radius: 0 0 11px 11px;
+  width: 18px; height: 8px;
+  border-bottom: 2.5px solid rgba(20,10,60,.78);
+  border-radius: 0 0 9px 9px;
   transition: all .35s cubic-bezier(.34,1.56,.64,1);
 }
 
-/* ══ MOODS ══ */
-/* happy */
+/* ── Moods ── */
 #h-ball[data-mood="happy"] #h-mo {
-  width: 30px; height: 14px;
-  border-radius: 0 0 15px 15px;
-  bottom: 11px;
+  width: 26px; height: 12px;
+  border-radius: 0 0 13px 13px;
+  bottom: 9px;
 }
-#h-ball[data-mood="happy"] .h-eye { width: 22px; height: 22px; }
-#h-ball[data-mood="happy"] #h-el  { left: 11px; top: 25px; }
-#h-ball[data-mood="happy"] #h-er  { left: 47px; top: 25px; }
+#h-ball[data-mood="happy"] .h-eye { width: 19px; height: 19px; }
+#h-ball[data-mood="happy"] #h-el  { left: 9px;  top: 20px; }
+#h-ball[data-mood="happy"] #h-er  { left: 36px; top: 20px; }
 
-/* scared */
-#h-ball[data-mood="scared"] .h-eye { width: 24px; height: 24px; }
-#h-ball[data-mood="scared"] #h-el  { left: 10px; top: 23px; }
-#h-ball[data-mood="scared"] #h-er  { left: 46px; top: 23px; }
+#h-ball[data-mood="scared"] .h-eye { width: 21px; height: 21px; }
+#h-ball[data-mood="scared"] #h-el  { left: 8px;  top: 19px; }
+#h-ball[data-mood="scared"] #h-er  { left: 35px; top: 19px; }
 #h-ball[data-mood="scared"] #h-mo {
-  width: 14px; height: 7px;
-  border-bottom: 3px solid rgba(20,10,60,.75);
-  border-radius: 0 0 7px 7px;
+  width: 11px; height: 6px;
+  border-radius: 0 0 6px 6px;
 }
 
-/* sad */
+#h-ball[data-mood="curious"] .h-eye { width: 19px; height: 19px; }
+#h-ball[data-mood="curious"] #h-el  { left: 9px;  top: 20px; }
+#h-ball[data-mood="curious"] #h-er  { left: 36px; top: 20px; }
+
 #h-ball[data-mood="sad"] #h-mo {
   border-bottom: none;
-  border-top: 3px solid rgba(20,10,60,.75);
-  border-radius: 11px 11px 0 0;
-  bottom: 13px;
-}
-
-/* sleeping */
-#h-ball[data-mood="sleeping"] .h-eye {
-  height: 7px;
-  border-radius: 50% 50% 0 0;
-}
-#h-ball[data-mood="sleeping"] .h-pu { top: 0; }
-#h-ball[data-mood="sleeping"] #h-mo {
-  width: 18px; height: 0;
-  border-radius: 0;
-  bottom: 16px;
-}
-#h-ball[data-mood="sleeping"] #h-arm { animation-duration: 40s; }
-
-/* curious */
-#h-ball[data-mood="curious"] .h-eye { width: 22px; height: 22px; }
-#h-ball[data-mood="curious"] #h-el  { left: 11px; top: 25px; }
-#h-ball[data-mood="curious"] #h-er  { left: 47px; top: 25px; }
-
-/* sheltered */
-#h-ball[data-mood="sheltered"] #h-mo {
-  width: 28px; height: 13px;
-  border-radius: 0 0 14px 14px;
+  border-top: 2.5px solid rgba(20,10,60,.78);
+  border-radius: 9px 9px 0 0;
   bottom: 11px;
 }
 
-/* ══ TIME OF DAY ══ */
-#h-ball[data-time="morning"] {
-  background: radial-gradient(circle at 38% 32%,
-    #A855F7 0%, #4C1D95 38%, #1E1B4B 76%, #0D0A28 100%);
+#h-ball[data-mood="sleeping"] .h-eye { height: 6px; border-radius: 50% 50% 0 0; }
+#h-ball[data-mood="sleeping"] .h-pu  { top: 0; }
+#h-ball[data-mood="sleeping"] #h-mo  { width: 14px; height: 0; border-radius: 0; bottom: 14px; }
+#h-ball[data-mood="sleeping"] #h-arm { animation-duration: 40s; }
+
+#h-ball[data-mood="reading"] .h-eye  { height: 11px; }
+#h-ball[data-mood="reading"] #h-mo   { width: 12px; bottom: 14px; height: 4px; }
+
+#h-ball[data-mood="sheltered"] #h-mo {
+  width: 24px; height: 11px;
+  border-radius: 0 0 12px 12px;
+  bottom: 9px;
 }
-#h-ball[data-time="evening"] {
-  background: radial-gradient(circle at 38% 32%,
-    #9333EA 0%, #3B1C6E 38%, #1B0B2E 76%, #0A0514 100%);
-}
-#h-ball[data-time="night"] {
-  background: radial-gradient(circle at 38% 32%,
-    #4C1D95 0%, #1E1B4B 38%, #080B1A 76%, #020408 100%);
-}
-#h-ball[data-time="night"]   .h-star { animation-duration: 1s; }
+
+/* ── Time of day ── */
+#h-ball[data-time="morning"]   { --hcol-a: #A855F7; }
+#h-ball[data-time="evening"]   { --hcol-a: #9333EA; }
+#h-ball[data-time="night"]     { --hcol-a: #4C1D95; --hcol-b: #1E1B4B; }
+#h-ball[data-time="night"] .h-star   { animation-duration: 1s; }
 #h-ball[data-time="morning"] .h-star { animation-duration: 3s; }
 
-/* ══ RAIN ══ */
+/* ── Rain ── */
 #h-rain {
   position: absolute;
-  top: 20px; left: 20px;
-  width: 80px; height: 80px;
+  top: 18px; left: 18px;
+  width: 64px; height: 64px;
   border-radius: 50%;
   overflow: hidden;
   pointer-events: none;
@@ -251,30 +265,26 @@
   width: 1.5px;
   background: linear-gradient(to bottom, transparent, rgba(147,197,253,.72));
   border-radius: 0 0 2px 2px;
-  pointer-events: none;
 }
 
-/* ══ UMBRELLA ══ */
+/* ── Umbrella ── */
 #h-umb {
   position: fixed;
-  width: 72px; height: 55px;
+  width: 62px; height: 48px;
   cursor: grab;
   display: none;
   z-index: 2147483642;
   pointer-events: all;
   filter: drop-shadow(0 4px 10px rgba(0,0,0,.35));
   transition: filter .2s, opacity .4s;
-  user-select: none;
-  -webkit-user-select: none;
   opacity: 0;
 }
 #h-umb.h-umb-show  { opacity: 1; }
-#h-umb:hover       { filter: drop-shadow(0 4px 18px rgba(43,207,192,.65)); }
-#h-umb.h-umb-cover { filter: drop-shadow(0 4px 24px rgba(43,207,192,.95)); }
+#h-umb.h-umb-cover { filter: drop-shadow(0 4px 22px rgba(43,207,192,.9)); }
 
-/* ══ PARTICLES ══ */
+/* ── Particles ── */
 #h-fx {
-  position: absolute;   /* relative to #h-root which = full viewport */
+  position: absolute;
   inset: 0;
   pointer-events: none;
   overflow: visible;
@@ -285,21 +295,21 @@
   line-height: 1;
   will-change: transform, opacity;
 }
-.h-pt-sp  { color: #FBBF24; font-size: 14px; text-shadow: 0 0 5px #FDE68A; }
-.h-pt-hrt { color: #F472B6; font-size: 13px; }
-.h-pt-zzz { color: rgba(167,139,250,.95); font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+.h-pt-sp  { color: #FBBF24; font-size: 13px; text-shadow: 0 0 5px #FDE68A; }
+.h-pt-hrt { color: #F472B6; font-size: 12px; }
+.h-pt-zzz { color: rgba(167,139,250,.95); font-size: 10px; font-weight: 700; }
+.h-pt-rd  { color: rgba(255,255,255,.85); font-size: 9px; font-weight: 700; }
 
-/* ══ EXIT-INTENT ARM ══ */
+/* ── Exit-intent arm ── */
 #h-arm-w {
   position: absolute;
-  width: 18px; height: 8px;
-  top: 8px; left: 50%;
-  margin-left: -9px;
-  background: #6D28D9;
+  width: 16px; height: 7px;
+  top: 6px; left: 50%;
+  margin-left: -8px;
+  background: var(--hcol-a, #6D28D9);
   border-radius: 4px;
   transform-origin: right center;
   opacity: 0;
-  pointer-events: none;
 }
 #h-arm-w.h-wave {
   opacity: 1;
@@ -309,3 +319,16 @@
   0%,100% { transform: rotate(-35deg); }
   50%     { transform: rotate(15deg);  }
 }
+
+/* ── Highlight overlay (when AI points at element) ── */
+.h-hilite {
+  position: absolute;
+  pointer-events: none;
+  border: 2px dashed var(--hcol-a, #7C3AED);
+  border-radius: 8px;
+  background: rgba(124,58,237,.06);
+  z-index: 2147483639;
+  opacity: 0;
+  transition: opacity .3s;
+}
+.h-hilite.h-hi-show { opacity: 1; }
