@@ -1,864 +1,842 @@
-/* ════════════════════════════════════════════════════════════════
-   حرفو v10 — Intelligent Galaxy Mascot
-   Modules: PageAI · ThemeSense · AnchorTracker · ShapeMorph
-            · Physics · Squish · PupilTrack · Rain · Umbrella · FX
-   Zero external dependencies.
-   ════════════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════
+   حرفو v10.1 — Galaxy Mascot JS (self-contained, no external deps)
+   ════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
 
-  /* ════════════════════════════════════════════════════════════
-     CONFIG & STATE
-     ════════════════════════════════════════════════════════════ */
+  /* ── Constants ── */
   var C = {
-    WRAP: 100, BALL: 64, BOFF: 18,
-    SK: 0.052, SD: 0.82, MSP: 18,
-    SQK: 0.18, SQD: 0.66, SQA: 0.30,
-    /* zones */
-    ZN: 400, ZT: 260, ZA: 165, ZF: 110, ZP: 62,
-    /* forces */
-    FF: 5.5, PF: 10,
-    /* timing */
-    SLP: 60000,
-    /* anchor follow */
-    ANCHOR_OFFSET: 26,
+    SK: 0.052, SD: 0.82, MSP: 18,          /* spring */
+    SQK: 0.18, SQD: 0.66, SQA: 0.30,       /* squish */
+    WI_MIN: 3200, WI_MAX: 7500,             /* wander interval ms */
+    WD_MIN: 0.18, WD_MAX: 0.76,            /* wander distance fraction */
+    NOTICE: 400, TEASE: 260, ALERT: 165,
+    FLEE: 110, PANIC: 62,
+    IDLE_SLEEP: 22000,
+    RAIN_DROPS: 14, RAIN_SPD_MIN: 280, RAIN_SPD_MAX: 520,
+    RAIN_HOURS: [6, 7, 8, 17, 18, 19, 20, 21],
+    FLOAT_AMP: 3.2, FLOAT_FREQ: 0.0008,
   };
 
+  /* ── State ── */
   var S = {
-    x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0,
-    sx: 1, sy: 1, sxv: 0, syv: 0,
-    mx: -9999, my: -9999,
-    plx: 0, ply: 0, prx: 0, pry: 0,
-    zone: 'far', mood: 'normal', shape: 'ball',
-    drag: false, dox: 0, doy: 0,
-    rain: false, shelter: false, sleeping: false,
-    idleAt: Date.now(),
-    lastZzz: 0,
-    /* anchor following */
-    anchorEl: null,
-    anchorSide: 'right',
-    anchorSticky: false,
-    /* umbrella */
-    ux: 0, uy: 0, udrag: false, udox: 0, udoy: 0,
+    x: 0, y: 0, vx: 0, vy: 0,
+    tx: 0, ty: 0,
+    sqx: 1, sqy: 1, sqvx: 0, sqvy: 0,
+    mx: -999, my: -999,
+    idle: 0, lastMove: 0,
+    sleeping: false,
+    nextWander: 0,
+    dragging: false, dragOx: 0, dragOy: 0,
+    mood: 'normal',
+    shape: 'ball',
+    perchEl: null, perchRect: null,
+    raining: false,
+    umbDrag: false, umbX: 0, umbY: 0,
+    umbVx: 0, umbVy: 0,
+    sheltered: false,
+    lastTick: 0,
+    booted: false,
+    pupLx: 4, pupLy: 4, pupRx: 4, pupRy: 4,
+    ptId: 0,
   };
 
-  var W, BALL, PL, PR, RAIN, UMB, FX, ARM_W, STARS, ICON, GLOW, ROOT;
-  var pageInfo = null;
-  var hiBox = null;
+  /* ── DOM refs ── */
+  var ROOT, W, BALL, GLOW, FACE, EL, ER, PL, PR, MO,
+      ARM, STARS, NEB, ICON, FX, RAIN, UMB, ARMW;
 
-  /* ── Utils ── */
-  function cl(v, a, b) { return v < a ? a : v > b ? b : v; }
-  function lr(a, b, t) { return a + (b - a) * t; }
-  function rn(a, b)    { return a + Math.random() * (b - a); }
-  function maxX() { return window.innerWidth  - C.WRAP - 6; }
-  function maxY() { return window.innerHeight - C.WRAP - 6; }
-  function bC()   { return { x: S.x + C.WRAP / 2, y: S.y + C.WRAP / 2 }; }
+  function grab() {
+    ROOT  = document.getElementById('harfo-root');
+    W     = document.getElementById('harfo-w');
+    BALL  = document.getElementById('harfo-ball');
+    GLOW  = document.getElementById('harfo-glow');
+    FACE  = document.getElementById('harfo-face');
+    EL    = document.getElementById('harfo-el');
+    ER    = document.getElementById('harfo-er');
+    PL    = document.getElementById('harfo-pl');
+    PR    = document.getElementById('harfo-pr');
+    MO    = document.getElementById('harfo-mo');
+    ARM   = document.getElementById('harfo-arm');
+    STARS = document.getElementById('harfo-stars');
+    NEB   = document.getElementById('harfo-neb');
+    ICON  = document.getElementById('harfo-icon');
+    FX    = document.getElementById('harfo-fx');
+    RAIN  = document.getElementById('harfo-rain');
+    UMB   = document.getElementById('harfo-umb');
+    ARMW  = document.getElementById('harfo-armw');
+    return !!(W && BALL && FX);
+  }
 
-  /* ════════════════════════════════════════════════════════════
-     MODULE: ThemeSense — sample site colors, apply to mascot
-     ════════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════
+     MODULE 1 — ThemeSense: reads site colors & Elementor kit
+     ══════════════════════════════════════════════════════ */
   var ThemeSense = (function () {
-    function rgbStr(str) {
-      var m = str && str.match(/rgba?\(([^)]+)\)/);
-      if (!m) return null;
-      var p = m[1].split(',').map(parseFloat);
-      return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+    function hexToRgb(h) {
+      h = h.replace('#','');
+      if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+      var n = parseInt(h, 16);
+      return { r: (n>>16)&255, g: (n>>8)&255, b: n&255 };
     }
-    function lum(c) { return 0.299*c.r + 0.587*c.g + 0.114*c.b; }
-    function isVivid(c) {
-      var mx = Math.max(c.r, c.g, c.b), mn = Math.min(c.r, c.g, c.b);
-      return mx - mn > 50 && mx > 80 && mx < 240;
-    }
-    function rgbToHex(c) {
-      var h = function (n) { return ('0' + (n | 0).toString(16)).slice(-2); };
-      return '#' + h(c.r) + h(c.g) + h(c.b);
-    }
-    function darken(c, f) {
-      return { r: c.r * f, g: c.g * f, b: c.b * f };
-    }
+    function luminance(r,g,b) { return 0.2126*r + 0.7152*g + 0.0722*b; }
 
-    function sample() {
+    function sampleDOM() {
       var candidates = [];
-      var selectors = [
-        'header', '.site-header', '#masthead', '.main-navigation',
-        '.elementor-button', '.button', '.btn-primary',
-        '.wp-block-button__link', 'a.button',
-        '[class*="primary"]', '[class*="brand"]'
-      ];
-      for (var i = 0; i < selectors.length; i++) {
-        var els = document.querySelectorAll(selectors[i]);
-        for (var j = 0; j < Math.min(els.length, 3); j++) {
-          var cs = getComputedStyle(els[j]);
-          [cs.backgroundColor, cs.borderColor, cs.color].forEach(function (s) {
-            var c = rgbStr(s);
-            if (c && c.a > 0.3 && isVivid(c)) candidates.push(c);
-          });
+      var els = document.querySelectorAll(
+        '.elementor-widget-container,[class*="bg-"],[style*="background"],' +
+        'header,nav,.site-header,.elementor-section'
+      );
+      for (var i = 0; i < Math.min(els.length, 40); i++) {
+        var cs = window.getComputedStyle(els[i]);
+        var bg = cs.backgroundColor;
+        var m = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+        if (m) {
+          var r = +m[1], g = +m[2], b = +m[3];
+          if (r+g+b > 30 && !(r>230&&g>230&&b>230)) candidates.push({r:r,g:g,b:b});
         }
       }
-      if (!candidates.length) return null;
-      /* Pick the most vivid */
-      candidates.sort(function (a, b) {
-        var ar = Math.max(a.r, a.g, a.b) - Math.min(a.r, a.g, a.b);
-        var br = Math.max(b.r, b.g, b.b) - Math.min(b.r, b.g, b.b);
-        return br - ar;
-      });
-      return candidates[0];
+      return candidates;
     }
 
     function apply() {
-      var c = sample();
-      if (!c || !ROOT) return null;
-      var ca = c;
-      var cb = darken(c, 0.42);
-      var cc = darken(c, 0.15);
-      ROOT.style.setProperty('--hcol-a', rgbToHex(ca));
-      ROOT.style.setProperty('--hcol-b', rgbToHex(cb));
-      ROOT.style.setProperty('--hcol-c', rgbToHex(cc));
-      ROOT.style.setProperty('--hcol-glow',
-        'rgba(' + (ca.r|0) + ',' + (ca.g|0) + ',' + (ca.b|0) + ',0.55)');
-      return ca;
+      var colors = [];
+      /* 1. Elementor kit colors from PHP (passed via HC) */
+      if (typeof HC !== 'undefined' && HC.elementor && HC.elementor.kit && HC.elementor.kit.length) {
+        for (var i = 0; i < HC.elementor.kit.length; i++) {
+          colors.push(hexToRgb(HC.elementor.kit[i]));
+        }
+      }
+      /* 2. DOM sample fallback */
+      if (colors.length < 2) {
+        colors = colors.concat(sampleDOM());
+      }
+      if (!colors.length) return;
+
+      /* Pick darkest vibrant candidate as primary accent */
+      colors.sort(function(a,b){ return luminance(a.r,a.g,a.b) - luminance(b.r,b.g,b.b); });
+      var p = colors[0];
+      if (luminance(p.r,p.g,p.b) < 5) p = {r:124,g:58,b:237};
+
+      var hcA = 'rgb('+p.r+','+p.g+','+p.b+')';
+      var hcB = 'rgb('+Math.round(p.r*.45)+','+Math.round(p.g*.35)+','+Math.round(p.b*.55)+')';
+      var hcC = 'rgb('+Math.round(p.r*.1)+','+Math.round(p.g*.08)+','+Math.round(p.b*.16)+')';
+      var hcG = 'rgba('+p.r+','+p.g+','+p.b+',.58)';
+
+      ROOT.style.setProperty('--hc-a', hcA);
+      ROOT.style.setProperty('--hc-b', hcB);
+      ROOT.style.setProperty('--hc-c', hcC);
+      ROOT.style.setProperty('--hc-glow', hcG);
     }
 
     return { apply: apply };
   })();
 
-  /* ════════════════════════════════════════════════════════════
-     MODULE: PageAI — understand what the page contains
-     ════════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════
+     MODULE 2 — PageAI: understands page type and Elementor content
+     ══════════════════════════════════════════════════════ */
   var PageAI = (function () {
+    var info = {
+      type: 'generic', widgets: [], headings: [], images: [],
+      buttons: [], hasHero: false, hasProducts: false,
+      elementorTemplate: '', wordCount: 0,
+    };
+
     function analyze() {
-      var info = {
-        type: 'generic',
-        article: null,
-        productImage: null,
-        headings: [],
-        ctas: [],
-        paragraphs: [],
-        images: []
-      };
+      var hc = (typeof HC !== 'undefined') ? HC : {};
 
-      var body = document.body;
-      if (!body) return info;
+      if (hc.is404)           info.type = '404';
+      else if (hc.isSearch)   info.type = 'search';
+      else if (hc.isProduct)  info.type = 'product';
+      else if (hc.isShop)     info.type = 'shop';
+      else if (hc.isSingle)   info.type = 'article';
+      else if (hc.isHome)     info.type = 'home';
+      else info.type = (hc.postType) || 'generic';
 
-      /* Article detection */
-      var art =
-        document.querySelector('article .entry-content') ||
-        document.querySelector('article .post-content') ||
-        document.querySelector('article') ||
-        document.querySelector('.entry-content') ||
-        document.querySelector('main');
-      if (art) {
-        info.article = art;
-        info.type = 'article';
+      /* Elementor widget scan */
+      info.widgets = [];
+      var wEls = document.querySelectorAll('[class*="elementor-widget-"]');
+      for (var i = 0; i < wEls.length; i++) {
+        var m = wEls[i].className.match(/elementor-widget-([\w-]+)/);
+        if (m) info.widgets.push(m[1]);
       }
 
-      /* WooCommerce product */
-      var pimg = document.querySelector(
-        '.woocommerce-product-gallery__image img, ' +
-        '.product .images img, ' +
-        '.product img.wp-post-image'
+      /* Headings */
+      info.headings = [];
+      var hEls = document.querySelectorAll(
+        '.elementor-heading-title,.elementor-widget-heading h1,.elementor-widget-heading h2,h1,h2'
       );
-      if (pimg) { info.productImage = pimg; info.type = 'product'; }
-
-      /* Headings inside article preferred */
-      var hScope = info.article || body;
-      info.headings = Array.prototype.slice.call(
-        hScope.querySelectorAll('h1, h2, h3')
-      ).filter(function (h) { return h.offsetHeight > 0; });
-
-      /* Paragraphs in article */
-      if (info.article) {
-        info.paragraphs = Array.prototype.slice.call(
-          info.article.querySelectorAll('p')
-        ).filter(function (p) {
-          return p.offsetHeight > 0 && p.textContent.trim().length > 40;
-        });
+      for (var j = 0; j < hEls.length; j++) {
+        var t = (hEls[j].textContent || '').trim();
+        if (t) info.headings.push(t.substring(0,80));
       }
 
-      /* CTAs */
-      info.ctas = Array.prototype.slice.call(
-        document.querySelectorAll(
-          'button, .button, .btn, a.wp-block-button__link, ' +
-          'input[type="submit"], .single_add_to_cart_button'
-        )
-      ).filter(function (b) {
-        return b.offsetHeight > 0 && b.offsetWidth > 30;
-      }).slice(0, 8);
+      /* Images */
+      info.images = [];
+      var iEls = document.querySelectorAll(
+        '.elementor-widget-image img,.elementor-image img,article img,.wp-post-image'
+      );
+      for (var k = 0; k < iEls.length; k++) {
+        if (iEls[k].src) info.images.push(iEls[k].src);
+      }
 
-      /* Big images */
-      info.images = Array.prototype.slice.call(
-        document.querySelectorAll('img')
-      ).filter(function (img) {
-        return img.offsetWidth > 200 && img.offsetHeight > 150;
-      }).slice(0, 10);
+      /* Buttons */
+      info.buttons = [];
+      var bEls = document.querySelectorAll(
+        '.elementor-button,.elementor-widget-button a,.wp-block-button__link,button'
+      );
+      for (var l = 0; l < bEls.length; l++) {
+        var bt = (bEls[l].textContent || '').trim();
+        if (bt) info.buttons.push(bt.substring(0,40));
+      }
+
+      /* Hero detection */
+      info.hasHero = !!(
+        document.querySelector('.elementor-section.elementor-section-height-full') ||
+        document.querySelector('.e-con[class*="hero"]') ||
+        document.querySelector('[class*="hero-section"]')
+      );
+
+      /* Products */
+      info.hasProducts = !!(
+        document.querySelector('.products') ||
+        document.querySelector('.elementor-widget-woocommerce-products') ||
+        document.querySelector('.woocommerce-loop-product__title')
+      );
+
+      /* Word count */
+      var texts = document.querySelectorAll(
+        '.elementor-widget-text-editor p,.elementor-widget-text-editor div,article p'
+      );
+      var wc = 0;
+      for (var n = 0; n < texts.length; n++) {
+        wc += (texts[n].textContent || '').split(/\s+/).length;
+      }
+      info.wordCount = wc;
+      info.elementorTemplate = (hc.elementor) ? (hc.elementor.template || '') : '';
 
       return info;
     }
 
-    return { analyze: analyze };
+    function get() { return info; }
+
+    function reactToPage() {
+      var i = info;
+      if (i.type === '404')                     setMood('sad');
+      else if (i.type === 'product' || i.hasProducts) setMood('curious');
+      else if (i.type === 'home' && i.hasHero)  setMood('happy');
+      else if (i.wordCount > 800)               setMood('reading');
+      else                                       setMood('normal');
+    }
+
+    return { analyze: analyze, get: get, reactToPage: reactToPage };
   })();
 
-  /* ════════════════════════════════════════════════════════════
-     MODULE: ShapeMorph — transform the ball
-     ════════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════
+     MODULE 3 — ShapeMorph: icon SVG paths
+     ══════════════════════════════════════════════════════ */
   var ShapeMorph = (function () {
     var ICONS = {
-      magnify:
-        '<circle cx="32" cy="32" r="14" fill="none" stroke="white" stroke-width="4"/>' +
-        '<line x1="44" y1="44" x2="58" y2="58" stroke="white" stroke-width="5" stroke-linecap="round"/>',
-      arrow:
-        '<path d="M40 14 L40 60 M40 60 L26 46 M40 60 L54 46" stroke="white" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
-      heart:
-        '<path d="M40 60 C 20 46 16 32 24 22 C 32 14 40 22 40 28 C 40 22 48 14 56 22 C 64 32 60 46 40 60 Z" fill="#F472B6"/>',
-      cart:
-        '<path d="M16 22 L22 22 L30 50 L58 50 M30 50 L26 30 L60 30 L55 46 L30 46" stroke="white" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
-        '<circle cx="32" cy="58" r="4" fill="white"/>' +
-        '<circle cx="52" cy="58" r="4" fill="white"/>',
-      bulb:
-        '<path d="M40 18 C 28 18 22 28 22 36 C 22 42 26 46 28 50 L 52 50 C 54 46 58 42 58 36 C 58 28 52 18 40 18 Z" fill="#FBBF24" stroke="white" stroke-width="2"/>' +
-        '<rect x="30" y="52" width="20" height="5" rx="2" fill="white"/>' +
-        '<rect x="32" y="59" width="16" height="3" rx="1.5" fill="white" opacity=".8"/>',
+      magnify: '<circle cx="26" cy="26" r="16" stroke="white" stroke-width="5" fill="none"/><line x1="37" y1="37" x2="54" y2="54" stroke="white" stroke-width="5" stroke-linecap="round"/>',
+      cart:    '<path d="M8 12h48l-6 24H20L8 12z" stroke="white" stroke-width="4" fill="none"/><circle cx="24" cy="44" r="4" fill="white"/><circle cx="42" cy="44" r="4" fill="white"/>',
+      heart:   '<path d="M32 50 C18 40 8 32 8 22 C8 14 14 10 20 10 C25 10 30 14 32 18 C34 14 39 10 44 10 C50 10 56 14 56 22 C56 32 46 40 32 50Z" fill="rgba(244,114,182,.9)"/>',
+      bulb:    '<circle cx="32" cy="28" r="14" stroke="#FBBF24" stroke-width="4" fill="none"/><path d="M26 44h12M28 50h8" stroke="#FBBF24" stroke-width="3" stroke-linecap="round"/>',
+      arrow:   '<path d="M16 32h32M36 20l12 12-12 12" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
     };
+    var current = 'ball';
 
     function to(shape) {
-      if (S.shape === shape || !BALL) return;
-      S.shape = shape;
-      BALL.setAttribute('data-shape', shape);
-      if (ICON) {
-        ICON.innerHTML = ICONS[shape] || '';
+      if (current === shape) return;
+      current = shape;
+      BALL.dataset.shape = (shape === 'ball') ? '' : shape;
+      if (ICONS[shape]) {
+        ICON.innerHTML = ICONS[shape];
+        ICON.style.opacity = '1';
+      } else {
+        ICON.style.opacity = '0';
+        setTimeout(function(){ ICON.innerHTML = ''; }, 400);
       }
-      /* squish accent on transform */
-      S.sxv = -0.5; S.syv = 0.5;
     }
 
-    return { to: to };
+    function get() { return current; }
+    return { to: to, get: get };
   })();
 
-  /* ════════════════════════════════════════════════════════════
-     MODULE: AnchorTracker — find best content to perch beside
-     ════════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════
+     MODULE 4 — AnchorTracker: perch beside interesting DOM elements
+     ══════════════════════════════════════════════════════ */
   var AnchorTracker = (function () {
-    var lastScan = 0;
-    var current = null;
+    var SELECTORS = [
+      '.elementor-heading-title',
+      '.elementor-widget-image img',
+      '.elementor-button',
+      '.elementor-widget-text-editor p',
+      '.woocommerce-loop-product__title',
+      '.wp-post-image',
+      'h1','h2','h3',
+      'article p',
+      'figure img',
+    ];
 
-    function visible(el) {
-      if (!el) return null;
+    var perchTimer = 0;
+    var perchActive = false;
+
+    function scoreEl(el) {
       var r = el.getBoundingClientRect();
-      if (r.height < 10 || r.width < 10) return null;
-      var vh = window.innerHeight;
-      var inView = r.bottom > 60 && r.top < vh - 60;
-      if (!inView) return null;
-      return r;
+      var vh = window.innerHeight, vw = window.innerWidth;
+      if (r.bottom < 0 || r.top > vh || r.right < 0 || r.left > vw) return 0;
+      if (!r.height || !r.width) return 0;
+      var visH = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0)) / r.height;
+      var visW = Math.max(0, Math.min(r.right, vw) - Math.max(r.left, 0)) / r.width;
+      var vis = visH * visW;
+      var cx = vw/2, cy = vh/2;
+      var ecx = r.left + r.width/2, ecy = r.top + r.height/2;
+      var dist = Math.sqrt((ecx-cx)*(ecx-cx)+(ecy-cy)*(ecy-cy));
+      var distFactor = 1 - Math.min(dist / (vw * 0.8), 1);
+      return vis * 0.6 + distFactor * 0.4;
     }
 
-    /* Pick the most visible element from a list (prefer ones near
-       vertical center of viewport) */
-    function best(list) {
-      if (!list || !list.length) return null;
-      var vh = window.innerHeight;
-      var mid = vh * 0.42;
-      var best = null, bestScore = -1;
-      for (var i = 0; i < list.length; i++) {
-        var r = visible(list[i]);
-        if (!r) continue;
-        var elMid = r.top + r.height / 2;
-        var dist  = Math.abs(elMid - mid);
-        var visibleAmt = Math.min(r.bottom, vh) - Math.max(r.top, 0);
-        var score = visibleAmt - dist * 0.5;
-        if (score > bestScore) { bestScore = score; best = { el: list[i], rect: r }; }
+    function pick() {
+      var best = null, bestScore = 0.25;
+      for (var s = 0; s < SELECTORS.length; s++) {
+        var els = document.querySelectorAll(SELECTORS[s]);
+        for (var i = 0; i < els.length; i++) {
+          var sc = scoreEl(els[i]);
+          if (sc > bestScore) { bestScore = sc; best = els[i]; }
+        }
       }
       return best;
     }
 
-    /* Compute perch position (wrapper top-left) next to element */
-    function perchFor(elInfo) {
-      if (!elInfo) return null;
-      var r  = elInfo.rect;
-      var vw = window.innerWidth;
-      var vh = window.innerHeight;
-
-      /* Prefer right side; switch to left if not enough room */
-      var rightSpace = vw - r.right;
-      var leftSpace  = r.left;
-      var side, x;
-
-      if (rightSpace > C.WRAP + 24) {
-        side = 'right';
-        x = r.right + C.ANCHOR_OFFSET;
-      } else if (leftSpace > C.WRAP + 24) {
-        side = 'left';
-        x = r.left - C.WRAP - C.ANCHOR_OFFSET;
-      } else {
-        /* No side space → drop to corner */
-        side = 'corner';
-        x = vw - C.WRAP - 24;
-      }
-
-      /* Vertical: align mascot's center to element's center */
-      var y = r.top + r.height / 2 - C.WRAP / 2;
-      y = cl(y, 8, vh - C.WRAP - 8);
-      x = cl(x, 8, vw - C.WRAP - 8);
-
-      return { x: x, y: y, side: side, el: elInfo.el, rect: r };
-    }
-
-    function pick() {
-      if (!pageInfo) return null;
-
-      /* On product page → perch next to product image */
-      if (pageInfo.productImage) {
-        var pr = visible(pageInfo.productImage);
-        if (pr) return perchFor({ el: pageInfo.productImage, rect: pr });
-      }
-
-      /* On article → follow visible paragraph */
-      if (pageInfo.paragraphs && pageInfo.paragraphs.length) {
-        var p = best(pageInfo.paragraphs);
-        if (p) return perchFor(p);
-      }
-
-      /* Otherwise follow visible heading */
-      if (pageInfo.headings && pageInfo.headings.length) {
-        var h = best(pageInfo.headings);
-        if (h) return perchFor(h);
-      }
-
-      /* Otherwise hover near a visible image */
-      if (pageInfo.images && pageInfo.images.length) {
-        var im = best(pageInfo.images);
-        if (im) return perchFor(im);
-      }
-
-      return null;
+    function perchFor(el) {
+      if (!el) return;
+      var r = el.getBoundingClientRect();
+      var tw = (W && W.offsetWidth) ? W.offsetWidth : 100;
+      var tx = r.right + 12;
+      if (tx + tw > window.innerWidth - 20) tx = r.left - tw - 12;
+      var ty = r.top + r.height/2 - tw/2;
+      ty = Math.max(10, Math.min(ty, window.innerHeight - tw - 10));
+      S.tx = tx; S.ty = ty;
+      perchActive = true;
     }
 
     function update(force) {
+      if (S.dragging) return;
       var now = Date.now();
-      if (!force && now - lastScan < 250) return;
-      lastScan = now;
-
-      if (S.drag || S.zone === 'flee' || S.zone === 'panic') return;
-
-      var p = pick();
-      if (p) {
-        current = p;
-        S.tx = p.x; S.ty = p.y;
-        S.anchorEl = p.el; S.anchorSide = p.side;
-
-        /* Shape based on context */
-        if (p.el.tagName === 'IMG') {
-          ShapeMorph.to('magnify');
-        } else if (p.el.tagName === 'P') {
-          ShapeMorph.to('reader');
-          mood('reading');
-        } else if (/^H[1-3]$/.test(p.el.tagName)) {
-          ShapeMorph.to('ball');
-          mood('curious');
-        } else if (p.el === pageInfo.productImage) {
-          ShapeMorph.to('cart');
-        }
-      }
+      if (!force && now - perchTimer < 4000) return;
+      perchTimer = now;
+      var el = pick();
+      if (el) perchFor(el);
+      else perchActive = false;
     }
 
-    return { update: update, get: function () { return current; } };
+    function isActive() { return perchActive; }
+    function release() { perchActive = false; }
+
+    return { update: update, isActive: isActive, release: release };
   })();
 
-  /* ════════════════════════════════════════════════════════════
-     CORE: Mood / shape helpers
-     ════════════════════════════════════════════════════════════ */
-  function mood(m) {
-    if (!BALL || S.mood === m) return;
+  /* ══════════════════════════════════════════════════════
+     HELPERS
+     ══════════════════════════════════════════════════════ */
+  function setMood(m) {
+    if (S.mood === m) return;
     S.mood = m;
-    BALL.setAttribute('data-mood', m);
+    BALL.dataset.mood = m;
   }
 
-  function applyTime() {
-    if (!BALL) return;
-    var h = new Date().getHours();
-    var t = h >= 6 && h < 12 ? 'morning' :
-            h >= 12 && h < 18 ? 'afternoon' :
-            h >= 18 && h < 22 ? 'evening' : 'night';
-    BALL.setAttribute('data-time', t);
-    C.MSP = t === 'night' ? 11 : t === 'morning' ? 22 : 18;
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function rn(a, b) { return a + Math.random() * (b - a); }
+
+  function getHour() { return new Date().getHours(); }
+
+  function setTimeOfDay() {
+    var h = getHour();
+    var t = (h >= 5 && h < 12) ? 'morning' : (h >= 18 || h < 5) ? 'night' : 'day';
+    BALL.dataset.time = t;
   }
 
-  /* ════════════════════════════════════════════════════════════
-     PHYSICS
-     ════════════════════════════════════════════════════════════ */
-  function dMouse() {
-    if (S.mx < 0) return 1e9;
-    var c = bC();
-    return Math.hypot(S.mx - c.x, S.my - c.y);
-  }
-  function toZone(d) {
-    if (d < C.ZP) return 'panic';
-    if (d < C.ZF) return 'flee';
-    if (d < C.ZA) return 'alert';
-    if (d < C.ZT) return 'tease';
-    if (d < C.ZN) return 'notice';
-    return 'far';
-  }
-  function repulse() {
-    var c  = bC();
-    var dx = c.x - S.mx, dy = c.y - S.my;
-    var d  = Math.hypot(dx, dy) || 1;
-    var nx = dx / d, ny = dy / d;
-    if (d < C.ZP) {
-      var t = Math.pow((C.ZP - d) / C.ZP, 1.2);
-      S.vx += nx * t * C.PF; S.vy += ny * t * C.PF * 0.6;
-    } else {
-      var t2 = Math.pow((C.ZF - d) / C.ZF, 1.5);
-      S.vx += nx * t2 * C.FF; S.vy += ny * t2 * C.FF * 0.55;
-    }
-    S.sxv += ny * 0.5; S.syv += nx * 0.5;
-  }
-  function tickSquish(sp) {
-    var ux = sp > 0.2 ? S.vx / sp : 0;
-    var uy = sp > 0.2 ? S.vy / sp : 0;
-    var k  = cl(sp * 0.024, 0, C.SQA);
-    var tx = 1 + (ux * ux - uy * uy * 0.5) * k;
-    var ty = 1 + (uy * uy - ux * ux * 0.5) * k;
-    S.sxv = S.sxv * C.SQD + (tx - S.sx) * C.SQK;
-    S.syv = S.syv * C.SQD + (ty - S.sy) * C.SQK;
-    S.sx = cl(S.sx + S.sxv, 0.6, 1.5);
-    S.sy = cl(S.sy + S.syv, 0.6, 1.5);
-  }
-  function tickPupils() {
-    var tx = 0, ty = 0;
-    if (S.mx > 0 && S.mood !== 'sleeping') {
-      var c = bC();
-      var dx = S.mx - c.x, dy = S.my - c.y;
-      var d  = Math.hypot(dx, dy) || 1;
-      var r  = cl(d / 90, 0, 1) * 4;
-      tx = (dx / d) * r; ty = (dy / d) * r;
-    }
-    S.plx = lr(S.plx, tx, 0.14); S.ply = lr(S.ply, ty, 0.14);
-    S.prx = lr(S.prx, tx, 0.14); S.pry = lr(S.pry, ty, 0.14);
-  }
-
-  function onZone(prev, cur) {
-    if (cur === 'panic' || cur === 'flee') {
-      mood('scared');
-      if (cur === 'panic') { S.sxv = -1.1; S.syv = 1.1; }
-    } else if (cur === 'tease' || cur === 'notice') {
-      if (S.mood === 'normal' || S.mood === 'curious') mood('curious');
-    } else if (cur === 'far' && (prev === 'flee' || prev === 'panic')) {
-      mood('happy');
-      spark(6); hearts(2);
-      setTimeout(function () { mood('normal'); }, 1800);
-    }
-  }
-
-  /* ════════════════════════════════════════════════════════════
-     PARTICLES
-     ════════════════════════════════════════════════════════════ */
-  var pts = [];
-  function mkPt(ch, cls, x, y) {
-    if (!FX) return;
-    var e = document.createElement('div');
-    e.className = 'h-pt ' + cls;
-    e.textContent = ch;
-    e.style.left = x + 'px';
-    e.style.top  = y + 'px';
-    e._vx = rn(-2.5, 2.5);
-    e._vy = rn(-3.5, -1.2);
-    e._life = rn(600, 1100);
-    e._born = Date.now();
-    FX.appendChild(e);
-    pts.push(e);
-  }
-  function spark(n) {
-    var b = bC();
-    for (var i = 0; i < n; i++)
-      mkPt(['✦','✧','⋆','·'][0|rn(0,4)], 'h-pt-sp', b.x - 7, b.y - 7);
-  }
-  function hearts(n) {
-    var b = bC();
-    for (var i = 0; i < n; i++) mkPt('♥', 'h-pt-hrt', b.x - 6, b.y - 6);
-  }
-  function zzz() {
-    var b = bC();
-    mkPt(['z','Z','ᶻ'][0|rn(0,3)], 'h-pt-zzz', b.x + rn(-10,10), b.y - 35);
-  }
-  function tickPts() {
-    var now = Date.now();
-    pts = pts.filter(function (p) {
-      var age = now - p._born;
-      if (age > p._life) { p.remove(); return false; }
-      p._vy += 0.065;
-      p.style.left = (parseFloat(p.style.left) + p._vx) + 'px';
-      p.style.top  = (parseFloat(p.style.top)  + p._vy) + 'px';
-      var t = age / p._life;
-      p.style.opacity   = (1 - t * t).toFixed(2);
-      p.style.transform = 'scale(' + (1 - t * 0.45).toFixed(2) + ')';
-      return true;
-    });
-  }
-
-  /* ════════════════════════════════════════════════════════════
-     RAIN + UMBRELLA
-     ════════════════════════════════════════════════════════════ */
-  var rdrops = [], rInt = null;
-  function startRain() {
-    if (S.rain) return;
-    S.rain = true; mood('sad');
-    rInt = setInterval(mkRDrop, 55);
-    setTimeout(showUmb, 2200);
-    setTimeout(stopRain, 20000);
-  }
-  function stopRain() {
-    if (!S.rain) return;
-    S.rain = false;
-    clearInterval(rInt); rInt = null;
-    rdrops.forEach(function (d) { try { d.remove(); } catch (e) {} });
-    rdrops = [];
-    hideUmb();
-    if (S.mood === 'sad' || S.mood === 'sheltered') {
-      mood('happy'); spark(5);
-      setTimeout(function () { mood('normal'); }, 1500);
-    }
-  }
-  function mkRDrop() {
-    if (!RAIN || S.shelter) return;
-    var d = document.createElement('div');
-    d.className = 'h-rdrop';
-    d.style.height = rn(8, 16) + 'px';
-    d.style.left   = rn(2, 58) + 'px';
-    d.style.top    = '-5px';
-    d._vy = rn(4, 7);
-    RAIN.appendChild(d);
-    rdrops.push(d);
-  }
-  function tickRain() {
-    rdrops = rdrops.filter(function (d) {
-      var y = parseFloat(d.style.top) + d._vy;
-      if (y > 66) { try { d.remove(); } catch (e) {} return false; }
-      d.style.top = y + 'px';
-      return true;
-    });
-  }
-  function showUmb() {
-    if (!UMB) return;
-    var c = bC();
-    S.ux = cl(c.x + 110, 10, window.innerWidth  - 70);
-    S.uy = cl(c.y - 30,  10, window.innerHeight - 56);
-    UMB.style.left    = S.ux + 'px';
-    UMB.style.top     = S.uy + 'px';
-    UMB.style.display = 'block';
-    setTimeout(function () { UMB.classList.add('h-umb-show'); }, 30);
-  }
-  function hideUmb() {
-    if (!UMB) return;
-    UMB.classList.remove('h-umb-show', 'h-umb-cover');
-    setTimeout(function () { if (!S.rain) UMB.style.display = 'none'; }, 420);
-    S.shelter = false;
-  }
-  function chkShelter() {
-    if (!S.rain || !UMB || UMB.style.display === 'none') return;
-    var c = bC();
-    var d = Math.hypot((S.ux + 31) - c.x, (S.uy + 24) - (c.y - 14));
-    if (d < 48) {
-      if (!S.shelter) {
-        S.shelter = true;
-        UMB.classList.add('h-umb-cover');
-        mood('sheltered');
-        hearts(4);
-        rdrops.forEach(function (d) { try { d.remove(); } catch (e) {} });
-        rdrops = [];
-      }
-    } else if (S.shelter) {
-      S.shelter = false;
-      UMB.classList.remove('h-umb-cover');
-      if (S.rain) mood('sad');
-    }
-  }
-  function schedRain() {
-    setTimeout(function () { startRain(); schedRain(); }, rn(5*60000, 14*60000));
-  }
-
-  /* ════════════════════════════════════════════════════════════
-     DOM update each frame
-     ════════════════════════════════════════════════════════════ */
-  function applyDOM() {
-    if (!W) return;
-    var sp2 = Math.hypot(S.vx, S.vy);
-    var fy = (!S.drag && sp2 < 0.5) ? Math.sin(Date.now() / 1320) * 3 : 0;
-    W.style.transform =
-      'translate(' + (S.x | 0) + 'px,' + ((S.y | 0) + fy).toFixed(1) + 'px)';
-    if (BALL)
-      BALL.style.transform =
-        'scaleX(' + S.sx.toFixed(3) + ') scaleY(' + S.sy.toFixed(3) + ')';
-    if (PL) PL.style.transform = 'translate(' + S.plx.toFixed(1) + 'px,' + S.ply.toFixed(1) + 'px)';
-    if (PR) PR.style.transform = 'translate(' + S.prx.toFixed(1) + 'px,' + S.pry.toFixed(1) + 'px)';
-  }
-
-  /* ════════════════════════════════════════════════════════════
-     MAIN TICK
-     ════════════════════════════════════════════════════════════ */
-  function tick() {
-    try {
-      if (!S.drag) {
-        var d = dMouse();
-        var z = toZone(d);
-        if (z !== S.zone) { onZone(S.zone, z); S.zone = z; }
-
-        if (z === 'flee' || z === 'panic') {
-          repulse();
-        } else if (z === 'alert') {
-          var c = bC();
-          var ax = c.x - S.mx, ay = c.y - S.my;
-          var ad = Math.hypot(ax, ay) || 1;
-          S.vx += (ax/ad) * 0.55; S.vy += (ay/ad) * 0.4;
-        }
-
-        /* spring */
-        S.vx = S.vx * C.SD + (S.tx - S.x) * C.SK;
-        S.vy = S.vy * C.SD + (S.ty - S.y) * C.SK;
-
-        var sp = Math.hypot(S.vx, S.vy);
-        if (sp > C.MSP) { S.vx = (S.vx/sp)*C.MSP; S.vy = (S.vy/sp)*C.MSP; }
-
-        var nx = S.x + S.vx, ny = S.y + S.vy;
-        var mxv = maxX(), myv = maxY();
-        if (nx < 4)   { S.vx *= -0.5; nx = 4;   S.sxv = -0.7; }
-        if (nx > mxv) { S.vx *= -0.5; nx = mxv; S.sxv = -0.7; }
-        if (ny < 4)   { S.vy *= -0.5; ny = 4;   S.syv = -0.7; }
-        if (ny > myv) { S.vy *= -0.5; ny = myv; S.syv = -0.7; }
-        S.x = nx; S.y = ny;
-
-        tickSquish(sp);
-      }
-
-      if (S.sleeping && Date.now() - S.lastZzz > 2400) {
-        S.lastZzz = Date.now(); zzz();
-      }
-
-      applyDOM();
-      tickPupils();
-      tickPts();
-      if (S.rain) tickRain();
-      chkShelter();
-    } catch (e) {}
-    requestAnimationFrame(tick);
-  }
-
-  /* ════════════════════════════════════════════════════════════
-     INTERACTIONS
-     ════════════════════════════════════════════════════════════ */
-  function initDrag() {
-    function ds(mx, my) {
-      S.drag = true; S.dox = mx - S.x; S.doy = my - S.y;
-      W.style.cursor = 'grabbing';
-      S.sxv = -0.7; S.syv = 0.7;
-    }
-    function dm(mx, my) {
-      if (!S.drag) return;
-      S.x = cl(mx - S.dox, 4, maxX());
-      S.y = cl(my - S.doy, 4, maxY());
-      S.tx = S.x; S.ty = S.y;
-      S.vx = 0; S.vy = 0;
-    }
-    function de() {
-      if (!S.drag) return;
-      S.drag = false;
-      W.style.cursor = 'pointer';
-      S.vy -= 2; S.sxv = 0.5; S.syv = -0.5;
-      /* after release, snap back to anchor */
-      setTimeout(function () { AnchorTracker.update(true); }, 800);
-    }
-    W.addEventListener('mousedown',  function (e) { if (!e.target.closest('button,a')) { e.preventDefault(); ds(e.clientX, e.clientY); }});
-    W.addEventListener('touchstart', function (e) { e.preventDefault(); ds(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
-    document.addEventListener('mousemove', function (e) { dm(e.clientX, e.clientY); });
-    document.addEventListener('touchmove', function (e) { if (S.drag) dm(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
-    document.addEventListener('mouseup',  de);
-    document.addEventListener('touchend', de);
-  }
-
-  function initUmbDrag() {
-    if (!UMB) return;
-    UMB.addEventListener('mousedown', function (e) {
-      e.preventDefault(); e.stopPropagation();
-      S.udrag = true; S.udox = e.clientX - S.ux; S.udoy = e.clientY - S.uy;
-    });
-    document.addEventListener('mousemove', function (e) {
-      if (!S.udrag) return;
-      S.ux = e.clientX - S.udox; S.uy = e.clientY - S.udoy;
-      UMB.style.left = S.ux + 'px'; UMB.style.top = S.uy + 'px';
-    });
-    document.addEventListener('mouseup', function () { S.udrag = false; });
-    UMB.addEventListener('touchstart', function (e) {
-      e.stopPropagation();
-      S.udrag = true;
-      S.udox = e.touches[0].clientX - S.ux;
-      S.udoy = e.touches[0].clientY - S.uy;
-    }, { passive: true });
-    document.addEventListener('touchmove', function (e) {
-      if (!S.udrag) return;
-      S.ux = e.touches[0].clientX - S.udox;
-      S.uy = e.touches[0].clientY - S.udoy;
-      UMB.style.left = S.ux + 'px'; UMB.style.top = S.uy + 'px';
-    }, { passive: true });
-    document.addEventListener('touchend', function () { S.udrag = false; });
-  }
-
+  /* ── Stars ── */
   function buildStars() {
     if (!STARS) return;
-    for (var i = 0; i < 22; i++) {
+    STARS.innerHTML = '';
+    for (var i = 0; i < 18; i++) {
       var s = document.createElement('div');
-      s.className = 'h-star';
-      var sz = rn(0.8, 2.3);
-      s.style.cssText =
-        'width:'+sz+'px;height:'+sz+'px;' +
-        'left:'+rn(5,92)+'%;top:'+rn(5,92)+'%;' +
-        'animation-delay:'+rn(0,4)+'s;' +
-        'animation-duration:'+rn(1.4,3.8)+'s;';
+      s.className = 'harfo-star';
+      var sz = rn(1.2, 2.8);
+      s.style.cssText = [
+        'width:'+sz+'px','height:'+sz+'px',
+        'top:'+rn(8,88)+'%','left:'+rn(8,88)+'%',
+        'animation-delay:'+rn(0,2.2)+'s',
+        'animation-duration:'+rn(1.6,3.2)+'s',
+      ].join(';');
       STARS.appendChild(s);
     }
   }
 
-  function initEvents() {
-    /* Mouse */
-    window.addEventListener('mousemove', function (e) {
-      S.mx = e.clientX; S.my = e.clientY;
-      S.idleAt = Date.now();
-      if (S.sleeping) {
-        S.sleeping = false; mood('curious'); spark(3);
-        AnchorTracker.update(true);
-      }
-    }, { passive: true });
-    window.addEventListener('mouseleave', function () { S.mx = -9999; S.my = -9999; });
-    window.addEventListener('touchmove', function (e) {
-      S.mx = e.touches[0].clientX; S.my = e.touches[0].clientY;
-      S.idleAt = Date.now();
-    }, { passive: true });
+  /* ── Particles ── */
+  function spawnParticle(type) {
+    if (!FX) return;
+    var id = 'hpt'+(++S.ptId);
+    var el = document.createElement('div');
+    el.className = 'harfo-pt harfo-pt-'+(type||'sp');
+    el.id = id;
+    var glyphs = {sp:'✦', hrt:'♥', zzz:'z'};
+    el.textContent = glyphs[type] || glyphs.sp;
+    var wx = S.x + 50, wy = S.y + 50;
+    el.style.cssText = 'position:absolute;left:'+wx+'px;top:'+wy+'px;';
+    FX.appendChild(el);
+    var t0 = null;
+    var vx = rn(-40,40), vy = rn(-80,-20);
+    (function animPt(ts) {
+      if (!t0) t0 = ts;
+      var dt = (ts - t0) / 1000;
+      var op = Math.max(0, 1 - dt * 1.4);
+      el.style.left = (wx + vx * dt) + 'px';
+      el.style.top  = (wy + vy * dt + 60 * dt * dt) + 'px';
+      el.style.opacity = op;
+      if (op > 0) requestAnimationFrame(animPt);
+      else if (el.parentNode) el.parentNode.removeChild(el);
+    })(performance.now());
+  }
 
-    /* Exit intent */
-    document.addEventListener('mouseleave', function (e) {
-      if (e.clientY < 15 && ARM_W) {
-        mood('sad'); hearts(4);
-        ARM_W.classList.remove('h-wave');
-        void ARM_W.offsetWidth;
-        ARM_W.classList.add('h-wave');
-        setTimeout(function () {
-          ARM_W.classList.remove('h-wave');
-          mood('normal');
-        }, 2000);
-      }
-    });
+  /* ── ZZZ emitter ── */
+  var zzzInterval = null;
+  function startZzz() {
+    if (zzzInterval) return;
+    zzzInterval = setInterval(function() {
+      if (S.sleeping) spawnParticle('zzz');
+      else stopZzz();
+    }, 1100);
+  }
+  function stopZzz() {
+    clearInterval(zzzInterval);
+    zzzInterval = null;
+  }
 
-    /* Click ball */
-    W.addEventListener('click', function (e) {
-      if (S.drag) return;
-      e.stopPropagation();
-      spark(7); hearts(2);
-      S.sxv = -1.0; S.syv = 1.0;
-      mood('happy');
-      /* Cycle through fun shapes */
-      var fun = ['ball','heart','bulb','arrow','magnify','cart'];
-      var i = fun.indexOf(S.shape);
-      ShapeMorph.to(fun[(i + 1) % fun.length]);
-      setTimeout(function () { mood('normal'); }, 1400);
-    });
+  /* ══════════════════════════════════════════════════════
+     RAIN SYSTEM
+     ══════════════════════════════════════════════════════ */
+  var rainDrops = [];
+  var rainActive = false;
 
-    /* Scroll = re-anchor smartly */
-    var scrollT = null;
-    window.addEventListener('scroll', function () {
-      if (scrollT) return;
-      scrollT = setTimeout(function () {
-        scrollT = null;
-        AnchorTracker.update();
-      }, 120);
-    }, { passive: true });
+  function shouldRain() {
+    var h = getHour();
+    return C.RAIN_HOURS.indexOf(h) !== -1 || (Math.random() < 0.12);
+  }
 
-    /* Resize */
-    window.addEventListener('resize', function () {
-      S.tx = cl(S.tx, 4, maxX()); S.ty = cl(S.ty, 4, maxY());
-      AnchorTracker.update(true);
-    });
+  function startRain() {
+    if (rainActive || !RAIN || !UMB) return;
+    rainActive = true;
+    S.raining = true;
+    RAIN.innerHTML = '';
+    rainDrops = [];
+    for (var i = 0; i < C.RAIN_DROPS; i++) {
+      var d = document.createElement('div');
+      d.className = 'harfo-rdrop';
+      var h = rn(8, 18);
+      d.style.cssText = [
+        'height:'+h+'px',
+        'left:'+rn(4,56)+'%',
+        'top:'+(-h)+'px',
+      ].join(';');
+      RAIN.appendChild(d);
+      rainDrops.push({ el:d, y:-h, spd:rn(C.RAIN_SPD_MIN, C.RAIN_SPD_MAX), h:h });
+    }
+    UMB.style.display = 'block';
+    setTimeout(function() {
+      UMB.classList.add('harfo-umb-show');
+      S.umbX = clamp(S.x + rn(80,160), 0, window.innerWidth - 80);
+      S.umbY = clamp(S.y + rn(20,60), 20, window.innerHeight - 80);
+      UMB.style.left = S.umbX + 'px';
+      UMB.style.top  = S.umbY + 'px';
+    }, 200);
+  }
 
-    /* Sleep check */
-    setInterval(function () {
-      if (S.drag || S.rain || S.udrag) return;
-      if (Date.now() - S.idleAt > C.SLP && !S.sleeping) {
-        S.sleeping = true;
-        mood('sleeping');
-      }
-    }, 5000);
+  function stopRain() {
+    if (!rainActive || !RAIN || !UMB) return;
+    rainActive = false;
+    S.raining = false;
+    RAIN.innerHTML = '';
+    rainDrops = [];
+    UMB.classList.remove('harfo-umb-show','harfo-umb-cover');
+    setTimeout(function() { if (UMB) UMB.style.display = 'none'; }, 450);
+    if (S.sheltered) {
+      S.sheltered = false;
+      BALL.dataset.mood = S.mood;
+    }
+  }
 
-    /* Periodic re-scan of page (for dynamic content) */
-    setInterval(function () {
-      pageInfo = PageAI.analyze();
-      AnchorTracker.update(true);
-    }, 8000);
-
-    /* Hourly time refresh */
-    setInterval(applyTime, 3600000);
-
-    /* Page-specific moods (key moments only) */
-    if (window.HC && window.HC.page) {
-      var pg = window.HC.page;
-      if (pg.is404) {
-        setTimeout(function () { mood('sad'); S.sxv = -0.8; S.syv = 0.8; }, 1500);
+  function tickRain(dt) {
+    if (!rainActive || !RAIN || !UMB) return;
+    for (var i = 0; i < rainDrops.length; i++) {
+      var d = rainDrops[i];
+      d.y += d.spd * dt;
+      if (d.y > 64 + d.h) d.y = -d.h;
+      d.el.style.top = d.y + 'px';
+    }
+    var ur = UMB.getBoundingClientRect();
+    var br = W.getBoundingClientRect();
+    var covered = (
+      br.top > ur.top &&
+      br.bottom < ur.bottom + 20 &&
+      br.left > ur.left - 10 &&
+      br.right < ur.right + 10
+    );
+    if (covered !== S.sheltered) {
+      S.sheltered = covered;
+      if (covered) {
+        BALL.dataset.mood = 'sheltered';
+        UMB.classList.add('harfo-umb-cover');
+        spawnParticle('hrt');
+      } else {
+        BALL.dataset.mood = S.mood;
+        UMB.classList.remove('harfo-umb-cover');
       }
     }
   }
 
-  /* ════════════════════════════════════════════════════════════
-     BOOT
-     ════════════════════════════════════════════════════════════ */
-  function boot() {
-    ROOT  = document.getElementById('h-root');
-    W     = document.getElementById('h-w');
-    BALL  = document.getElementById('h-ball');
-    PL    = document.getElementById('h-pl');
-    PR    = document.getElementById('h-pr');
-    RAIN  = document.getElementById('h-rain');
-    UMB   = document.getElementById('h-umb');
-    FX    = document.getElementById('h-fx');
-    ARM_W = document.getElementById('h-arm-w');
-    STARS = document.getElementById('h-stars');
-    ICON  = document.getElementById('h-icon');
-    GLOW  = document.getElementById('h-glow');
+  function initUmbDrag() {
+    if (!UMB) return;
+    function onDown(e) {
+      e.preventDefault();
+      S.umbDrag = true;
+      var pt = e.touches ? e.touches[0] : e;
+      var r = UMB.getBoundingClientRect();
+      S.umbOx = pt.clientX - r.left;
+      S.umbOy = pt.clientY - r.top;
+    }
+    function onMove(e) {
+      if (!S.umbDrag) return;
+      e.preventDefault();
+      var pt = e.touches ? e.touches[0] : e;
+      S.umbX = pt.clientX - S.umbOx;
+      S.umbY = pt.clientY - S.umbOy;
+      UMB.style.left = S.umbX + 'px';
+      UMB.style.top  = S.umbY + 'px';
+    }
+    function onUp() { S.umbDrag = false; }
+    UMB.addEventListener('mousedown', onDown);
+    UMB.addEventListener('touchstart', onDown, {passive:false});
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('touchmove', onMove, {passive:false});
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchend', onUp);
+  }
 
-    if (!W || !BALL) return;
+  /* ══════════════════════════════════════════════════════
+     WANDER
+     ══════════════════════════════════════════════════════ */
+  function wander() {
+    if (S.dragging) return;
+    AnchorTracker.release();
+    var margin = 60;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    S.tx = rn(margin, vw - margin - 100);
+    S.ty = rn(margin, vh - margin - 100);
+    S.nextWander = Date.now() + rn(C.WI_MIN, C.WI_MAX);
+  }
 
-    /* Intelligence sweep */
-    ThemeSense.apply();
-    pageInfo = PageAI.analyze();
+  /* ══════════════════════════════════════════════════════
+     EXIT INTENT
+     ══════════════════════════════════════════════════════ */
+  var exitFired = false;
+  document.addEventListener('mouseleave', function(e) {
+    if (e.clientY < 5 && !exitFired && ARMW) {
+      exitFired = true;
+      ARMW.classList.add('harfo-wave');
+      setTimeout(function() {
+        if (ARMW) ARMW.classList.remove('harfo-wave');
+        exitFired = false;
+      }, 2200);
+    }
+  });
 
-    /* Initial position: bottom-right */
-    S.x = window.innerWidth  - C.WRAP - 24;
-    S.y = window.innerHeight - C.WRAP - 24;
-    S.tx = S.x; S.ty = S.y;
-    W.style.transform = 'translate(' + S.x + 'px,' + S.y + 'px)';
-    W.classList.add('h-ready');
+  /* ══════════════════════════════════════════════════════
+     DRAG (character)
+     ══════════════════════════════════════════════════════ */
+  function initDrag() {
+    if (!W) return;
+    function onDown(e) {
+      if (UMB && (e.target === UMB || UMB.contains(e.target))) return;
+      e.preventDefault();
+      S.dragging = true;
+      AnchorTracker.release();
+      var pt = e.touches ? e.touches[0] : e;
+      S.dragOx = pt.clientX - S.x;
+      S.dragOy = pt.clientY - S.y;
+      spawnParticle('sp');
+    }
+    function onMove(e) {
+      if (!S.dragging) return;
+      var pt = e.touches ? e.touches[0] : e;
+      S.tx = pt.clientX - S.dragOx;
+      S.ty = pt.clientY - S.dragOy;
+    }
+    function onUp() {
+      if (!S.dragging) return;
+      S.dragging = false;
+      spawnParticle('hrt');
+    }
+    W.addEventListener('mousedown', onDown);
+    W.addEventListener('touchstart', onDown, {passive:false});
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('touchmove', onMove, {passive:false});
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchend', onUp);
+  }
 
-    buildStars();
-    applyTime();
-    initDrag();
-    initUmbDrag();
-    initEvents();
-    schedRain();
+  /* ══════════════════════════════════════════════════════
+     PUPIL TRACKING
+     ══════════════════════════════════════════════════════ */
+  function updatePupils() {
+    if (!PL || !PR) return;
+    var cx = S.x + 50, cy = S.y + 50;
+    var dx = S.mx - cx, dy = S.my - cy;
+    var dist = Math.sqrt(dx*dx+dy*dy) || 1;
+    var maxR = 4;
+    var tx = (dx/dist)*Math.min(dist*.18, maxR);
+    var ty = (dy/dist)*Math.min(dist*.18, maxR);
+    S.pupLx = lerp(S.pupLx, 4+tx, 0.14);
+    S.pupLy = lerp(S.pupLy, 4+ty, 0.14);
+    S.pupRx = lerp(S.pupRx, 4+tx, 0.14);
+    S.pupRy = lerp(S.pupRy, 4+ty, 0.14);
+    PL.style.transform = 'translate('+(S.pupLx-4)+'px,'+(S.pupLy-4)+'px)';
+    PR.style.transform = 'translate('+(S.pupRx-4)+'px,'+(S.pupRy-4)+'px)';
+  }
 
-    /* First anchor pick after a beat */
-    setTimeout(function () { AnchorTracker.update(true); }, 900);
+  /* ══════════════════════════════════════════════════════
+     ZONE REACTIONS
+     ══════════════════════════════════════════════════════ */
+  function reactToMouse() {
+    if (S.sleeping || S.dragging) return;
+    var cx = S.x + 50, cy = S.y + 50;
+    var dx = S.mx - cx, dy = S.my - cy;
+    var dist = Math.sqrt(dx*dx+dy*dy);
+
+    if (dist < C.PANIC) {
+      var ang = Math.atan2(dy, dx);
+      S.tx = clamp(S.x - Math.cos(ang)*180, 20, window.innerWidth-120);
+      S.ty = clamp(S.y - Math.sin(ang)*180, 20, window.innerHeight-120);
+      setMood('scared');
+      AnchorTracker.release();
+    } else if (dist < C.FLEE) {
+      var ang2 = Math.atan2(dy, dx);
+      S.tx = clamp(S.x - Math.cos(ang2)*90, 20, window.innerWidth-120);
+      S.ty = clamp(S.y - Math.sin(ang2)*90, 20, window.innerHeight-120);
+      setMood('scared');
+    } else if (dist < C.ALERT) {
+      setMood('curious');
+    } else if (dist < C.NOTICE) {
+      if (S.mood === 'scared') setMood('normal');
+    } else {
+      if (S.mood === 'scared' || S.mood === 'curious') setMood('normal');
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════
+     MAIN PHYSICS TICK
+     ══════════════════════════════════════════════════════ */
+  function applyDOM() {
+    var floatY = S.sleeping ? 0 : Math.sin(Date.now() * C.FLOAT_FREQ) * C.FLOAT_AMP;
+    W.style.transform = 'translate('+(S.x|0)+'px,'+((S.y + floatY)|0)+'px)';
+    BALL.style.transform = 'scale('+S.sqx.toFixed(3)+','+S.sqy.toFixed(3)+')';
+  }
+
+  var lastScrollY = window.scrollY || 0;
+  var scrollMoodTime = 0;
+
+  function tick(ts) {
+    try {
+      var dt = Math.min((ts - (S.lastTick||ts)) / 1000, 0.05);
+      S.lastTick = ts;
+      var now = Date.now();
+
+      /* Wander */
+      if (!S.dragging && !AnchorTracker.isActive() && now > S.nextWander) {
+        wander();
+      }
+
+      /* Perch update */
+      AnchorTracker.update(false);
+
+      /* Zone reaction */
+      reactToMouse();
+
+      /* Spring physics */
+      var ax = (S.tx - S.x) * C.SK;
+      var ay = (S.ty - S.y) * C.SK;
+      S.vx = (S.vx + ax) * C.SD;
+      S.vy = (S.vy + ay) * C.SD;
+      S.vx = clamp(S.vx, -C.MSP, C.MSP);
+      S.vy = clamp(S.vy, -C.MSP, C.MSP);
+      S.x += S.vx;
+      S.y += S.vy;
+
+      /* Boundary */
+      var maxX = window.innerWidth  - ((W && W.offsetWidth)  || 100);
+      var maxY = window.innerHeight - ((W && W.offsetHeight) || 100);
+      if (S.x < 0)    { S.x = 0;    S.vx *= -0.4; }
+      if (S.y < 0)    { S.y = 0;    S.vy *= -0.4; }
+      if (S.x > maxX) { S.x = maxX; S.vx *= -0.4; }
+      if (S.y > maxY) { S.y = maxY; S.vy *= -0.4; }
+
+      /* Squish */
+      var speed = Math.sqrt(S.vx*S.vx+S.vy*S.vy);
+      var sqTx = 1 + speed * C.SQA * 0.025;
+      var sqTy = 1 - speed * C.SQA * 0.018;
+      S.sqvx = (S.sqvx + (sqTx - S.sqx) * C.SQK) * C.SQD;
+      S.sqvy = (S.sqvy + (sqTy - S.sqy) * C.SQK) * C.SQD;
+      S.sqx += S.sqvx;
+      S.sqy += S.sqvy;
+      S.sqx = clamp(S.sqx, 0.7, 1.45);
+      S.sqy = clamp(S.sqy, 0.7, 1.45);
+
+      /* Pupils */
+      updatePupils();
+
+      /* Idle / sleep */
+      if (speed > 0.8 || S.dragging) S.idle = now;
+      if (!S.sleeping && (now - S.idle) > C.IDLE_SLEEP) {
+        S.sleeping = true;
+        setMood('sleeping');
+        startZzz();
+      }
+      if (S.sleeping && (speed > 1.5 || S.dragging)) {
+        S.sleeping = false;
+        stopZzz();
+        PageAI.reactToPage();
+      }
+
+      /* Shape morph on scroll */
+      var scrollY = window.scrollY || 0;
+      if (Math.abs(scrollY - lastScrollY) > 60) {
+        var pi = PageAI.get();
+        if (pi.type === 'article' || pi.wordCount > 400) ShapeMorph.to('reader');
+        else if (pi.hasProducts) ShapeMorph.to('cart');
+        else ShapeMorph.to('ball');
+        scrollMoodTime = now;
+      }
+      if (now - scrollMoodTime > 3000 && ShapeMorph.get() !== 'ball' && !S.dragging) {
+        ShapeMorph.to('ball');
+      }
+      lastScrollY = scrollY;
+
+      /* Rain */
+      tickRain(dt);
+
+      /* Apply to DOM */
+      applyDOM();
+
+    } catch(e) { /* keep loop alive on error */ }
 
     requestAnimationFrame(tick);
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot);
-  } else {
-    boot();
+  /* ══════════════════════════════════════════════════════
+     EVENTS
+     ══════════════════════════════════════════════════════ */
+  var scrollThrottle = 0;
+  window.addEventListener('scroll', function() {
+    var now = Date.now();
+    if (now - scrollThrottle > 600) {
+      scrollThrottle = now;
+      AnchorTracker.update(true);
+    }
+  }, {passive:true});
+
+  document.addEventListener('mousemove', function(e) {
+    S.mx = e.clientX;
+    S.my = e.clientY;
+    S.lastMove = Date.now();
+    if (S.sleeping) { S.idle = Date.now(); }
+  }, {passive:true});
+
+  document.addEventListener('touchmove', function(e) {
+    if (e.touches.length) {
+      S.mx = e.touches[0].clientX;
+      S.my = e.touches[0].clientY;
+    }
+  }, {passive:true});
+
+  /* ══════════════════════════════════════════════════════
+     RAIN SCHEDULE
+     ══════════════════════════════════════════════════════ */
+  function checkRainSchedule() {
+    if (!rainActive && shouldRain()) {
+      startRain();
+      setTimeout(stopRain, rn(25000, 55000));
+    }
+    setTimeout(checkRainSchedule, rn(90000, 180000));
   }
 
-  /* Public API */
-  window.HarfoAI = {
-    rain:    startRain,
-    rescan:  function () { pageInfo = PageAI.analyze(); AnchorTracker.update(true); },
-    shape:   function (s) { ShapeMorph.to(s); },
-    mood:    mood,
-    happy:   function () { spark(9); mood('happy'); }
-  };
+  /* ══════════════════════════════════════════════════════
+     BOOT
+     ══════════════════════════════════════════════════════ */
+  function boot() {
+    if (!grab()) {
+      setTimeout(boot, 80);
+      return;
+    }
+
+    /* CSS-first boot: read position from rendered CSS (bottom:28px, right:28px) */
+    var rect = W.getBoundingClientRect();
+    S.x  = rect.left;
+    S.y  = rect.top;
+    S.tx = S.x;
+    S.ty = S.y;
+    S.idle = Date.now();
+    S.nextWander = Date.now() + rn(C.WI_MIN, C.WI_MAX);
+
+    /* Switch wrapper to transform-driven physics */
+    W.classList.add('harfo-phys');
+    W.style.transform = 'translate('+S.x+'px,'+S.y+'px)';
+
+    buildStars();
+    setTimeOfDay();
+
+    /* Click sparkle */
+    W.addEventListener('click', function() {
+      spawnParticle('sp');
+      spawnParticle('hrt');
+    });
+
+    /* Intelligence */
+    PageAI.analyze();
+    PageAI.reactToPage();
+    ThemeSense.apply();
+    AnchorTracker.update(true);
+
+    /* Drag & umbrella */
+    initDrag();
+    initUmbDrag();
+
+    /* Rain — after page settles */
+    setTimeout(function() {
+      if (shouldRain()) {
+        startRain();
+        setTimeout(stopRain, rn(25000, 55000));
+      }
+      setTimeout(checkRainSchedule, rn(90000, 180000));
+    }, 4000);
+
+    /* RAF loop */
+    requestAnimationFrame(tick);
+  }
+
+  /* Boot: wait for DOM, then also retry after Elementor renders */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(boot, 50); });
+  } else {
+    setTimeout(boot, 50);
+  }
+
+  /* Re-sense theme after Elementor frontend init */
+  document.addEventListener('elementor/frontend/init', function() {
+    setTimeout(function() {
+      ThemeSense.apply();
+      PageAI.analyze();
+      PageAI.reactToPage();
+    }, 600);
+  });
 
 })();

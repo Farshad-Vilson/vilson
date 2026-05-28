@@ -1,170 +1,157 @@
 /* ════════════════════════════════════════════════════════
-   حرفو v10 — Intelligent Galaxy Mascot
+   حرفو v10.1 — Galaxy Mascot (full styles, supplements inline)
    ════════════════════════════════════════════════════════ */
 
-#h-root {
+/* Root: no overflow:hidden — glow must not be clipped */
+#harfo-root {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 2147483640;
   overflow: visible;
-  /* CSS vars adjusted by JS based on site theme */
-  --hcol-a: #7C3AED;
-  --hcol-b: #2D1B6E;
-  --hcol-c: #0D0A28;
-  --hcol-glow: rgba(109,40,217,.55);
+  --hc-a: #7C3AED;
+  --hc-b: #2D1B6E;
+  --hc-c: #0D0A28;
+  --hc-glow: rgba(109,40,217,.58);
 }
 
-/* ── Wrapper ── */
-#h-w {
-  position: absolute;
-  width: 100px; height: 100px;
+/* ── Wrapper: CSS-first visibility (no JS required to show) ── */
+#harfo-w {
+  position: fixed;     /* fixed = viewport-relative, no parent dependency */
+  bottom: 28px;
+  right:  28px;
+  width:  100px;
+  height: 100px;
   pointer-events: all;
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
   touch-action: none;
-  opacity: 0;
-  transition: opacity .5s ease;
+  z-index: 2147483640;
+  /* visible immediately — JS physics takes over position */
 }
-#h-w.h-ready { opacity: 1; }
+/* Once JS boots: switch to transform-based physics */
+#harfo-w.harfo-phys {
+  bottom: auto;
+  right:  auto;
+  left:   0;
+  top:    0;
+}
 
-/* ── Glow ── */
-#h-glow {
+/* ── Glow ring (outside ball, no squish) ── */
+#harfo-glow {
   position: absolute;
   width: 80px; height: 80px;
   top: 10px; left: 10px;
   border-radius: 50%;
   pointer-events: none;
-  animation: glowPulse 3.6s ease-in-out infinite;
+  animation: hGlowPulse 3.8s ease-in-out infinite;
 }
-@keyframes glowPulse {
-  0%,100% { box-shadow: 0 0 14px 4px var(--hcol-glow), 0 0 38px 10px rgba(109,40,217,.18); }
-  50%     { box-shadow: 0 0 22px 7px var(--hcol-glow), 0 0 56px 16px rgba(109,40,217,.32); }
+@keyframes hGlowPulse {
+  0%,100% { box-shadow: 0 0 14px 4px var(--hc-glow,rgba(109,40,217,.58)),
+                        0 0 36px 10px rgba(109,40,217,.18); }
+  50%     { box-shadow: 0 0 22px 8px var(--hc-glow,rgba(109,40,217,.58)),
+                        0 0 54px 16px rgba(109,40,217,.3); }
 }
 
-/* ── Ball (galaxy, the "rest" shape) ── */
-#h-ball {
+/* ── Ball ── */
+#harfo-ball {
   position: absolute;
   width: 64px; height: 64px;
   top: 18px; left: 18px;
   border-radius: 50%;
   background: radial-gradient(circle at 38% 32%,
-    var(--hcol-a) 0%,
-    var(--hcol-b) 38%,
-    var(--hcol-c) 76%,
+    var(--hc-a,#7C3AED) 0%,
+    var(--hc-b,#2D1B6E) 38%,
+    var(--hc-c,#0D0A28) 76%,
     #050714 100%);
-  border: 1px solid rgba(139,92,246,.45);
+  border: 1px solid rgba(139,92,246,.4);
   overflow: hidden;
   transform-origin: center center;
   will-change: transform;
-  transition: border-radius .35s, background .8s;
+  transition: border-radius .4s, background .9s;
 }
 
-/* ── Shapes (morphs via data-shape) ── */
-#h-ball[data-shape="ball"]      { border-radius: 50%; }
-#h-ball[data-shape="eye"]       { border-radius: 50% 50% 45% 45% / 50% 50% 60% 60%; }
-#h-ball[data-shape="pill"]      { border-radius: 32px; }
-#h-ball[data-shape="square"]    { border-radius: 14px; }
-#h-ball[data-shape="diamond"]   { border-radius: 8px; }
-#h-ball[data-shape="droplet"]   { border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
-#h-ball[data-shape="reader"]    { border-radius: 14px; width: 52px; height: 72px; top: 14px; left: 24px; }
+/* ── Shape morphs ── */
+#harfo-ball[data-shape="eye"]    { border-radius: 50% 50% 45% 45% / 50% 50% 60% 60%; }
+#harfo-ball[data-shape="pill"]   { border-radius: 32px; }
+#harfo-ball[data-shape="square"] { border-radius: 14px; }
+#harfo-ball[data-shape="reader"] { border-radius: 14px; width: 50px; height: 68px; top: 16px; left: 25px; }
 
-/* Hide face on icon-only shapes */
-#h-ball[data-shape="arrow"]    #h-face,
-#h-ball[data-shape="magnify"]  #h-face,
-#h-ball[data-shape="cart"]     #h-face,
-#h-ball[data-shape="heart"]    #h-face,
-#h-ball[data-shape="bulb"]     #h-face { opacity: .15; }
+/* Icon shapes: dim face, show SVG icon */
+#harfo-ball[data-shape="magnify"] #harfo-face,
+#harfo-ball[data-shape="cart"]    #harfo-face,
+#harfo-ball[data-shape="heart"]   #harfo-face,
+#harfo-ball[data-shape="bulb"]    #harfo-face,
+#harfo-ball[data-shape="arrow"]   #harfo-face { opacity: .12; }
 
-/* Icon overlay (visible on icon shapes) */
-#h-icon {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity .25s;
-}
-#h-ball[data-shape="arrow"]    #h-icon,
-#h-ball[data-shape="magnify"]  #h-icon,
-#h-ball[data-shape="cart"]     #h-icon,
-#h-ball[data-shape="heart"]    #h-icon,
-#h-ball[data-shape="bulb"]     #h-icon { opacity: 1; }
+#harfo-ball[data-shape="magnify"] #harfo-icon,
+#harfo-ball[data-shape="cart"]    #harfo-icon,
+#harfo-ball[data-shape="heart"]   #harfo-icon,
+#harfo-ball[data-shape="bulb"]    #harfo-icon,
+#harfo-ball[data-shape="arrow"]   #harfo-icon { opacity: 1 !important; }
 
 /* ── Galaxy arm ── */
-#h-arm {
+#harfo-arm {
   position: absolute;
   inset: -15%;
   border-radius: 50%;
   background: conic-gradient(
     from 0deg,
     transparent 0deg,
-    rgba(139,92,246,.55) 40deg,
-    rgba(167,139,250,.35) 70deg,
+    rgba(139,92,246,.55) 40deg, rgba(167,139,250,.3) 70deg,
     transparent 110deg,
-    rgba(236,72,153,.3) 180deg,
-    transparent 220deg,
-    rgba(96,165,250,.28) 280deg,
-    transparent 320deg,
-    rgba(139,92,246,.45) 345deg,
-    transparent 360deg
+    rgba(236,72,153,.3) 180deg, transparent 220deg,
+    rgba(96,165,250,.28) 280deg, transparent 320deg,
+    rgba(139,92,246,.45) 345deg, transparent 360deg
   );
-  animation: armSpin 22s linear infinite;
+  animation: hArmSpin 22s linear infinite;
   mix-blend-mode: screen;
 }
-@keyframes armSpin { to { transform: rotate(360deg); } }
+@keyframes hArmSpin { to { transform: rotate(360deg); } }
 
 /* ── Stars ── */
-#h-stars { position: absolute; inset: 0; border-radius: 50%; }
-.h-star {
+#harfo-stars { position: absolute; inset: 0; border-radius: 50%; }
+.harfo-star {
   position: absolute;
   border-radius: 50%;
   background: white;
-  animation: twinkle 2.2s ease-in-out infinite alternate;
+  animation: hStarTwinkle 2.2s ease-in-out infinite alternate;
 }
-@keyframes twinkle {
+@keyframes hStarTwinkle {
   from { opacity: .85; transform: scale(1); }
-  to   { opacity: .08; transform: scale(.35); }
+  to   { opacity: .06; transform: scale(.3); }
 }
 
 /* ── Nebula ── */
-#h-neb {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
+#harfo-neb {
+  position: absolute; inset: 0; border-radius: 50%;
   background:
     radial-gradient(circle at 25% 62%, rgba(236,72,153,.22) 0%, transparent 48%),
-    radial-gradient(circle at 74% 34%, rgba(96,165,250,.20) 0%, transparent 42%);
+    radial-gradient(circle at 74% 34%, rgba(96,165,250,.2) 0%, transparent 42%);
   mix-blend-mode: screen;
-  animation: nebDrift 9s ease-in-out infinite alternate;
+  animation: hNebDrift 9s ease-in-out infinite alternate;
 }
-@keyframes nebDrift {
+@keyframes hNebDrift {
   from { transform: translate(0,0) rotate(0deg); }
   to   { transform: translate(3px,2px) rotate(14deg); }
 }
 
 /* ── Sheen ── */
-#h-sheen {
+#harfo-sheen {
   position: absolute;
   width: 22px; height: 14px;
   top: 8px; left: 11px;
-  background: radial-gradient(ellipse, rgba(255,255,255,.32) 0%, transparent 70%);
+  background: radial-gradient(ellipse, rgba(255,255,255,.3) 0%, transparent 70%);
   border-radius: 50%;
   transform: rotate(-18deg);
   pointer-events: none;
 }
 
 /* ── Face ── */
-#h-face {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  transition: opacity .25s;
-}
+#harfo-face { position: absolute; inset: 0; pointer-events: none; transition: opacity .3s; }
 
-.h-eye {
+.harfo-eye {
   position: absolute;
   width: 17px; height: 17px;
   border-radius: 50%;
@@ -172,10 +159,10 @@
   box-shadow: 0 0 5px rgba(255,255,255,.7);
   transition: width .25s, height .25s, top .25s, left .25s;
 }
-#h-el { left: 10px; top: 21px; }
-#h-er { left: 37px; top: 21px; }
+#harfo-el { left: 10px; top: 21px; }
+#harfo-er { left: 37px; top: 21px; }
 
-.h-pu {
+.harfo-pu {
   position: absolute;
   width: 9px; height: 9px;
   border-radius: 50%;
@@ -183,7 +170,7 @@
   top: 4px; left: 4px;
   will-change: transform;
 }
-.h-sh {
+.harfo-sh {
   position: absolute;
   width: 4px; height: 4px;
   border-radius: 50%;
@@ -191,7 +178,7 @@
   top: 2px; left: 2px;
 }
 
-#h-mo {
+#harfo-mo {
   position: absolute;
   left: 50%; bottom: 12px;
   transform: translateX(-50%);
@@ -202,57 +189,41 @@
 }
 
 /* ── Moods ── */
-#h-ball[data-mood="happy"] #h-mo {
-  width: 26px; height: 12px;
-  border-radius: 0 0 13px 13px;
-  bottom: 9px;
-}
-#h-ball[data-mood="happy"] .h-eye { width: 19px; height: 19px; }
-#h-ball[data-mood="happy"] #h-el  { left: 9px;  top: 20px; }
-#h-ball[data-mood="happy"] #h-er  { left: 36px; top: 20px; }
+#harfo-ball[data-mood="happy"] #harfo-mo   { width:26px;height:12px;border-radius:0 0 13px 13px;bottom:9px; }
+#harfo-ball[data-mood="happy"] .harfo-eye  { width:19px;height:19px; }
+#harfo-ball[data-mood="happy"] #harfo-el   { left:9px;top:20px; }
+#harfo-ball[data-mood="happy"] #harfo-er   { left:36px;top:20px; }
 
-#h-ball[data-mood="scared"] .h-eye { width: 21px; height: 21px; }
-#h-ball[data-mood="scared"] #h-el  { left: 8px;  top: 19px; }
-#h-ball[data-mood="scared"] #h-er  { left: 35px; top: 19px; }
-#h-ball[data-mood="scared"] #h-mo {
-  width: 11px; height: 6px;
-  border-radius: 0 0 6px 6px;
-}
+#harfo-ball[data-mood="scared"] .harfo-eye { width:21px;height:21px; }
+#harfo-ball[data-mood="scared"] #harfo-el  { left:8px;top:19px; }
+#harfo-ball[data-mood="scared"] #harfo-er  { left:35px;top:19px; }
+#harfo-ball[data-mood="scared"] #harfo-mo  { width:11px;height:6px;border-radius:0 0 6px 6px; }
 
-#h-ball[data-mood="curious"] .h-eye { width: 19px; height: 19px; }
-#h-ball[data-mood="curious"] #h-el  { left: 9px;  top: 20px; }
-#h-ball[data-mood="curious"] #h-er  { left: 36px; top: 20px; }
+#harfo-ball[data-mood="sad"] #harfo-mo     { border-bottom:none;border-top:2.5px solid rgba(20,10,60,.78);border-radius:9px 9px 0 0;bottom:11px; }
 
-#h-ball[data-mood="sad"] #h-mo {
-  border-bottom: none;
-  border-top: 2.5px solid rgba(20,10,60,.78);
-  border-radius: 9px 9px 0 0;
-  bottom: 11px;
-}
+#harfo-ball[data-mood="curious"] .harfo-eye { width:19px;height:19px; }
+#harfo-ball[data-mood="curious"] #harfo-el  { left:9px;top:20px; }
+#harfo-ball[data-mood="curious"] #harfo-er  { left:36px;top:20px; }
 
-#h-ball[data-mood="sleeping"] .h-eye { height: 6px; border-radius: 50% 50% 0 0; }
-#h-ball[data-mood="sleeping"] .h-pu  { top: 0; }
-#h-ball[data-mood="sleeping"] #h-mo  { width: 14px; height: 0; border-radius: 0; bottom: 14px; }
-#h-ball[data-mood="sleeping"] #h-arm { animation-duration: 40s; }
+#harfo-ball[data-mood="sleeping"] .harfo-eye { height:6px;border-radius:50% 50% 0 0; }
+#harfo-ball[data-mood="sleeping"] .harfo-pu  { top:0; }
+#harfo-ball[data-mood="sleeping"] #harfo-mo  { width:14px;height:0;border-radius:0;bottom:14px; }
+#harfo-ball[data-mood="sleeping"] #harfo-arm { animation-duration:42s; }
 
-#h-ball[data-mood="reading"] .h-eye  { height: 11px; }
-#h-ball[data-mood="reading"] #h-mo   { width: 12px; bottom: 14px; height: 4px; }
+#harfo-ball[data-mood="reading"] .harfo-eye  { height:11px; }
+#harfo-ball[data-mood="reading"] #harfo-mo   { width:12px;bottom:14px;height:4px; }
 
-#h-ball[data-mood="sheltered"] #h-mo {
-  width: 24px; height: 11px;
-  border-radius: 0 0 12px 12px;
-  bottom: 9px;
-}
+#harfo-ball[data-mood="sheltered"] #harfo-mo { width:24px;height:11px;border-radius:0 0 12px 12px;bottom:9px; }
 
 /* ── Time of day ── */
-#h-ball[data-time="morning"]   { --hcol-a: #A855F7; }
-#h-ball[data-time="evening"]   { --hcol-a: #9333EA; }
-#h-ball[data-time="night"]     { --hcol-a: #4C1D95; --hcol-b: #1E1B4B; }
-#h-ball[data-time="night"] .h-star   { animation-duration: 1s; }
-#h-ball[data-time="morning"] .h-star { animation-duration: 3s; }
+#harfo-ball[data-time="morning"] { background: radial-gradient(circle at 38% 32%,#A855F7 0%,#4C1D95 38%,#1E1B4B 76%,#0D0A28 100%); }
+#harfo-ball[data-time="evening"] { background: radial-gradient(circle at 38% 32%,#9333EA 0%,#3B1C6E 38%,#1B0B2E 76%,#0A0514 100%); }
+#harfo-ball[data-time="night"]   { background: radial-gradient(circle at 38% 32%,#4C1D95 0%,#1E1B4B 38%,#080B1A 76%,#020408 100%); }
+#harfo-ball[data-time="night"]   .harfo-star { animation-duration:1s; }
+#harfo-ball[data-time="morning"] .harfo-star { animation-duration:3.5s; }
 
 /* ── Rain ── */
-#h-rain {
+#harfo-rain {
   position: absolute;
   top: 18px; left: 18px;
   width: 64px; height: 64px;
@@ -260,7 +231,7 @@
   overflow: hidden;
   pointer-events: none;
 }
-.h-rdrop {
+.harfo-rdrop {
   position: absolute;
   width: 1.5px;
   background: linear-gradient(to bottom, transparent, rgba(147,197,253,.72));
@@ -268,9 +239,8 @@
 }
 
 /* ── Umbrella ── */
-#h-umb {
+#harfo-umb {
   position: fixed;
-  width: 62px; height: 48px;
   cursor: grab;
   display: none;
   z-index: 2147483642;
@@ -278,57 +248,46 @@
   filter: drop-shadow(0 4px 10px rgba(0,0,0,.35));
   transition: filter .2s, opacity .4s;
   opacity: 0;
+  user-select: none;
 }
-#h-umb.h-umb-show  { opacity: 1; }
-#h-umb.h-umb-cover { filter: drop-shadow(0 4px 22px rgba(43,207,192,.9)); }
+#harfo-umb.harfo-umb-show  { opacity: 1; }
+#harfo-umb.harfo-umb-cover { filter: drop-shadow(0 4px 22px rgba(43,207,192,.9)); }
 
 /* ── Particles ── */
-#h-fx {
+#harfo-fx {
   position: absolute;
   inset: 0;
   pointer-events: none;
   overflow: visible;
 }
-.h-pt {
-  position: absolute;
-  pointer-events: none;
-  line-height: 1;
-  will-change: transform, opacity;
-}
-.h-pt-sp  { color: #FBBF24; font-size: 13px; text-shadow: 0 0 5px #FDE68A; }
-.h-pt-hrt { color: #F472B6; font-size: 12px; }
-.h-pt-zzz { color: rgba(167,139,250,.95); font-size: 10px; font-weight: 700; }
-.h-pt-rd  { color: rgba(255,255,255,.85); font-size: 9px; font-weight: 700; }
+.harfo-pt { position: absolute; pointer-events: none; line-height: 1; will-change: transform,opacity; }
+.harfo-pt-sp  { color: #FBBF24; font-size: 13px; text-shadow: 0 0 5px #FDE68A; }
+.harfo-pt-hrt { color: #F472B6; font-size: 12px; }
+.harfo-pt-zzz { color: rgba(167,139,250,.95); font-size: 10px; font-weight: 700; }
 
-/* ── Exit-intent arm ── */
-#h-arm-w {
+/* ── Exit arm ── */
+#harfo-armw {
   position: absolute;
   width: 16px; height: 7px;
   top: 6px; left: 50%;
   margin-left: -8px;
-  background: var(--hcol-a, #6D28D9);
+  background: var(--hc-a,#6D28D9);
   border-radius: 4px;
   transform-origin: right center;
   opacity: 0;
 }
-#h-arm-w.h-wave {
-  opacity: 1;
-  animation: armWave .45s ease-in-out 4;
-}
-@keyframes armWave {
+#harfo-armw.harfo-wave { opacity:1; animation: hWave .45s ease-in-out 4; }
+@keyframes hWave {
   0%,100% { transform: rotate(-35deg); }
-  50%     { transform: rotate(15deg);  }
+  50%     { transform: rotate(15deg); }
 }
 
-/* ── Highlight overlay (when AI points at element) ── */
-.h-hilite {
-  position: absolute;
-  pointer-events: none;
-  border: 2px dashed var(--hcol-a, #7C3AED);
-  border-radius: 8px;
-  background: rgba(124,58,237,.06);
-  z-index: 2147483639;
-  opacity: 0;
-  transition: opacity .3s;
+/* Mobile */
+@media (max-width: 640px) {
+  #harfo-w { bottom: 16px; right: 16px; width: 80px; height: 80px; }
+  #harfo-ball { width: 52px; height: 52px; top: 14px; left: 14px; }
+  #harfo-glow { width: 66px; height: 66px; top: 7px; left: 7px; }
+  #harfo-rain { top: 14px; left: 14px; width: 52px; height: 52px; }
+  #harfo-el { left: 7px; top: 16px; }
+  #harfo-er { left: 29px; top: 16px; }
 }
-.h-hilite.h-hi-show { opacity: 1; }
