@@ -1,14 +1,14 @@
 <?php
 /**
  * Plugin Name: حرفو — ربات هوشمند مسکات
- * Description: کاراکتر کهکشانی هوشمند با درک المنتور، صفحه، و محتوا
- * Version:     10.1.0
+ * Description: کاوشگر کهکشانی — هر صفحه یک ماموریت، ستاره‌های پنهان روی محتوای المنتور
+ * Version:     12.0.0
  * Author:      حرف اول
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'HARFO_VER', '10.1.0' );
+define( 'HARFO_VER', '12.0.0' );
 define( 'HARFO_URL', plugin_dir_url( __FILE__ ) );
 
 /* ── Collect page intelligence (for mascot's internal awareness only) ── */
@@ -117,6 +117,17 @@ add_action( 'wp_footer', function () { ?>
   </div>
 
   <div id="harfo-fx"></div>
+  <div id="harfo-marks"></div>
+
+  <div id="harfo-chip" role="status" aria-hidden="true">
+    <span id="harfo-chip-icon">★</span>
+    <span id="harfo-chip-text">۰ / ۰</span>
+  </div>
+
+  <div id="harfo-note" aria-hidden="true">
+    <div id="harfo-note-day">روز ۱</div>
+    <div id="harfo-note-text"></div>
+  </div>
 
 </div>
 <?php }, 9999 );
