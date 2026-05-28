@@ -1,0 +1,369 @@
+/* ════════════════════════════════════════════════════════
+   Vilson Economy v1.0
+   ════════════════════════════════════════════════════════ */
+
+/* ── Locked exclusive content ── */
+.vfx-exclusive { position: relative; }
+
+.vfx-exclusive-body {
+  display: none;
+}
+.vfx-exclusive.vfx-unlocked .vfx-exclusive-body {
+  display: block;
+  animation: vecReveal .7s cubic-bezier(.34,1.56,.64,1) both;
+}
+.vfx-exclusive.vfx-unlocked .vfx-locked-shell {
+  display: none;
+}
+
+.vfx-locked-shell {
+  padding: 28px 24px;
+  border: 1px dashed rgba(124,58,237,.3);
+  border-radius: 14px;
+  text-align: center;
+  background: rgba(124,58,237,.04);
+  margin: 12px 0;
+}
+.vfx-lock-mark {
+  font-size: 28px;
+  color: rgba(124,58,237,.5);
+  margin-bottom: 8px;
+}
+.vfx-lock-title {
+  font-family: Tahoma, Vazirmatn, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #3B0764;
+  margin-bottom: 6px;
+  direction: rtl;
+}
+.vfx-lock-hint {
+  font-family: Tahoma, Vazirmatn, sans-serif;
+  font-size: 12px;
+  color: #6B7280;
+  direction: rtl;
+}
+
+@keyframes vecReveal {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ════════════════════════════════════════════════════════
+   DASHBOARD
+   ════════════════════════════════════════════════════════ */
+
+#vec-dash {
+  position: fixed;
+  bottom: 28px;
+  left: 28px;
+  z-index: 2147483641;
+  direction: rtl;
+  font-family: Tahoma, Vazirmatn, -apple-system, sans-serif;
+}
+
+/* ── Pill (collapsed) ── */
+#vec-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(13,10,40,.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(124,58,237,.35);
+  border-radius: 999px;
+  padding: 7px 14px;
+  cursor: pointer;
+  color: #E9D5FF;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 4px 18px rgba(0,0,0,.25);
+  transition: transform .2s, box-shadow .2s, opacity .4s;
+  user-select: none;
+  opacity: 0;
+}
+#vec-pill.vec-visible { opacity: 1; }
+#vec-pill:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 24px rgba(124,58,237,.35);
+}
+
+#vec-pill-mark {
+  color: #A78BFA;
+  font-size: 14px;
+  animation: vecPillPulse 3s ease-in-out infinite;
+}
+@keyframes vecPillPulse {
+  0%,100% { opacity: .8; }
+  50%     { opacity: 1; text-shadow: 0 0 8px rgba(167,139,250,.8); }
+}
+
+/* ── Card (expanded) ── */
+#vec-card {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 0;
+  width: 240px;
+  background: rgba(10,8,32,.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(124,58,237,.4);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 16px 48px rgba(0,0,0,.5), 0 0 0 1px rgba(124,58,237,.1);
+  opacity: 0;
+  transform: translateY(8px) scale(.97);
+  pointer-events: none;
+  transition: opacity .35s ease, transform .35s cubic-bezier(.34,1.56,.64,1);
+}
+#vec-card.vec-open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: all;
+}
+
+/* Arrow */
+#vec-card::after {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  left: 24px;
+  width: 14px; height: 14px;
+  background: rgba(10,8,32,.94);
+  border-right: 1px solid rgba(124,58,237,.4);
+  border-bottom: 1px solid rgba(124,58,237,.4);
+  transform: rotate(45deg);
+}
+
+#vec-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+#vec-level-badge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+#vec-badge-mark {
+  font-size: 18px;
+  color: #A78BFA;
+}
+#vec-badge-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+#vec-card-close {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,.35);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 4px;
+  line-height: 1;
+  transition: color .2s;
+}
+#vec-card-close:hover { color: rgba(255,255,255,.8); }
+
+/* Progress */
+#vec-progress-wrap { margin-bottom: 16px; }
+#vec-progress-bar {
+  height: 4px;
+  background: rgba(255,255,255,.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+#vec-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7C3AED, #A78BFA);
+  border-radius: 2px;
+  width: 0;
+  transition: width .8s cubic-bezier(.34,1.56,.64,1);
+}
+#vec-progress-label {
+  font-size: 10px;
+  color: rgba(255,255,255,.4);
+  text-align: left;
+}
+
+/* Tokens */
+#vec-tokens {
+  border-top: 1px solid rgba(255,255,255,.07);
+  padding-top: 12px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vec-token-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vec-token-icon {
+  font-size: 13px;
+  color: #7C3AED;
+  width: 16px;
+  text-align: center;
+}
+.vec-token-name {
+  flex: 1;
+  font-size: 12px;
+  color: rgba(255,255,255,.55);
+}
+.vec-token-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: #E9D5FF;
+  direction: ltr;
+}
+.vec-token-row.vec-pop .vec-token-val {
+  animation: vecTokenPop .5s ease;
+}
+@keyframes vecTokenPop {
+  0%,100% { transform: scale(1); }
+  50%     { transform: scale(1.35); color: #A78BFA; }
+}
+
+/* Next unlock hint */
+#vec-next-unlock {
+  font-size: 11px;
+  color: rgba(255,255,255,.3);
+  text-align: center;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,.06);
+  line-height: 1.5;
+}
+
+/* Certificate button */
+#vec-cert-wrap {
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,.07);
+  text-align: center;
+}
+#vec-cert-btn {
+  background: linear-gradient(135deg, #7C3AED, #2563EB);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 11px;
+  font-family: Tahoma, sans-serif;
+  cursor: pointer;
+  width: 100%;
+  transition: opacity .2s, transform .2s;
+}
+#vec-cert-btn:hover { opacity: .88; transform: scale(1.02); }
+
+/* ════════════════════════════════════════════════════════
+   TOAST
+   ════════════════════════════════════════════════════════ */
+#vec-toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-80px);
+  background: rgba(10,8,32,.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: #E9D5FF;
+  font-family: Tahoma, Vazirmatn, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 12px 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(124,58,237,.4);
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+  z-index: 2147483645;
+  pointer-events: none;
+  transition: transform .5s cubic-bezier(.34,1.56,.64,1), opacity .4s ease;
+  opacity: 0;
+  direction: rtl;
+  white-space: nowrap;
+}
+#vec-toast.vec-toast-show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* ════════════════════════════════════════════════════════
+   TEMPORAL EVOLUTION — body level classes
+   ════════════════════════════════════════════════════════ */
+
+/* Level 2 — Familiar: warm subtle glow on headings */
+body.vec-l2 h1,
+body.vec-l2 h2,
+body.vec-l2 .elementor-heading-title {
+  text-shadow: 0 0 30px rgba(124,58,237,.12);
+  transition: text-shadow .8s ease;
+}
+
+/* Level 3 — Friend: headings gain a very faint underline glow */
+body.vec-l3 h1,
+body.vec-l3 h2,
+body.vec-l3 .elementor-heading-title {
+  text-shadow: 0 0 40px rgba(124,58,237,.18);
+}
+body.vec-l3 .elementor-button,
+body.vec-l3 .wp-block-button__link {
+  box-shadow: 0 0 16px rgba(124,58,237,.18) !important;
+  transition: box-shadow .6s ease !important;
+}
+
+/* Level 4 — Companion: premium page edge glow */
+body.vec-l4::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2147483620;
+  background:
+    linear-gradient(to right, rgba(124,58,237,.04) 0%, transparent 120px),
+    linear-gradient(to left,  rgba(124,58,237,.04) 0%, transparent 120px);
+}
+
+/* Level 5 — Brand Soul: dark mode toggle appears, premium glow */
+body.vec-l5 .elementor-heading-title {
+  text-shadow: 0 0 50px rgba(124,58,237,.22);
+}
+body.vec-l5.vec-dark {
+  filter: invert(1) hue-rotate(180deg);
+}
+body.vec-l5.vec-dark img,
+body.vec-l5.vec-dark video,
+body.vec-l5.vec-dark canvas {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Dark mode toggle */
+#vec-dark-toggle {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  z-index: 2147483641;
+  background: rgba(13,10,40,.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(124,58,237,.3);
+  border-radius: 50%;
+  width: 36px; height: 36px;
+  cursor: pointer;
+  color: #A78BFA;
+  font-size: 16px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: transform .2s;
+}
+#vec-dark-toggle:hover { transform: scale(1.1); }
+body.vec-l5 #vec-dark-toggle { display: flex; }
+
+/* Mobile */
+@media (max-width: 640px) {
+  #vec-dash { bottom: 20px; left: 16px; }
+  #vec-card { width: 210px; }
+}
