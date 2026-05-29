@@ -426,6 +426,23 @@ function ha_sites_pro_inline_styles( $id ) {
 }
 {$m} .ha-pro-preview-side .ha-pro-actions .ha-pro-btn { width: 100% !important; flex: none !important; }
 
+/* Star rating buttons — plain glyphs, no box/border/rounding/background */
+{$m} .ha-pro-side-rating { border: 0 !important; background: none !important; box-shadow: none !important; padding: 8px 0 !important; }
+{$m} .ha-pro-stars .ha-pro-star,
+{$m} .ha-pro-side-rating .ha-pro-star {
+    background: none !important; border: 0 !important; border-radius: 0 !important;
+    box-shadow: none !important; outline: none !important; padding: 0 2px !important;
+    margin: 0 !important; min-width: 0 !important; width: auto !important; height: auto !important;
+    font-size: 1.5rem !important; line-height: 1 !important; cursor: pointer !important;
+    color: #d1d5db !important; transition: color .15s ease, transform .15s ease !important;
+}
+{$m} .ha-pro-stars .ha-pro-star.is-filled,
+{$m} .ha-pro-side-rating .ha-pro-star.is-filled { color: #f59e0b !important; }
+{$m} .ha-pro-stars .ha-pro-star:hover,
+{$m} .ha-pro-side-rating .ha-pro-star:hover { color: #fbbf24 !important; transform: scale(1.12) !important; }
+{$m} .ha-pro-stars .ha-pro-star:focus,
+{$m} .ha-pro-side-rating .ha-pro-star:focus { outline: none !important; box-shadow: none !important; }
+
 /* Side panel action group — new button layout */
 {$m} .ha-pro-side-action-group {
     display: flex !important; flex-direction: column !important; gap: 10px !important;
@@ -661,8 +678,8 @@ function ha_sites_pro_inline_styles( $id ) {
 {$p} .ha-pro-chip small { display:none !important; }
 
 {$p} .ha-pro-grid { gap:26px !important; align-items:stretch !important; }
-{$p} .ha-pro-card { background:#fff !important; border:1px solid #e5e7eb !important; border-radius:12px !important; box-shadow:0 1px 3px rgba(15,23,42,.06) !important; padding:12px !important; overflow:visible !important; min-height:100% !important; gap:0 !important; transition:transform .30s cubic-bezier(.34,1.56,.64,1), box-shadow .26s ease, border-color .26s ease !important; }
-{$p} .ha-pro-card:hover { transform:translateY(-6px) !important; border-color:#011627 !important; box-shadow:0 14px 34px rgba(1,22,39,.16) !important; }
+{$p} .ha-pro-card { background:#fff !important; border:1px solid #e5e7eb !important; border-radius:12px !important; box-shadow:0 1px 3px rgba(15,23,42,.06) !important; padding:12px !important; overflow:visible !important; min-height:100% !important; gap:0 !important; transition:transform .6s cubic-bezier(.22,1,.36,1), box-shadow .6s cubic-bezier(.22,1,.36,1), border-color .5s ease !important; will-change:transform !important; }
+{$p} .ha-pro-card:hover { transform:translateY(-5px) !important; border-color:#011627 !important; box-shadow:0 14px 34px rgba(1,22,39,.16) !important; }
 {$p} .ha-pro-thumb { height:var(--ha-thumb-h,220px) !important; border-radius:10px !important; border:1px solid #e5e7eb !important; background:#f7f9fc !important; overflow:hidden !important; margin:0 !important; }
 {$p} .ha-pro-thumb::after { background:transparent !important; }
 {$p} .ha-pro-card-body { padding:18px 0 0 !important; gap:11px !important; }

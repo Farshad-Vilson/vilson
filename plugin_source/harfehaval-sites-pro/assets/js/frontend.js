@@ -905,12 +905,17 @@
 		this.refs.modal.setAttribute('aria-hidden', 'false');
 		document.documentElement.classList.add('ha-pro-modal-open');
 
-		/* Urgency counter */
+		/* Urgency counter — smart, based on real view count (hidden for low-traffic items) */
 		var urgencyEl = this.refs.modal ? this.refs.modal.querySelector('.ha-pro-urgency') : null;
+		if (this._urgencyTimer) { clearInterval(this._urgencyTimer); this._urgencyTimer = null; }
 		if (urgencyEl) {
-			var viewers = this._urgencyViewers(item.id);
-			urgencyEl.textContent = viewers + ' نفر در حال مشاهده';
-			this._startUrgencyTick(urgencyEl, item.id);
+			var viewers = this._urgencyViewers(item);
+			if (viewers >= 2) {
+				urgencyEl.textContent = viewers + ' نفر در حال مشاهده';
+				this._startUrgencyTick(urgencyEl, item);
+			} else {
+				urgencyEl.textContent = '';
+			}
 		}
 
 		this.setDevice('desktop');
@@ -988,23 +993,39 @@
 			'</div>';
 	};
 
-	App.prototype._urgencyViewers = function (itemId) {
-		var key = 'ha_viewers_' + itemId;
+	/* Smart "live viewers" derived from the project's real view count.
+	   Popular templates show more concurrent viewers; low-traffic ones show none. */
+	App.prototype._urgencyBase = function (item) {
+		var views = (item && item.view_count) ? Number(item.view_count) : 0;
+		if (views < 8) return 0; /* not enough real interest → don't fake urgency */
+		/* gentle log curve: ~2 at 8 views, ~5 at 100, ~7 at 1000, capped at 12 */
+		var base = Math.round(Math.log(views) / Math.log(2.2));
+		return Math.max(2, Math.min(12, base));
+	};
+
+	App.prototype._urgencyViewers = function (item) {
+		var base = this._urgencyBase(item);
+		if (base === 0) return 0;
+		var key = 'ha_viewers_' + (item ? item.id : 'x');
 		var stored = sessionStorage.getItem(key);
 		if (stored) return parseInt(stored, 10);
-		var n = Math.floor(Math.random() * 6) + 2; /* 2-7 */
+		var jitter = Math.floor(Math.random() * 3) - 1; /* -1..+1 around the base */
+		var n = Math.max(2, base + jitter);
 		sessionStorage.setItem(key, n);
 		return n;
 	};
 
-	App.prototype._startUrgencyTick = function (el, itemId) {
-		var self = this;
+	App.prototype._startUrgencyTick = function (el, item) {
+		var base = this._urgencyBase(item);
+		if (base === 0) return;
+		var lo = Math.max(2, base - 2);
+		var hi = base + 2;
+		var key = 'ha_viewers_' + item.id;
 		if (this._urgencyTimer) clearInterval(this._urgencyTimer);
 		this._urgencyTimer = setInterval(function () {
-			var key = 'ha_viewers_' + itemId;
-			var n = parseInt(sessionStorage.getItem(key) || '3', 10);
-			var delta = Math.random() < 0.5 ? 1 : -1;
-			n = Math.max(2, Math.min(9, n + delta));
+			var n = parseInt(sessionStorage.getItem(key) || String(base), 10);
+			n += Math.random() < 0.5 ? 1 : -1;
+			n = Math.max(lo, Math.min(hi, n));
 			sessionStorage.setItem(key, n);
 			if (el && el.parentNode) el.textContent = n + ' نفر در حال مشاهده';
 		}, 18000 + Math.random() * 12000); /* every 18-30 seconds */
