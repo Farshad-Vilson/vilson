@@ -688,7 +688,7 @@ function ha_sites_pro_inline_styles( $id ) {
 {$p} .ha-pro-chip small { display:none !important; }
 
 {$p} .ha-pro-grid { gap:26px !important; align-items:stretch !important; }
-{$p} .ha-pro-card { background:#fff !important; border:1px solid #e5e7eb !important; border-radius:12px !important; box-shadow:0 1px 3px rgba(15,23,42,.06) !important; padding:12px !important; overflow:visible !important; min-height:100% !important; gap:0 !important; transition:transform .9s cubic-bezier(.16,1,.3,1), box-shadow .9s cubic-bezier(.16,1,.3,1), border-color .6s ease !important; will-change:transform !important; }
+{$p} .ha-pro-card { background:#fff !important; border:1px solid #e5e7eb !important; border-radius:12px !important; box-shadow:0 1px 3px rgba(15,23,42,.06) !important; padding:12px !important; overflow:visible !important; min-height:100% !important; gap:0 !important; transition:transform .5s cubic-bezier(.45,0,.55,1), box-shadow .5s cubic-bezier(.45,0,.55,1), border-color .6s ease !important; will-change:transform !important; }
 {$p} .ha-pro-card:hover { transform:translateY(-5px) !important; border-color:#011627 !important; box-shadow:0 14px 34px rgba(1,22,39,.16) !important; }
 {$p} .ha-pro-thumb { height:var(--ha-thumb-h,220px) !important; border-radius:10px !important; border:1px solid #e5e7eb !important; background:#f7f9fc !important; overflow:hidden !important; margin:0 !important; }
 {$p} .ha-pro-thumb::after { background:transparent !important; }
