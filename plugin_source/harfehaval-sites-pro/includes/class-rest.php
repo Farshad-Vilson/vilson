@@ -131,7 +131,10 @@ class HA_Sites_Pro_REST {
 
 		$tax_query = array();
 		if ( '' !== $category ) {
-			$terms = array_filter( array_map( 'sanitize_title', array_map( 'trim', explode( ',', $category ) ) ) );
+			// Use sanitize_text_field (not sanitize_title): these slugs come from our own /filters
+			// endpoint and may be UTF-8 / percent-encoded (Persian). sanitize_title would mangle or
+			// empty them, dropping the filter and returning every post.
+			$terms = array_filter( array_map( 'sanitize_text_field', array_map( 'trim', explode( ',', $category ) ) ) );
 			if ( $terms ) {
 				$tax_query[] = array(
 					'taxonomy' => HA_Sites_Pro_Post_Type::TAX_CATEGORY,
@@ -142,7 +145,7 @@ class HA_Sites_Pro_REST {
 			}
 		}
 		if ( '' !== $features ) {
-			$terms = array_filter( array_map( 'sanitize_title', array_map( 'trim', explode( ',', $features ) ) ) );
+			$terms = array_filter( array_map( 'sanitize_text_field', array_map( 'trim', explode( ',', $features ) ) ) );
 			foreach ( $terms as $term ) {
 				$tax_query[] = array(
 					'taxonomy' => HA_Sites_Pro_Post_Type::TAX_FEATURE,
