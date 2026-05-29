@@ -64,29 +64,11 @@
 	}
 	function setRatedToday(id, rating) { try { localStorage.setItem('ha_rated_' + id, todayStr() + '|' + rating); } catch (e) {} }
 
-	/* ── Hash state ── */
-	function parseHash() {
-		var out = {};
-		try {
-			var h = decodeURIComponent(location.hash.replace('#', ''));
-			if (!h) return out;
-			h.split('&').forEach(function (pair) {
-				var kv = pair.split('=');
-				if (kv[0]) out[kv[0]] = kv[1] || '';
-			});
-		} catch(e) {}
-		return out;
-	}
-
-	function encodeHash(state) {
-		var parts = [];
-		if (state.category) parts.push('cat=' + encodeURIComponent(state.category));
-		if (state.features && state.features.length) parts.push('feat=' + encodeURIComponent(state.features.join(',')));
-		if (state.status)   parts.push('status=' + encodeURIComponent(state.status));
-		if (state.search)   parts.push('q=' + encodeURIComponent(state.search));
-		if (state.sort && state.sort !== 'newest') parts.push('sort=' + encodeURIComponent(state.sort));
-		history.replaceState(null, '', parts.length ? '#' + parts.join('&') : location.pathname + location.search);
-	}
+	/* ── Hash state ──
+	   Disabled by request: we no longer write filter state to the URL hash (it produced
+	   ugly double-encoded Persian slugs like #cat=%25d8...). Filtering is held in memory only. */
+	function parseHash() { return {}; }
+	function encodeHash() { /* intentionally no-op — do not pollute the URL */ }
 
 	/* ══════════════════════════════════════════════════════
 	   Lazy Image Loader — IntersectionObserver based
@@ -196,6 +178,10 @@
 
 	App.prototype.init = function () {
 		var self = this;
+		/* Clean any old filter hash left in the URL by previous versions */
+		if (location.hash && /(?:^|#)(cat|feat|status|q|sort)=/.test(location.hash)) {
+			try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+		}
 		this.applyLayout(this.state.layout);
 
 		if (this.refs.search && this.state.search) {
@@ -461,7 +447,7 @@
 
 	App.prototype.loadFilters = function () {
 		var self = this;
-		var cacheKey = 'ha_filters_' + (apiBase || '');
+		var cacheKey = 'ha_filters_v2_' + (apiBase || '');
 		/* Paint cached chips instantly (if any), then refresh from the network */
 		try {
 			var cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
@@ -480,10 +466,15 @@
 		var self = this;
 		var showCounts = !!this.cfg.show_filter_counts;
 
+		/* Use the numeric term ID as the filter value — it never gets mangled by URL/CDN
+		   encode-decode the way Persian slugs do. Falls back to slug for old cached data. */
+		function termVal(t) { return (t.id !== undefined && t.id !== null) ? String(t.id) : String(t.slug); }
+
 		if (this.refs.cats) {
 			var h = '<button type="button" class="ha-pro-chip ' + (!this.state.category ? 'is-active' : '') + '" data-ha-cat="">' + esc(this.label('all_categories_label', 'همه دسته‌بندی‌ها')) + '</button>';
 			h += cats.map(function (t) {
-				return '<button type="button" class="ha-pro-chip' + (self.state.category === t.slug ? ' is-active' : '') + '" data-ha-cat="' + esc(t.slug) + '">' + esc(t.name) + (showCounts ? '<small>' + esc(t.count) + '</small>' : '') + '</button>';
+				var v = termVal(t);
+				return '<button type="button" class="ha-pro-chip' + (self.state.category === v ? ' is-active' : '') + '" data-ha-cat="' + esc(v) + '">' + esc(t.name) + (showCounts ? '<small>' + esc(t.count) + '</small>' : '') + '</button>';
 			}).join('');
 			this.refs.cats.innerHTML = h;
 		}
@@ -491,7 +482,8 @@
 		if (this.refs.features) {
 			var fh = '<button type="button" class="ha-pro-chip ' + (!this.state.features.length ? 'is-active' : '') + '" data-ha-feature="">' + esc(this.label('all_features_label', 'همه ویژگی‌ها')) + '</button>';
 			fh += feats.map(function (t) {
-				return '<button type="button" class="ha-pro-chip' + (self.state.features.indexOf(t.slug) >= 0 ? ' is-active' : '') + '" data-ha-feature="' + esc(t.slug) + '">' + esc(t.name) + (showCounts ? '<small>' + esc(t.count) + '</small>' : '') + '</button>';
+				var v = termVal(t);
+				return '<button type="button" class="ha-pro-chip' + (self.state.features.indexOf(v) >= 0 ? ' is-active' : '') + '" data-ha-feature="' + esc(v) + '">' + esc(t.name) + (showCounts ? '<small>' + esc(t.count) + '</small>' : '') + '</button>';
 			}).join('');
 			this.refs.features.innerHTML = fh;
 		}

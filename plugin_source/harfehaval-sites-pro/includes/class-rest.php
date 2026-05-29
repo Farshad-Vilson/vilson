@@ -110,14 +110,24 @@ class HA_Sites_Pro_REST {
 	 * Resolve a list of slugs (possibly Persian / percent-encoded / decoded) to numeric term IDs.
 	 * Matching by term_id in WP_Query is encoding-proof, unlike matching by slug.
 	 */
-	private static function resolve_term_ids( $taxonomy, $slugs ) {
+	private static function resolve_term_ids( $taxonomy, $values ) {
 		$ids = array();
-		foreach ( (array) $slugs as $raw ) {
-			$slug = sanitize_text_field( trim( (string) $raw ) );
-			if ( '' === $slug ) {
+		foreach ( (array) $values as $raw ) {
+			$val = sanitize_text_field( trim( (string) $raw ) );
+			if ( '' === $val ) {
 				continue;
 			}
-			$variants = array_unique( array( $slug, rawurldecode( $slug ), urldecode( $slug ), rawurlencode( $slug ) ) );
+			// Preferred path: the value is a numeric term ID (sent by the front-end chips).
+			// Numeric IDs are encoding-proof — no Persian slug round-trip issues.
+			if ( ctype_digit( $val ) ) {
+				$term = get_term( (int) $val, $taxonomy );
+				if ( $term && ! is_wp_error( $term ) ) {
+					$ids[] = (int) $term->term_id;
+				}
+				continue;
+			}
+			// Fallback: a slug (e.g. preset via shortcode/Elementor). Try every encoding variant, then name.
+			$variants = array_unique( array( $val, rawurldecode( $val ), urldecode( $val ), rawurlencode( $val ) ) );
 			$term = false;
 			foreach ( $variants as $variant ) {
 				$term = get_term_by( 'slug', $variant, $taxonomy );
@@ -125,9 +135,8 @@ class HA_Sites_Pro_REST {
 					break;
 				}
 			}
-			// Last resort: match by visible name.
 			if ( ! $term || is_wp_error( $term ) ) {
-				$term = get_term_by( 'name', $slug, $taxonomy );
+				$term = get_term_by( 'name', $val, $taxonomy );
 			}
 			if ( $term && ! is_wp_error( $term ) ) {
 				$ids[] = (int) $term->term_id;
@@ -281,7 +290,7 @@ class HA_Sites_Pro_REST {
 		}
 		$out = array();
 		foreach ( $terms as $term ) {
-			$out[] = array( 'slug' => $term->slug, 'name' => $term->name, 'count' => (int) $term->count );
+			$out[] = array( 'id' => (int) $term->term_id, 'slug' => $term->slug, 'name' => $term->name, 'count' => (int) $term->count );
 		}
 		return $out;
 	}
