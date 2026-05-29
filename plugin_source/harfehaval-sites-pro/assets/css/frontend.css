@@ -415,12 +415,12 @@
 	display:       flex;
 	flex-direction: column;
 	position:      relative;
-	transition:    transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+	transition:    transform .5s cubic-bezier(0.2, 0, 0, 1), box-shadow .5s cubic-bezier(0.2, 0, 0, 1), border-color .4s ease;
 	box-shadow:    var(--ha-shadow);
 }
 .ha-pro-card:hover {
-	transform:    translateY(-6px);
-	box-shadow:   var(--ha-shadow-lg);
+	transform:    translateY(-4px);
+	box-shadow:   var(--ha-shadow-md);
 	border-color: var(--ha-accent);
 }
 
@@ -3524,4 +3524,69 @@ html body .ha-sites-pro .ha-pro-actions .ha-pro-btn-secondary:hover .ha-pro-btn-
   font-weight: 700;
   border-radius: 999px;
   border:      1px solid rgba(46,196,182,.25);
+}
+
+/* ── 10. Urgency viewers counter ── */
+.ha-pro-urgency:not(:empty) {
+  display:       inline-flex;
+  align-items:   center;
+  gap:           5px;
+  margin-top:    6px;
+  padding:       3px 10px;
+  background:    rgba(239,68,68,.08);
+  color:         #dc2626;
+  font-size:     .76rem;
+  font-weight:   700;
+  border-radius: 999px;
+  border:        1px solid rgba(239,68,68,.2);
+  animation:     ha-urgency-pulse 2s ease-in-out infinite;
+}
+.ha-pro-urgency:not(:empty)::before { content: '🔴 '; font-size: .7rem; }
+@keyframes ha-urgency-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .7; }
+}
+
+/* ── 11. Star rating in side panel ── */
+.ha-pro-side-rating {
+  display:        flex;
+  align-items:    center;
+  gap:            6px;
+  flex-wrap:      wrap;
+  margin-top:     8px;
+  padding:        8px 0;
+}
+.ha-pro-stars {
+  display:  flex;
+  gap:      2px;
+}
+.ha-pro-star {
+  background:  none !important;
+  border:      none !important;
+  padding:     0 !important;
+  font-size:   1.4rem !important;
+  cursor:      pointer !important;
+  color:       #d1d5db !important;
+  transition:  color .15s ease, transform .15s ease !important;
+  line-height: 1 !important;
+}
+.ha-pro-star.is-filled { color: #f59e0b !important; }
+.ha-pro-star:hover, .ha-pro-stars:hover .ha-pro-star { color: #fbbf24 !important; }
+.ha-pro-stars:hover .ha-pro-star:hover ~ .ha-pro-star { color: #d1d5db !important; }
+.ha-pro-star:active { transform: scale(.9) !important; }
+.ha-pro-rating-count {
+  font-size:   .75rem;
+  color:       var(--ha-muted);
+  font-weight: 600;
+}
+.ha-pro-rated-badge {
+  display:       inline-flex;
+  align-items:   center;
+  padding:       2px 8px;
+  background:    rgba(46,196,182,.1);
+  color:         #2ec4b6;
+  border-radius: 999px;
+  font-size:     .72rem;
+  font-weight:   700;
+  border:        1px solid rgba(46,196,182,.25);
 }
