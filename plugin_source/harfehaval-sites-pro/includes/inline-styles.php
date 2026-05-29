@@ -443,6 +443,16 @@ function ha_sites_pro_inline_styles( $id ) {
 {$m} .ha-pro-stars .ha-pro-star:focus,
 {$m} .ha-pro-side-rating .ha-pro-star:focus { outline: none !important; box-shadow: none !important; }
 
+/* Side facts — right-aligned RTL layout */
+{$m} .ha-pro-side-facts { direction:rtl !important; text-align:right !important; }
+{$m} .ha-pro-side-facts li { direction:rtl !important; justify-content:space-between !important; }
+{$m} .ha-pro-side-facts span { text-align:right !important; direction:rtl !important; }
+
+/* Meta row: view count + stars compact side-by-side */
+{$m} .ha-pro-side-meta-row { display:flex !important; align-items:center !important; justify-content:space-between !important; gap:8px !important; margin-top:8px !important; flex-wrap:wrap !important; padding:0 !important; }
+{$m} .ha-pro-side-view-count { display:inline-flex !important; align-items:center !important; gap:4px !important; padding:2px 8px !important; background:rgba(1,22,39,.07) !important; color:#011627 !important; font-size:.72rem !important; font-weight:700 !important; border-radius:999px !important; border:1px solid rgba(1,22,39,.12) !important; white-space:nowrap !important; }
+{$m} .ha-pro-side-rating { display:flex !important; align-items:center !important; gap:2px !important; margin-top:0 !important; padding:0 !important; }
+
 /* Side panel action group — new button layout */
 {$m} .ha-pro-side-action-group {
     display: flex !important; flex-direction: column !important; gap: 10px !important;
@@ -678,7 +688,7 @@ function ha_sites_pro_inline_styles( $id ) {
 {$p} .ha-pro-chip small { display:none !important; }
 
 {$p} .ha-pro-grid { gap:26px !important; align-items:stretch !important; }
-{$p} .ha-pro-card { background:#fff !important; border:1px solid #e5e7eb !important; border-radius:12px !important; box-shadow:0 1px 3px rgba(15,23,42,.06) !important; padding:12px !important; overflow:visible !important; min-height:100% !important; gap:0 !important; transition:transform .6s cubic-bezier(.22,1,.36,1), box-shadow .6s cubic-bezier(.22,1,.36,1), border-color .5s ease !important; will-change:transform !important; }
+{$p} .ha-pro-card { background:#fff !important; border:1px solid #e5e7eb !important; border-radius:12px !important; box-shadow:0 1px 3px rgba(15,23,42,.06) !important; padding:12px !important; overflow:visible !important; min-height:100% !important; gap:0 !important; transition:transform .75s cubic-bezier(.65,0,.35,1), box-shadow .75s cubic-bezier(.65,0,.35,1), border-color .6s ease !important; will-change:transform !important; }
 {$p} .ha-pro-card:hover { transform:translateY(-5px) !important; border-color:#011627 !important; box-shadow:0 14px 34px rgba(1,22,39,.16) !important; }
 {$p} .ha-pro-thumb { height:var(--ha-thumb-h,220px) !important; border-radius:10px !important; border:1px solid #e5e7eb !important; background:#f7f9fc !important; overflow:hidden !important; margin:0 !important; }
 {$p} .ha-pro-thumb::after { background:transparent !important; }

@@ -1349,21 +1349,41 @@ html.ha-pro-modal-open { overflow: hidden !important; }
 }
 
 .ha-pro-side-facts {
-	list-style: none;
-	margin:     8px 0 0;
-	padding:    0 20px;
+	list-style:  none;
+	margin:      8px 0 0;
+	padding:     0 20px;
+	direction:   rtl;
+	text-align:  right;
 }
 .ha-pro-side-facts li {
-	display:       flex;
-	align-items:   center;
+	display:         flex;
+	align-items:     flex-start;
 	justify-content: space-between;
-	padding:       8px 0;
-	border-bottom: 1px solid var(--ha-border);
-	font-size:     .83rem;
+	gap:             10px;
+	padding:         8px 0;
+	border-bottom:   1px solid var(--ha-border);
+	font-size:       .83rem;
+	direction:       rtl;
 }
 .ha-pro-side-facts li:last-child { border-bottom: none; }
-.ha-pro-side-facts b { color: var(--ha-muted); font-weight: 600; }
-.ha-pro-side-facts span { color: var(--ha-text); font-weight: 700; }
+.ha-pro-side-facts b {
+	color:       var(--ha-muted);
+	font-weight: 600;
+	flex-shrink: 0;
+	white-space: nowrap;
+}
+.ha-pro-side-facts span {
+	color:      var(--ha-text);
+	font-weight: 700;
+	text-align:  right;
+	direction:   rtl;
+	flex:        1;
+}
+@media (max-width: 768px) {
+	.ha-pro-side-facts { padding: 0 14px; }
+	.ha-pro-side-facts li { font-size: .8rem; padding: 7px 0; }
+	.ha-pro-side-meta-row { padding: 0 2px; }
+}
 
 .ha-pro-side-price {
 	padding:     12px 20px;
@@ -3513,19 +3533,27 @@ html body .ha-sites-pro .ha-pro-actions .ha-pro-btn-secondary:hover .ha-pro-btn-
   line-height:   1.4;
 }
 
-/* ── 9. View count in modal side panel ── */
+/* ── 9. Meta row: view count + stars side by side ── */
+.ha-pro-side-meta-row {
+  display:     flex;
+  align-items: center;
+  justify-content: space-between;
+  gap:         8px;
+  margin-top:  8px;
+  flex-wrap:   wrap;
+}
 .ha-pro-side-view-count {
   display:     inline-flex;
   align-items: center;
-  gap:         5px;
-  margin-top:  6px;
-  padding:     3px 10px;
-  background:  rgba(46,196,182,.10);
-  color:       #2ec4b6;
-  font-size:   .78rem;
+  gap:         4px;
+  padding:     3px 9px;
+  background:  rgba(1,22,39,.07);
+  color:       #011627;
+  font-size:   .72rem;
   font-weight: 700;
   border-radius: 999px;
-  border:      1px solid rgba(46,196,182,.25);
+  border:      1px solid rgba(1,22,39,.12);
+  white-space: nowrap;
 }
 
 /* ── 10. Urgency viewers counter ── */
@@ -3553,10 +3581,10 @@ html body .ha-sites-pro .ha-pro-actions .ha-pro-btn-secondary:hover .ha-pro-btn-
 .ha-pro-side-rating {
   display:        flex;
   align-items:    center;
-  gap:            6px;
-  flex-wrap:      wrap;
-  margin-top:     8px;
-  padding:        8px 0;
+  gap:            4px;
+  flex-wrap:      nowrap;
+  margin-top:     0;
+  padding:        0;
 }
 .ha-pro-stars {
   display:  flex;

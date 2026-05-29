@@ -968,14 +968,20 @@
 
 		var urgencyHtml = '<div class="ha-pro-urgency"></div>';
 
+		/* view count + stars in one compact row */
+		var metaRowHtml =
+			'<div class="ha-pro-side-meta-row">' +
+			(item.view_count ? '<span class="ha-pro-side-view-count"><span aria-hidden="true">👁</span>' + esc(Number(item.view_count).toLocaleString('fa-IR')) + ' بازدید</span>' : '') +
+			ratingHtml +
+			'</div>' +
+			urgencyHtml;
+
 		return '<div class="ha-pro-side-head">' +
 			(item.code ? '<div style="margin-bottom:10px"><span class="ha-pro-code-badge" style="position:static;display:inline-flex">' + esc(item.code) + '</span></div>' : '') +
 			(statusLabel(item.status) ? '<div class="ha-pro-badge ha-pro-badge-' + esc(item.status) + '" style="position:static;margin-bottom:8px">' + esc(statusLabel(item.status)) + '</div>' : '') +
 			'<h3>' + esc(item.title) + '</h3>' +
 			(item.excerpt ? '<p>' + esc(item.excerpt) + '</p>' : '') +
-			(item.view_count ? '<div class="ha-pro-side-view-count"><span>👁</span> ' + esc(Number(item.view_count).toLocaleString('fa-IR')) + ' بازدید</div>' : '') +
-			urgencyHtml +
-			ratingHtml +
+			metaRowHtml +
 			'</div>' +
 			(item.highlight ? '<div class="ha-pro-side-highlight">' + esc(item.highlight) + '</div>' : '') +
 			'<div class="ha-pro-side-tabs"><div class="ha-pro-side-tabs-nav">' + nav + '</div><div class="ha-pro-side-tabs-content">' + panels + '</div></div>' +
