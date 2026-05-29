@@ -263,7 +263,8 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$fields = [
 			'show_header'          => 'نمایش هدر Hero',
 			'show_search'          => 'نمایش جستجو',
-			'show_filters'         => 'نمایش فیلترها',
+			'show_filters'         => 'نمایش فیلتر دسته‌بندی‌ها',
+			'show_feature_filter'  => 'نمایش فیلتر ویژگی‌ها (زیر جستجو)',
 			'show_status_filter'   => 'نمایش فیلتر وضعیت',
 			'show_sort'            => 'نمایش مرتب‌سازی',
 			'show_layout_switcher' => 'نمایش تغییر چیدمان',
@@ -286,6 +287,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 		$default_on = [
 			'show_header',
 			'show_filters',
+			'show_feature_filter',
 			'show_image',
 			'show_excerpt',
 			'show_preview_button',
@@ -1455,6 +1457,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'show_header'          => $s['show_header'] ?? 'yes',
 			'show_search'          => $s['show_search'] ?? 'yes',
 			'show_filters'         => $s['show_filters'] ?? 'yes',
+			'show_feature_filter'  => $s['show_feature_filter'] ?? 'yes',
 			'show_status_filter'   => $s['show_status_filter'] ?? 'yes',
 			'show_sort'            => $s['show_sort'] ?? 'yes',
 			'show_layout_switcher' => $s['show_layout_switcher'] ?? 'yes',

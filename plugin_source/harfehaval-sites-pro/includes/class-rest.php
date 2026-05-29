@@ -106,6 +106,36 @@ class HA_Sites_Pro_REST {
 		return max( 1, min( 60, absint( $value ) ) );
 	}
 
+	/**
+	 * Resolve a list of slugs (possibly Persian / percent-encoded / decoded) to numeric term IDs.
+	 * Matching by term_id in WP_Query is encoding-proof, unlike matching by slug.
+	 */
+	private static function resolve_term_ids( $taxonomy, $slugs ) {
+		$ids = array();
+		foreach ( (array) $slugs as $raw ) {
+			$slug = sanitize_text_field( trim( (string) $raw ) );
+			if ( '' === $slug ) {
+				continue;
+			}
+			$variants = array_unique( array( $slug, rawurldecode( $slug ), urldecode( $slug ), rawurlencode( $slug ) ) );
+			$term = false;
+			foreach ( $variants as $variant ) {
+				$term = get_term_by( 'slug', $variant, $taxonomy );
+				if ( $term && ! is_wp_error( $term ) ) {
+					break;
+				}
+			}
+			// Last resort: match by visible name.
+			if ( ! $term || is_wp_error( $term ) ) {
+				$term = get_term_by( 'name', $slug, $taxonomy );
+			}
+			if ( $term && ! is_wp_error( $term ) ) {
+				$ids[] = (int) $term->term_id;
+			}
+		}
+		return array_values( array_unique( $ids ) );
+	}
+
 	public static function sites( WP_REST_Request $request ) {
 		$page     = max( 1, (int) $request->get_param( 'page' ) );
 		$per_page = self::sanitize_per_page( $request->get_param( 'per_page' ) );
@@ -131,26 +161,23 @@ class HA_Sites_Pro_REST {
 
 		$tax_query = array();
 		if ( '' !== $category ) {
-			// Use sanitize_text_field (not sanitize_title): these slugs come from our own /filters
-			// endpoint and may be UTF-8 / percent-encoded (Persian). sanitize_title would mangle or
-			// empty them, dropping the filter and returning every post.
-			$terms = array_filter( array_map( 'sanitize_text_field', array_map( 'trim', explode( ',', $category ) ) ) );
-			if ( $terms ) {
+			$cat_ids = self::resolve_term_ids( HA_Sites_Pro_Post_Type::TAX_CATEGORY, explode( ',', $category ) );
+			if ( $cat_ids ) {
 				$tax_query[] = array(
 					'taxonomy' => HA_Sites_Pro_Post_Type::TAX_CATEGORY,
-					'field'    => 'slug',
-					'terms'    => $terms,
+					'field'    => 'term_id',
+					'terms'    => $cat_ids,
 					'operator' => 'IN',
 				);
 			}
 		}
 		if ( '' !== $features ) {
-			$terms = array_filter( array_map( 'sanitize_text_field', array_map( 'trim', explode( ',', $features ) ) ) );
-			foreach ( $terms as $term ) {
+			$feature_ids = self::resolve_term_ids( HA_Sites_Pro_Post_Type::TAX_FEATURE, explode( ',', $features ) );
+			foreach ( $feature_ids as $fid ) {
 				$tax_query[] = array(
 					'taxonomy' => HA_Sites_Pro_Post_Type::TAX_FEATURE,
-					'field'    => 'slug',
-					'terms'    => array( $term ),
+					'field'    => 'term_id',
+					'terms'    => array( $fid ),
 					'operator' => 'IN',
 				);
 			}

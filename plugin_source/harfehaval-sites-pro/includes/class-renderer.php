@@ -25,6 +25,7 @@ class HA_Sites_Pro_Renderer {
 			'show_header'          => 'yes',
 			'show_search'          => 'no',
 			'show_filters'         => 'yes',
+			'show_feature_filter'  => 'yes',
 			'show_status_filter'   => 'no',
 			'show_sort'            => 'no',
 			'show_layout_switcher' => 'no',
@@ -163,6 +164,7 @@ class HA_Sites_Pro_Renderer {
 			'show_header'          => self::bool_attr( $atts['show_header'] ),
 			'show_search'          => self::bool_attr( $atts['show_search'] ),
 			'show_filters'         => self::bool_attr( $atts['show_filters'] ),
+			'show_feature_filter'  => self::bool_attr( $atts['show_feature_filter'] ),
 			'show_status_filter'   => self::bool_attr( $atts['show_status_filter'] ),
 			'show_sort'            => self::bool_attr( $atts['show_sort'] ),
 			'show_layout_switcher' => self::bool_attr( $atts['show_layout_switcher'] ),
@@ -311,10 +313,12 @@ class HA_Sites_Pro_Renderer {
 					</div>
 				<?php endif; ?>
 
-				<?php if ( $config['show_filters'] || $config['show_status_filter'] ) : ?>
+				<?php if ( $config['show_filters'] || $config['show_feature_filter'] || $config['show_status_filter'] ) : ?>
 					<div class="ha-pro-filter-panel">
 						<?php if ( $config['show_filters'] ) : ?>
 							<div class="ha-pro-filter-row ha-pro-cats" data-ha-cats></div>
+						<?php endif; ?>
+						<?php if ( $config['show_feature_filter'] ) : ?>
 							<div class="ha-pro-filter-row ha-pro-features" data-ha-features></div>
 						<?php endif; ?>
 						<?php if ( $config['show_status_filter'] ) : ?>
