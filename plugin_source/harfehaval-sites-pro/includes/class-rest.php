@@ -251,10 +251,18 @@ class HA_Sites_Pro_REST {
 		);
 		$response->header( 'X-WP-Total', (int) $query->found_posts );
 		$response->header( 'X-WP-TotalPages', (int) $query->max_num_pages );
-		/* Short-lived shared cache for CDN/proxy on non-authenticated requests */
-		if ( ! is_user_logged_in() ) {
-			$response->header( 'Cache-Control', 'public, max-age=120, s-maxage=120' );
-		}
+		/* NEVER let a shared cache/CDN (ArvanCloud, Cloudflare, etc.) cache filtered results.
+		   A public/s-maxage header here makes CDNs serve the first (unfiltered) response for every
+		   category/search request — which silently breaks all filtering. Always send fresh. */
+		self::no_cache_headers( $response );
+		return $response;
+	}
+
+	private static function no_cache_headers( $response ) {
+		$response->header( 'Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0' );
+		$response->header( 'Pragma', 'no-cache' );
+		$response->header( 'Expires', '0' );
+		$response->header( 'X-Accel-Expires', '0' ); // nginx / many CDNs
 		return $response;
 	}
 
@@ -262,9 +270,7 @@ class HA_Sites_Pro_REST {
 		$categories = self::terms( HA_Sites_Pro_Post_Type::TAX_CATEGORY, 'name', 'ASC' );
 		$features   = self::terms( HA_Sites_Pro_Post_Type::TAX_FEATURE, 'count', 'DESC' );
 		$response   = rest_ensure_response( array( 'categories' => $categories, 'features' => $features ) );
-		if ( ! is_user_logged_in() ) {
-			$response->header( 'Cache-Control', 'public, max-age=300, s-maxage=300' );
-		}
+		self::no_cache_headers( $response );
 		return $response;
 	}
 

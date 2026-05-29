@@ -454,6 +454,8 @@
 			features: this.state.features.join(','),
 			status:   this.state.status,
 			sort:     this.state.sort,
+			/* cache-buster: guarantees filtered/search requests never hit a stale CDN/browser cache */
+			_:        Date.now(),
 		};
 	};
 
@@ -524,7 +526,7 @@
 		}
 
 		var thisCtrl = this._ctrl;
-		fetch(buildUrl('sites', this._params()), { credentials: 'same-origin', signal: thisCtrl.signal, headers: nonce ? { 'X-WP-Nonce': nonce } : {} })
+		fetch(buildUrl('sites', this._params()), { credentials: 'same-origin', cache: 'no-store', signal: thisCtrl.signal, headers: nonce ? { 'X-WP-Nonce': nonce } : {} })
 			.then(function (r) { return r.json(); })
 			.then(function (d) {
 				var items = d.items || [];
