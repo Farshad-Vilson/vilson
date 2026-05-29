@@ -415,11 +415,13 @@
 	display:       flex;
 	flex-direction: column;
 	position:      relative;
-	transition:    transform .5s cubic-bezier(0.2, 0, 0, 1), box-shadow .5s cubic-bezier(0.2, 0, 0, 1), border-color .4s ease;
+	/* ease-in-out: starts slow, glides up, then settles softly (no sudden jump) */
+	transition:    transform .65s cubic-bezier(0.65, 0, 0.35, 1), box-shadow .65s cubic-bezier(0.65, 0, 0.35, 1), border-color .5s ease;
 	box-shadow:    var(--ha-shadow);
+	will-change:   transform;
 }
 .ha-pro-card:hover {
-	transform:    translateY(-4px);
+	transform:    translateY(-6px);
 	box-shadow:   var(--ha-shadow-md);
 	border-color: var(--ha-accent);
 }
@@ -3589,4 +3591,49 @@ html body .ha-sites-pro .ha-pro-actions .ha-pro-btn-secondary:hover .ha-pro-btn-
   font-size:     .72rem;
   font-weight:   700;
   border:        1px solid rgba(46,196,182,.25);
+}
+
+/* ── 12. Mobile loading hint — animated arrow nudging toward the details handle ── */
+.ha-pro-load-hint {
+  display:        none; /* desktop: hidden, shown only on mobile via media query */
+  position:       absolute;
+  left:           50%;
+  bottom:         74px;            /* sits just above the bottom-centered details handle */
+  transform:      translateX(-50%);
+  z-index:        65;
+  flex-direction: column;
+  align-items:    center;
+  gap:            2px;
+  pointer-events: none;
+  text-align:     center;
+}
+.ha-pro-load-hint-text {
+  display:       inline-block;
+  padding:       6px 14px;
+  background:    rgba(1,22,39,.92);
+  color:         #fff;
+  font-size:     12px;
+  font-weight:   700;
+  border-radius: 999px;
+  white-space:   nowrap;
+  box-shadow:    0 6px 18px rgba(1,22,39,.28);
+  max-width:     86vw;
+  overflow:      hidden;
+  text-overflow: ellipsis;
+}
+.ha-pro-load-hint-arrow {
+  font-size:     30px;
+  line-height:   .7;
+  color:         #2ec4b6;
+  text-shadow:   0 2px 6px rgba(1,22,39,.35);
+  animation:     ha-hint-bounce 1.3s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+@keyframes ha-hint-bounce {
+  0%, 100% { transform: translateY(0);   opacity: .85; }
+  50%      { transform: translateY(7px); opacity: 1;   }
+}
+@media (max-width: 768px) {
+  .ha-pro-frame-stage.is-loading-hint .ha-pro-load-hint { display: flex; }
+  /* hide once the user opens the details panel */
+  .ha-pro-frame-stage:not(.is-info-hidden) .ha-pro-load-hint { display: none !important; }
 }

@@ -802,6 +802,24 @@
 			pctEl  = loadingEl.querySelector('.ha-pro-ldr-pct');
 		}
 
+		/* ── Mobile: while the site loads, nudge the user to read the details below ── */
+		var loadStage = wrap ? wrap.closest('.ha-pro-frame-stage') : null;
+		this._removeLoadingHint = function () {
+			if (loadStage) loadStage.classList.remove('is-loading-hint');
+			var h = loadStage ? loadStage.querySelector('.ha-pro-load-hint') : null;
+			if (h && h.parentNode) h.remove();
+		};
+		if (loadStage && window.innerWidth <= 768) {
+			this._removeLoadingHint();
+			var hint = document.createElement('div');
+			hint.className = 'ha-pro-load-hint';
+			hint.innerHTML =
+				'<span class="ha-pro-load-hint-text">تا بارگذاری سایت، جزئیات قالب را ببینید</span>' +
+				'<span class="ha-pro-load-hint-arrow" aria-hidden="true">⌄</span>';
+			loadStage.appendChild(hint);
+			loadStage.classList.add('is-loading-hint');
+		}
+
 		/* rAF loop: smoothly advance progress 0→98% over TIMEOUT_MS */
 		function rafTick() {
 			if (loaded) return;
@@ -820,6 +838,7 @@
 			loaded = true;
 			cancelAnimationFrame(self._ldrRaf);
 			clearTimeout(self._frameTimer);
+			if (self._removeLoadingHint) self._removeLoadingHint();
 			/* Complete to 100% then fade out */
 			if (fillEl) fillEl.style.strokeDashoffset = '0';
 			if (pctEl)  pctEl.textContent = '100%';
@@ -836,6 +855,7 @@
 			if (!loaded && wrap) {
 				loaded = true;
 				cancelAnimationFrame(self._ldrRaf);
+				if (self._removeLoadingHint) self._removeLoadingHint();
 				if (loadingEl && loadingEl.parentNode) loadingEl.remove();
 				wrap.classList.add('is-blocked');
 				var fb = document.createElement('div');
@@ -1029,6 +1049,7 @@
 		if (this.refs.frame) { this.refs.frame.src = 'about:blank'; this.refs.frame.onload = null; }
 		clearTimeout(this._frameTimer);
 		if (this._urgencyTimer) { clearInterval(this._urgencyTimer); this._urgencyTimer = null; }
+		if (this._removeLoadingHint) this._removeLoadingHint();
 		clearTimeout(this._progressTimer);
 		var wrap = this.refs.frame ? this.refs.frame.closest('.ha-pro-frame-wrap') : null;
 		if (wrap) {
@@ -1053,6 +1074,8 @@
 	App.prototype._toggleInfo = function () {
 		var stage = this.refs.frame ? this.refs.frame.closest('.ha-pro-frame-stage') : null;
 		if (stage) stage.classList.toggle('is-info-hidden');
+		/* User engaged with the details — the loading nudge is no longer needed */
+		if (this._removeLoadingHint) this._removeLoadingHint();
 	};
 
 	App.prototype._activateSideTab = function (key) {

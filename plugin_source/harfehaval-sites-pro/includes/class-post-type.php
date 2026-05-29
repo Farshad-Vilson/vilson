@@ -172,13 +172,19 @@ class HA_Sites_Pro_Post_Type {
 	public static function default_preview_tabs() {
 		return array(
 			array(
-				'label'   => __( 'خلاصه', 'harfehaval-sites-pro' ),
+				'label'   => __( 'معرفی قالب', 'harfehaval-sites-pro' ),
 				'summary' => '',
 				'content' => '',
 				'enabled' => '1',
 			),
 			array(
-				'label'   => __( 'امکانات', 'harfehaval-sites-pro' ),
+				'label'   => __( 'امکانات سایت', 'harfehaval-sites-pro' ),
+				'summary' => '',
+				'content' => '',
+				'enabled' => '1',
+			),
+			array(
+				'label'   => __( 'تحویل و پشتیبانی', 'harfehaval-sites-pro' ),
 				'summary' => '',
 				'content' => '',
 				'enabled' => '1',
@@ -188,6 +194,10 @@ class HA_Sites_Pro_Post_Type {
 
 	public static function render_tabs_meta_box( $post ) {
 		wp_nonce_field( self::NONCE_ACTION, self::NONCE_FIELD );
+		// Load the editor JS API so dynamically-added tabs can mount a full classic (TinyMCE) editor.
+		if ( function_exists( 'wp_enqueue_editor' ) ) {
+			wp_enqueue_editor();
+		}
 		$tabs = get_post_meta( $post->ID, '_ha_preview_tabs', true );
 		if ( ! is_array( $tabs ) || empty( $tabs ) ) {
 			$tabs = self::default_preview_tabs();
@@ -246,21 +256,51 @@ class HA_Sites_Pro_Post_Type {
 		jQuery(function($){
 			var $builder = $('[data-ha-tabs-builder]');
 			var index = $builder.find('[data-ha-tab-row]').length;
+			var uid   = Date.now();
+
+			// Make sure all TinyMCE editors flush their content into the textareas before submit.
 			$('#post').off('submit.haTabs').on('submit.haTabs', function(){ if (typeof tinyMCE !== 'undefined') { try { tinyMCE.triggerSave(); } catch(e){} } });
+
 			$('[data-ha-add-tab]').off('click.haTabs').on('click.haTabs', function(){
 				var i = index++;
+				var editorId = 'ha_preview_tab_content_new_' + (uid++);
 				var row = '<div class="ha-pro-tab-row" data-ha-tab-row>' +
 					'<div class="ha-pro-tab-head"><strong>تب جدید</strong>' +
-					'<input type="text" name="_ha_preview_tabs[' + i + '][label]" placeholder="نام تب">' +
+					'<input type="text" name="_ha_preview_tabs[' + i + '][label]" placeholder="نام تب؛ مثل امکانات، نقد و بررسی، توضیحات">' +
 					'<label><input type="checkbox" name="_ha_preview_tabs[' + i + '][enabled]" value="1" checked> فعال</label>' +
 					'<button type="button" class="button ha-pro-remove-tab">حذف</button></div>' +
-					'<div class="ha-pro-tab-body"><label class="ha-pro-tab-field"><span><b>خلاصه پیش‌نمایش</b>برای پنل کنار پیش‌نمایش</span>' +
-					'<textarea name="_ha_preview_tabs[' + i + '][summary]" rows="4" placeholder="متن کوتاه..."></textarea></label>' +
-					'<label class="ha-pro-tab-field"><span><b>محتوای کامل تب</b>متن، HTML یا شورت‌کد المنتور</span>' +
-					'<textarea name="_ha_preview_tabs[' + i + '][content]" rows="8" placeholder="محتوای کامل تب..."></textarea></label></div></div>';
-				$builder.append(row);
+					'<div class="ha-pro-tab-body">' +
+					'<label class="ha-pro-tab-field"><span><b>خلاصه پیش‌نمایش</b>برای پنل کنار پیش‌نمایش</span>' +
+					'<textarea name="_ha_preview_tabs[' + i + '][summary]" rows="4" placeholder="متن کوتاه و قابل اسکن برای پیش‌نمایش سریع..."></textarea></label>' +
+					'<div class="ha-pro-tab-field"><span><b>محتوای کامل تب</b>متن، تصویر، HTML یا شورت‌کد المنتور</span>' +
+					'<textarea id="' + editorId + '" class="ha-pro-new-tab-content" name="_ha_preview_tabs[' + i + '][content]" rows="8" placeholder="محتوای کامل تب..."></textarea></div>' +
+					'</div></div>';
+				var $row = $(row);
+				$builder.append($row);
+
+				// Mount the full WordPress classic editor (TinyMCE + Quicktags + media) on the new tab,
+				// exactly like the existing tabs rendered server-side via wp_editor().
+				if (window.wp && wp.editor && typeof wp.editor.initialize === 'function') {
+					wp.editor.initialize(editorId, {
+						tinymce: {
+							wpautop: true,
+							toolbar1: 'formatselect,bold,italic,bullist,numlist,blockquote,alignright,aligncenter,alignleft,link,unlink,wp_more,wp_adv',
+							toolbar2: 'strikethrough,hr,forecolor,pastetext,removeformat,charmap,outdent,indent,undo,redo,wp_help'
+						},
+						quicktags: true,
+						mediaButtons: true
+					});
+				}
 			});
-			$(document).off('click.haRemoveTab').on('click.haRemoveTab', '.ha-pro-remove-tab', function(){ $(this).closest('[data-ha-tab-row]').remove(); });
+
+			$(document).off('click.haRemoveTab').on('click.haRemoveTab', '.ha-pro-remove-tab', function(){
+				var $row = $(this).closest('[data-ha-tab-row]');
+				// Tear down any TinyMCE instance inside the row first to avoid orphaned editors.
+				if (window.wp && wp.editor && typeof wp.editor.remove === 'function') {
+					$row.find('textarea').each(function(){ if (this.id) { try { wp.editor.remove(this.id); } catch(e){} } });
+				}
+				$row.remove();
+			});
 		});
 		</script>
 		<?php
