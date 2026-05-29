@@ -365,7 +365,19 @@ class HA_Sites_Pro_Renderer {
 				<div class="ha-pro-compare-bar" data-ha-compare-bar hidden>
 					<strong><span data-ha-compare-count>0</span> <?php echo esc_html( $config['compare_bar_label'] ); ?></strong>
 					<div data-ha-compare-list></div>
+					<button type="button" class="ha-pro-compare-bar-open" data-ha-compare-open><?php esc_html_e( 'مقایسه کردن', 'harfehaval-sites-pro' ); ?></button>
 					<button type="button" data-ha-compare-clear><?php esc_html_e( 'پاک کردن', 'harfehaval-sites-pro' ); ?></button>
+				</div>
+
+				<div class="ha-pro-compare-modal" data-ha-compare-modal hidden aria-hidden="true">
+					<div class="ha-pro-compare-modal-backdrop" data-ha-compare-modal-close></div>
+					<div class="ha-pro-compare-modal-inner" role="dialog" aria-modal="true" aria-label="<?php esc_attr_e( 'مقایسه قالب‌ها', 'harfehaval-sites-pro' ); ?>">
+						<header class="ha-pro-compare-modal-header">
+							<h2 class="ha-pro-compare-modal-title"><?php esc_html_e( 'مقایسه قالب‌ها', 'harfehaval-sites-pro' ); ?></h2>
+							<button type="button" class="ha-pro-compare-modal-close-btn" data-ha-compare-modal-close aria-label="<?php esc_attr_e( 'بستن', 'harfehaval-sites-pro' ); ?>">×</button>
+						</header>
+						<div class="ha-pro-compare-modal-body" data-ha-compare-content></div>
+					</div>
 				</div>
 			<?php endif; ?>
 

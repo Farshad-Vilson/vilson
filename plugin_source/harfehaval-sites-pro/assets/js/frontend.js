@@ -145,6 +145,8 @@
 			compareBar:    qs(el, '[data-ha-compare-bar]'),
 			compareCount:  qs(el, '[data-ha-compare-count]'),
 			compareList:   qs(el, '[data-ha-compare-list]'),
+			compareModal:  qs(el, '[data-ha-compare-modal]'),
+			compareContent:qs(el, '[data-ha-compare-content]'),
 		};
 
 		/* Parse URL hash into initial state */
@@ -326,6 +328,8 @@
 			if ((b = t.closest('[data-ha-device]'))   && self.el.contains(b)) { self.setDevice(b.getAttribute('data-ha-device')); return; }
 			if ((b = t.closest('[data-ha-preview-info-toggle]')) && self.el.contains(b)) { self._toggleInfo(); return; }
 			if ((b = t.closest('[data-ha-side-tab]')) && self.el.contains(b)) { self._activateSideTab(b.getAttribute('data-ha-side-tab')); return; }
+			if ((b = t.closest('[data-ha-compare-open]'))  && self.el.contains(b)) { self._openCompareModal(); return; }
+			if ((b = t.closest('[data-ha-compare-modal-close]')) && self.refs.compareModal && !self.refs.compareModal.hidden) { self._closeCompareModal(); return; }
 			if ((b = t.closest('[data-ha-compare-clear]')) && self.el.contains(b)) { self.state.compare = []; self._updateCompare(); self._refreshCards(); return; }
 			if ((b = t.closest('[data-ha-reset]'))    && self.el.contains(b)) { self.resetFilters(); return; }
 
@@ -371,7 +375,7 @@
 			}
 		});
 
-		document.addEventListener('keydown', function (e) { if (e.key === 'Escape') self.closeModal(); });
+		document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { self.closeModal(); self._closeCompareModal(); } });
 
 		/* Preload iframe on card hover for instant open */
 		this.el.addEventListener('mouseover', function (e) {
@@ -751,6 +755,101 @@
 		}
 	};
 
+	App.prototype._openCompareModal = function () {
+		if (!this.refs.compareModal || !this.state.compare.length) return;
+		if (this.refs.compareContent) this.refs.compareContent.innerHTML = this._buildCompareHtml();
+		this.refs.compareModal.hidden = false;
+		this.refs.compareModal.setAttribute('aria-hidden', 'false');
+		document.documentElement.classList.add('ha-pro-modal-open');
+	};
+
+	App.prototype._closeCompareModal = function () {
+		if (!this.refs.compareModal) return;
+		this.refs.compareModal.hidden = true;
+		this.refs.compareModal.setAttribute('aria-hidden', 'true');
+		if (!this.refs.modal || this.refs.modal.hidden) document.documentElement.classList.remove('ha-pro-modal-open');
+	};
+
+	App.prototype._buildCompareHtml = function () {
+		var self  = this;
+		var items = this.state.compare.map(function (id) { return self.state.items[id]; }).filter(Boolean);
+		if (!items.length) return '<p class="ha-pro-compare-empty">موردی برای مقایسه انتخاب نشده است.</p>';
+
+		function techBadges(stack) {
+			if (!stack) return '—';
+			return stack.split(/[,،]/).map(function (t) {
+				var s = t.trim();
+				return s ? '<span class="ha-pro-tech-badge">' + esc(s) + '</span>' : '';
+			}).join('');
+		}
+		function stars(avg) {
+			if (!avg) return '—';
+			var full = Math.round(avg);
+			var out = '';
+			for (var i = 1; i <= 5; i++) out += i <= full ? '★' : '☆';
+			return '<span class="ha-pro-compare-stars">' + out + ' <small>' + avg.toFixed(1) + '</small></span>';
+		}
+		function feats(item) {
+			if (!item.features || !item.features.length) return '—';
+			return item.features.map(function (f) { return '<span class="ha-pro-tech-badge">' + esc(f.name) + '</span>'; }).join('');
+		}
+		function price(item) {
+			if (!item.price) return '—';
+			var p = Number(item.price).toLocaleString('fa-IR');
+			var old = item.old_price ? '<del>' + Number(item.old_price).toLocaleString('fa-IR') + '</del> ' : '';
+			return old + p + ' تومان';
+		}
+
+		var cols = items.length;
+		var colWidth = Math.floor(100 / cols) + '%';
+
+		var rows = [
+			{ label: 'تصویر',    render: function (item) { return item.thumb ? '<img class="ha-pro-compare-thumb" src="' + esc(item.thumb) + '" alt="' + esc(item.title) + '" loading="lazy">' : '<div class="ha-pro-compare-no-thumb">بدون تصویر</div>'; } },
+			{ label: 'عنوان',    render: function (item) { return '<strong>' + esc(item.title) + '</strong>'; } },
+			{ label: 'قیمت',     render: price },
+			{ label: 'امتیاز',   render: function (item) { return stars(item.user_rating_avg); } },
+			{ label: 'نوع',      render: function (item) { return esc(item.project_type) || '—'; } },
+			{ label: 'تکنولوژی', render: function (item) { return techBadges(item.tech_stack); } },
+			{ label: 'تحویل',    render: function (item) { return esc(item.delivery) || '—'; } },
+			{ label: 'پشتیبانی', render: function (item) { return esc(item.support) || '—'; } },
+			{ label: 'امکانات',  render: feats },
+		];
+
+		var html = '<div class="ha-pro-compare-grid" style="--ha-cmp-cols:' + cols + '">';
+
+		/* Header row with remove buttons */
+		html += '<div class="ha-pro-compare-row ha-pro-compare-header-row">';
+		html += '<div class="ha-pro-compare-label-cell"></div>';
+		items.forEach(function (item) {
+			html += '<div class="ha-pro-compare-cell ha-pro-compare-head-cell">' +
+				'<span>' + esc(item.title) + '</span>' +
+				'</div>';
+		});
+		html += '</div>';
+
+		rows.forEach(function (row) {
+			html += '<div class="ha-pro-compare-row">';
+			html += '<div class="ha-pro-compare-label-cell">' + row.label + '</div>';
+			items.forEach(function (item) {
+				html += '<div class="ha-pro-compare-cell">' + row.render(item) + '</div>';
+			});
+			html += '</div>';
+		});
+
+		html += '</div>';
+
+		/* Action row */
+		html += '<div class="ha-pro-compare-actions">';
+		items.forEach(function (item) {
+			if (item.demo_url) {
+				html += '<a class="ha-pro-btn ha-pro-btn-primary" href="' + esc(item.demo_url) + '" target="_blank" rel="noopener noreferrer">مشاهده ' + esc(item.title) + '</a>';
+			}
+		});
+		html += '</div>';
+
+		return html;
+	};
+
 	/* ── Modal ── */
 	App.prototype.openPreview = function (id) {
 		var item = this.state.items[id];
@@ -952,9 +1051,15 @@
 		var order = this._whatsappUrl(item);
 		var feats = (item.features || []).map(function (f) { return '<span>' + esc(f.name) + '</span>'; }).join('');
 		var facts = '';
-		[['نوع پروژه', item.project_type], ['صفحات', item.pages_count], ['پشتیبانی', item.support], ['تکنولوژی', item.tech_stack], ['تحویل', item.delivery], ['پرداخت', item.installment]].forEach(function (r) {
+		[['نوع پروژه', item.project_type], ['صفحات', item.pages_count], ['پشتیبانی', item.support], ['تحویل', item.delivery], ['پرداخت', item.installment]].forEach(function (r) {
 			if (r[1]) facts += '<li><b>' + esc(r[0]) + '</b><span>' + esc(r[1]) + '</span></li>';
 		});
+		if (item.tech_stack) {
+			var techHtml = item.tech_stack.split(/[,،]/).map(function (t) {
+				var s = t.trim(); return s ? '<span class="ha-pro-tech-badge">' + esc(s) + '</span>' : '';
+			}).join('');
+			facts += '<li class="ha-pro-facts-tech"><b>تکنولوژی</b><span class="ha-pro-tech-badges">' + techHtml + '</span></li>';
+		}
 
 		var tabs = (item.tabs && item.tabs.length) ? item.tabs : [];
 		if (!tabs.length) {
