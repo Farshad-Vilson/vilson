@@ -38,6 +38,20 @@ class HA_Sites_Pro_REST {
 
 		register_rest_route(
 			self::NAMESPACE,
+			'/sites/(?P<id>\d+)/rate',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'callback'            => array( __CLASS__, 'rate_site' ),
+				'permission_callback' => '__return_true',
+				'args'                => array(
+					'id'     => array( 'sanitize_callback' => 'absint' ),
+					'rating' => array( 'sanitize_callback' => 'absint' ),
+				),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
 			'/filters',
 			array(
 				'methods'             => WP_REST_Server::READABLE,
@@ -69,6 +83,23 @@ class HA_Sites_Pro_REST {
 		$count++;
 		update_post_meta( $post_id, '_ha_view_count', $count );
 		return rest_ensure_response( array( 'view_count' => $count ) );
+	}
+
+	public static function rate_site( WP_REST_Request $request ) {
+		$post_id = absint( $request->get_param( 'id' ) );
+		$rating  = max( 1, min( 5, absint( $request->get_param( 'rating' ) ) ) );
+		$post    = get_post( $post_id );
+		if ( ! $post || HA_Sites_Pro_Post_Type::POST_TYPE !== $post->post_type || 'publish' !== $post->post_status ) {
+			return new WP_Error( 'not_found', 'Post not found', array( 'status' => 404 ) );
+		}
+		$sum   = (float) get_post_meta( $post_id, '_ha_user_rating_sum', true );
+		$count = (int)   get_post_meta( $post_id, '_ha_user_rating_count', true );
+		$sum   += $rating;
+		$count += 1;
+		update_post_meta( $post_id, '_ha_user_rating_sum',   $sum );
+		update_post_meta( $post_id, '_ha_user_rating_count', $count );
+		$avg = round( $sum / $count, 1 );
+		return rest_ensure_response( array( 'avg' => $avg, 'count' => $count ) );
 	}
 
 	public static function sanitize_per_page( $value ) {
@@ -263,6 +294,8 @@ class HA_Sites_Pro_REST {
 			'categories'   => $cats,
 			'features'    => $features,
 			'view_count'   => (int) get_post_meta( $post_id, '_ha_view_count', true ),
+			'user_rating_avg'   => (float) get_post_meta( $post_id, '_ha_user_rating_sum', true )   > 0 ? round( (float) get_post_meta( $post_id, '_ha_user_rating_sum', true ) / max( 1, (int) get_post_meta( $post_id, '_ha_user_rating_count', true ) ), 1 ) : 0,
+			'user_rating_count' => (int) get_post_meta( $post_id, '_ha_user_rating_count', true ),
 		);
 	}
 

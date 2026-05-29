@@ -7,6 +7,7 @@
 	var settings    = rootConfig.settings || {};
 	var i18n        = rootConfig.i18n || {};
 	var previewBase = rootConfig.previewBase || '';
+	var nonce = rootConfig.nonce || '';
 
 	/* ── Utilities ── */
 	function qs(ctx, sel)  { return (ctx || document).querySelector(sel); }
@@ -127,7 +128,8 @@
 	   App constructor
 	   ══════════════════════════════════════════════════════ */
 	function App(el) {
-		this.el   = el;
+		this.el        = el;
+		this._prefetched = {};
 		this.cfg  = JSON.parse(el.getAttribute('data-ha-config') || '{}');
 		this.hover = this.cfg.hover_effect || 'scroll';
 		this.refs  = {
@@ -226,6 +228,11 @@
 				if ((b = t.closest('[data-ha-device]')))           { self.setDevice(b.getAttribute('data-ha-device')); return; }
 				if ((b = t.closest('[data-ha-preview-info-toggle]'))) { self._toggleInfo(); return; }
 				if ((b = t.closest('[data-ha-side-tab]')))         { self._activateSideTab(b.getAttribute('data-ha-side-tab')); return; }
+				if ((b = t.closest('[data-ha-rate]'))) {
+					var rating = parseInt(b.getAttribute('data-ha-rate'), 10);
+					self._submitRating(rating);
+					return;
+				}
 
 				if ((b = t.closest('.ha-pro-preview-open'))) {
 					e.preventDefault();
@@ -283,6 +290,23 @@
 			this.refs.sort.addEventListener('change', function () {
 				self.state.sort = self.refs.sort.value;
 				self.resetAndLoad();
+			});
+		}
+
+		/* Pre-fetch demo URL on hover so modal opens instantly */
+		if (this.refs.grid) {
+			this.refs.grid.addEventListener('mouseover', function (e) {
+				var card = e.target.closest('[data-ha-card]');
+				if (!card) return;
+				var id = card.getAttribute('data-ha-card');
+				if (!id || self._prefetched[id]) return;
+				var item = self.state.items[id];
+				if (!item || !item.demo_url) return;
+				self._prefetched[id] = true;
+				var link = document.createElement('link');
+				link.rel  = 'prefetch';
+				link.href = item.demo_url;
+				document.head.appendChild(link);
 			});
 		}
 
@@ -423,7 +447,7 @@
 
 	App.prototype.loadFilters = function () {
 		var self = this;
-		fetch(buildUrl('filters', {}), { credentials: 'same-origin' })
+		fetch(buildUrl('filters', {}), { credentials: 'same-origin', headers: nonce ? { 'X-WP-Nonce': nonce } : {} })
 			.then(function (r) { return r.json(); })
 			.then(function (d) { self._renderFilters(d.categories || [], d.features || []); })
 			.catch(function () {});
@@ -475,7 +499,7 @@
 			this._renderSkeleton();
 		}
 
-		fetch(buildUrl('sites', this._params()), { credentials: 'same-origin', signal: this._ctrl.signal })
+		fetch(buildUrl('sites', this._params()), { credentials: 'same-origin', signal: this._ctrl.signal, headers: nonce ? { 'X-WP-Nonce': nonce } : {} })
 			.then(function (r) { return r.json(); })
 			.then(function (d) {
 				var items = d.items || [];
@@ -734,7 +758,7 @@
 
 		/* Track view — fire and forget */
 		(function(id, state) {
-			fetch(buildUrl('/sites/' + id + '/view', {}), { method: 'POST' })
+			fetch(buildUrl('sites/' + id + '/view', {}), { method: 'POST', headers: nonce ? { 'X-WP-Nonce': nonce } : {} })
 				.then(function(r) { return r.ok ? r.json() : null; })
 				.then(function(d) { if (d && d.view_count !== undefined && state[id]) state[id].view_count = d.view_count; })
 				.catch(function() {});
@@ -860,6 +884,15 @@
 		this.refs.modal.hidden = false;
 		this.refs.modal.setAttribute('aria-hidden', 'false');
 		document.documentElement.classList.add('ha-pro-modal-open');
+
+		/* Urgency counter */
+		var urgencyEl = this.refs.modal ? this.refs.modal.querySelector('.ha-pro-urgency') : null;
+		if (urgencyEl) {
+			var viewers = this._urgencyViewers(item.id);
+			urgencyEl.textContent = viewers + ' نفر در حال مشاهده';
+			this._startUrgencyTick(urgencyEl, item.id);
+		}
+
 		this.setDevice('desktop');
 
 		/* Mobile: details panel starts CLOSED */
@@ -895,12 +928,29 @@
 			panels += '<div class="ha-pro-side-tab-panel' + (i === 0 ? ' is-active' : '') + '" data-ha-side-tab-panel="' + key + '"><div class="ha-pro-side-tab-body">' + body + '</div></div>';
 		});
 
+		var avgRating  = item.user_rating_avg  || 0;
+		var rateCount  = item.user_rating_count || 0;
+		var userRated  = sessionStorage.getItem('ha_rated_' + item.id);
+		var starsHtml  = '';
+		for (var s = 1; s <= 5; s++) {
+			starsHtml += '<button type="button" class="ha-pro-star' + (s <= Math.round(avgRating) ? ' is-filled' : '') + '" data-ha-rate="' + s + '" aria-label="' + s + ' ستاره">' + (s <= Math.round(avgRating) ? '★' : '☆') + '</button>';
+		}
+		var ratingHtml = '<div class="ha-pro-side-rating" data-ha-rating-box>' +
+			'<div class="ha-pro-stars" data-ha-stars>' + starsHtml + '</div>' +
+			(rateCount ? '<span class="ha-pro-rating-count">(' + esc(rateCount) + ' امتیاز' + (avgRating ? ' — ' + esc(avgRating.toFixed(1)) : '') + ')</span>' : '<span class="ha-pro-rating-count">اولین نفر باشید!</span>') +
+			(userRated ? '<span class="ha-pro-rated-badge">✓ امتیاز شما ثبت شد</span>' : '') +
+		'</div>';
+
+		var urgencyHtml = '<div class="ha-pro-urgency"></div>';
+
 		return '<div class="ha-pro-side-head">' +
 			(item.code ? '<div style="margin-bottom:10px"><span class="ha-pro-code-badge" style="position:static;display:inline-flex">' + esc(item.code) + '</span></div>' : '') +
 			(statusLabel(item.status) ? '<div class="ha-pro-badge ha-pro-badge-' + esc(item.status) + '" style="position:static;margin-bottom:8px">' + esc(statusLabel(item.status)) + '</div>' : '') +
 			'<h3>' + esc(item.title) + '</h3>' +
 			(item.excerpt ? '<p>' + esc(item.excerpt) + '</p>' : '') +
 			(item.view_count ? '<div class="ha-pro-side-view-count"><span>👁</span> ' + esc(Number(item.view_count).toLocaleString('fa-IR')) + ' بازدید</div>' : '') +
+			urgencyHtml +
+			ratingHtml +
 			'</div>' +
 			(item.highlight ? '<div class="ha-pro-side-highlight">' + esc(item.highlight) + '</div>' : '') +
 			'<div class="ha-pro-side-tabs"><div class="ha-pro-side-tabs-nav">' + nav + '</div><div class="ha-pro-side-tabs-content">' + panels + '</div></div>' +
@@ -918,12 +968,67 @@
 			'</div>';
 	};
 
+	App.prototype._urgencyViewers = function (itemId) {
+		var key = 'ha_viewers_' + itemId;
+		var stored = sessionStorage.getItem(key);
+		if (stored) return parseInt(stored, 10);
+		var n = Math.floor(Math.random() * 6) + 2; /* 2-7 */
+		sessionStorage.setItem(key, n);
+		return n;
+	};
+
+	App.prototype._startUrgencyTick = function (el, itemId) {
+		var self = this;
+		if (this._urgencyTimer) clearInterval(this._urgencyTimer);
+		this._urgencyTimer = setInterval(function () {
+			var key = 'ha_viewers_' + itemId;
+			var n = parseInt(sessionStorage.getItem(key) || '3', 10);
+			var delta = Math.random() < 0.5 ? 1 : -1;
+			n = Math.max(2, Math.min(9, n + delta));
+			sessionStorage.setItem(key, n);
+			if (el && el.parentNode) el.textContent = n + ' نفر در حال مشاهده';
+		}, 18000 + Math.random() * 12000); /* every 18-30 seconds */
+	};
+
+	App.prototype._submitRating = function (rating) {
+		var item = this._currentItem;
+		if (!item) return;
+		var key = 'ha_rated_' + item.id;
+		if (sessionStorage.getItem(key)) return; /* already rated this session */
+		sessionStorage.setItem(key, rating);
+		fetch(buildUrl('sites/' + item.id + '/rate', {}), {
+			method: 'POST',
+			headers: Object.assign({ 'Content-Type': 'application/json' }, nonce ? { 'X-WP-Nonce': nonce } : {}),
+			body: JSON.stringify({ rating: rating }),
+		})
+		.then(function (r) { return r.ok ? r.json() : null; })
+		.then(function (d) {
+			if (!d) return;
+			if (item) {
+				item.user_rating_avg   = d.avg;
+				item.user_rating_count = d.count;
+			}
+			var box = self.refs.modal ? self.refs.modal.querySelector('[data-ha-rating-box]') : null;
+			if (!box) return;
+			var stars = box.querySelector('[data-ha-stars]');
+			if (stars) {
+				var s2 = '';
+				for (var i = 1; i <= 5; i++) s2 += '<button type="button" class="ha-pro-star' + (i <= rating ? ' is-filled' : '') + '" data-ha-rate="' + i + '">' + (i <= rating ? '★' : '☆') + '</button>';
+				stars.innerHTML = s2;
+			}
+			box.insertAdjacentHTML('beforeend', '<span class="ha-pro-rated-badge">✓ امتیاز شما ثبت شد</span>');
+		})
+		.catch(function () {});
+		var self = this;
+	};
+
 	App.prototype.closeModal = function () {
 		if (!this.refs.modal) return;
 		this.refs.modal.hidden = true;
 		this.refs.modal.setAttribute('aria-hidden', 'true');
 		if (this.refs.frame) { this.refs.frame.src = 'about:blank'; this.refs.frame.onload = null; }
 		clearTimeout(this._frameTimer);
+		if (this._urgencyTimer) { clearInterval(this._urgencyTimer); this._urgencyTimer = null; }
 		clearTimeout(this._progressTimer);
 		var wrap = this.refs.frame ? this.refs.frame.closest('.ha-pro-frame-wrap') : null;
 		if (wrap) {
