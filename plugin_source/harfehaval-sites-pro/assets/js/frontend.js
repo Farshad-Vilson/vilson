@@ -52,6 +52,18 @@
 	function storageGet(k) { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch(e) { return []; } }
 	function storageSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} }
 
+	/* Rating throttle: one rating per project per day, persisted in localStorage as "YYYY-M-D|rating" */
+	function todayStr() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+	function getRatedToday(id) {
+		try {
+			var v = localStorage.getItem('ha_rated_' + id);
+			if (!v) return null;
+			var p = v.split('|');
+			return p[0] === todayStr() ? (parseInt(p[1], 10) || 0) : null;
+		} catch (e) { return null; }
+	}
+	function setRatedToday(id, rating) { try { localStorage.setItem('ha_rated_' + id, todayStr() + '|' + rating); } catch (e) {} }
+
 	/* ── Hash state ── */
 	function parseHash() {
 		var out = {};
@@ -447,9 +459,18 @@
 
 	App.prototype.loadFilters = function () {
 		var self = this;
+		var cacheKey = 'ha_filters_' + (apiBase || '');
+		/* Paint cached chips instantly (if any), then refresh from the network */
+		try {
+			var cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
+			if (cached && cached.categories) self._renderFilters(cached.categories, cached.features || []);
+		} catch (e) {}
 		fetch(buildUrl('filters', {}), { credentials: 'same-origin', headers: nonce ? { 'X-WP-Nonce': nonce } : {} })
 			.then(function (r) { return r.json(); })
-			.then(function (d) { self._renderFilters(d.categories || [], d.features || []); })
+			.then(function (d) {
+				self._renderFilters(d.categories || [], d.features || []);
+				try { sessionStorage.setItem(cacheKey, JSON.stringify(d)); } catch (e) {}
+			})
 			.catch(function () {});
 	};
 
@@ -488,10 +509,13 @@
 
 	App.prototype.load = function (reset) {
 		var self = this;
-		if (this.state.loading) return;
-		this.state.loading = true;
+		/* A "load more" (reset=false) while a request is already running is a duplicate — ignore it.
+		   But a reset (filter/category/search change) must ALWAYS go through: abort the in-flight
+		   request and start fresh, otherwise filter clicks during a slow load are silently dropped. */
+		if (this.state.loading && !reset) return;
 		if (this._ctrl) this._ctrl.abort();
 		this._ctrl = new AbortController();
+		this.state.loading = true;
 
 		if (reset) {
 			this.state.items = {};
@@ -499,7 +523,8 @@
 			this._renderSkeleton();
 		}
 
-		fetch(buildUrl('sites', this._params()), { credentials: 'same-origin', signal: this._ctrl.signal, headers: nonce ? { 'X-WP-Nonce': nonce } : {} })
+		var thisCtrl = this._ctrl;
+		fetch(buildUrl('sites', this._params()), { credentials: 'same-origin', signal: thisCtrl.signal, headers: nonce ? { 'X-WP-Nonce': nonce } : {} })
 			.then(function (r) { return r.json(); })
 			.then(function (d) {
 				var items = d.items || [];
@@ -514,7 +539,7 @@
 				self.state.page += 1;
 			})
 			.catch(function (err) { if (err.name !== 'AbortError') self._renderError(); })
-			.finally(function () { self.state.loading = false; });
+			.finally(function () { if (thisCtrl === self._ctrl) self.state.loading = false; });
 	};
 
 	App.prototype._renderSkeleton = function () {
@@ -955,15 +980,16 @@
 
 		var avgRating  = item.user_rating_avg  || 0;
 		var rateCount  = item.user_rating_count || 0;
-		var userRated  = sessionStorage.getItem('ha_rated_' + item.id);
+		var myRating   = getRatedToday(item.id); /* null, or 1-5 if rated today */
+		var shownStars = myRating !== null ? myRating : Math.round(avgRating);
 		var starsHtml  = '';
 		for (var s = 1; s <= 5; s++) {
-			starsHtml += '<button type="button" class="ha-pro-star' + (s <= Math.round(avgRating) ? ' is-filled' : '') + '" data-ha-rate="' + s + '" aria-label="' + s + ' ستاره">' + (s <= Math.round(avgRating) ? '★' : '☆') + '</button>';
+			starsHtml += '<button type="button" class="ha-pro-star' + (s <= shownStars ? ' is-filled' : '') + '" data-ha-rate="' + s + '" aria-label="' + s + ' ستاره">' + (s <= shownStars ? '★' : '☆') + '</button>';
 		}
-		var ratingHtml = '<div class="ha-pro-side-rating" data-ha-rating-box>' +
+		var countText = rateCount ? '(' + rateCount + ' امتیاز' + (avgRating ? ' — ' + avgRating.toFixed(1) : '') + ')' : 'اولین نفر باشید!';
+		var ratingHtml = '<div class="ha-pro-side-rating' + (myRating !== null ? ' is-rated' : '') + '" data-ha-rating-box>' +
 			'<div class="ha-pro-stars" data-ha-stars>' + starsHtml + '</div>' +
-			(rateCount ? '<span class="ha-pro-rating-count">(' + esc(rateCount) + ' امتیاز' + (avgRating ? ' — ' + esc(avgRating.toFixed(1)) : '') + ')</span>' : '<span class="ha-pro-rating-count">اولین نفر باشید!</span>') +
-			(userRated ? '<span class="ha-pro-rated-badge">✓ امتیاز شما ثبت شد</span>' : '') +
+			'<span class="ha-pro-rating-count" data-ha-rating-count>' + esc(countText) + '</span>' +
 		'</div>';
 
 		var urgencyHtml = '<div class="ha-pro-urgency"></div>';
@@ -1038,11 +1064,26 @@
 	};
 
 	App.prototype._submitRating = function (rating) {
+		var self = this;
 		var item = this._currentItem;
 		if (!item) return;
-		var key = 'ha_rated_' + item.id;
-		if (sessionStorage.getItem(key)) return; /* already rated this session */
-		sessionStorage.setItem(key, rating);
+		/* One rating per project per day */
+		if (getRatedToday(item.id) !== null) {
+			toast('امروز قبلاً به این قالب امتیاز داده‌اید', 'info', '🌟');
+			return;
+		}
+		setRatedToday(item.id, rating);
+
+		/* Optimistically fill the stars to the user's choice (no layout shift) */
+		var box   = this.refs.modal ? this.refs.modal.querySelector('[data-ha-rating-box]') : null;
+		var stars = box ? box.querySelector('[data-ha-stars]') : null;
+		if (stars) {
+			var s2 = '';
+			for (var i = 1; i <= 5; i++) s2 += '<button type="button" class="ha-pro-star' + (i <= rating ? ' is-filled' : '') + '" data-ha-rate="' + i + '" aria-label="' + i + ' ستاره">' + (i <= rating ? '★' : '☆') + '</button>';
+			stars.innerHTML = s2;
+		}
+		if (box) box.classList.add('is-rated');
+
 		fetch(buildUrl('sites/' + item.id + '/rate', {}), {
 			method: 'POST',
 			headers: Object.assign({ 'Content-Type': 'application/json' }, nonce ? { 'X-WP-Nonce': nonce } : {}),
@@ -1051,22 +1092,14 @@
 		.then(function (r) { return r.ok ? r.json() : null; })
 		.then(function (d) {
 			if (!d) return;
-			if (item) {
-				item.user_rating_avg   = d.avg;
-				item.user_rating_count = d.count;
-			}
-			var box = self.refs.modal ? self.refs.modal.querySelector('[data-ha-rating-box]') : null;
-			if (!box) return;
-			var stars = box.querySelector('[data-ha-stars]');
-			if (stars) {
-				var s2 = '';
-				for (var i = 1; i <= 5; i++) s2 += '<button type="button" class="ha-pro-star' + (i <= rating ? ' is-filled' : '') + '" data-ha-rate="' + i + '">' + (i <= rating ? '★' : '☆') + '</button>';
-				stars.innerHTML = s2;
-			}
-			box.insertAdjacentHTML('beforeend', '<span class="ha-pro-rated-badge">✓ امتیاز شما ثبت شد</span>');
+			item.user_rating_avg   = d.avg;
+			item.user_rating_count = d.count;
+			var countEl = box ? box.querySelector('[data-ha-rating-count]') : null;
+			if (countEl) countEl.textContent = '(' + d.count + ' امتیاز' + (d.avg ? ' — ' + d.avg.toFixed(1) : '') + ')';
+			/* transient confirmation that comes and goes without disturbing the layout */
+			toast('✓ امتیاز شما ثبت شد', 'success', '⭐');
 		})
 		.catch(function () {});
-		var self = this;
 	};
 
 	App.prototype.closeModal = function () {
