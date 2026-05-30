@@ -639,11 +639,24 @@
 			grid.classList.add('ssv-' + this.cfg.slideshow_per_view);
 		}
 
-		var gridWrap = grid.parentNode;
-		if (gridWrap) gridWrap.style.position = 'relative';
+		/* Hide the load-more button while in slideshow mode */
+		if (this.refs.loadMore) { this.refs.loadMore.hidden = true; }
+		var lmWrap = this.el.querySelector('.ha-pro-loadmore-wrap');
+		if (lmWrap) { lmWrap.style.display = 'none'; }
+
+		/* Wrap the grid in a dedicated carousel container so arrows + dots
+		   sit directly around the cards (not below the load-more button). */
+		var carousel = this._slideshowCarousel;
+		if (!carousel || !carousel.contains(grid)) {
+			carousel = document.createElement('div');
+			carousel.className = 'ha-pro-carousel';
+			grid.parentNode.insertBefore(carousel, grid);
+			carousel.appendChild(grid);
+			this._slideshowCarousel = carousel;
+		}
 
 		/* Nav arrows */
-		if (this.cfg.slideshow_arrows && gridWrap && !this.el.querySelector('.ha-pro-slideshow-prev')) {
+		if (this.cfg.slideshow_arrows && !carousel.querySelector('.ha-pro-slideshow-prev')) {
 			var prev = document.createElement('button');
 			prev.type = 'button';
 			prev.className = 'ha-pro-slideshow-prev';
@@ -658,13 +671,13 @@
 			next.innerHTML = '&#8250;';
 			next.addEventListener('click', function () { self._slideshowStep(1); self._slideshowAutoplay(); });
 
-			gridWrap.appendChild(prev);
-			gridWrap.appendChild(next);
+			carousel.appendChild(prev);
+			carousel.appendChild(next);
 		}
 
-		/* Pagination dots */
+		/* Pagination dots — placed inside carousel, right under the cards */
 		if (this._slideshowDots) { this._slideshowDots.remove(); this._slideshowDots = null; }
-		if (this.cfg.slideshow_dots && gridWrap) {
+		if (this.cfg.slideshow_dots) {
 			var cards = qsa(grid, '[data-ha-card]');
 			if (cards.length > 1) {
 				var dots = document.createElement('div');
@@ -681,7 +694,7 @@
 					});
 					dots.appendChild(dot);
 				});
-				gridWrap.appendChild(dots);
+				carousel.appendChild(dots);
 				this._slideshowDots = dots;
 			}
 		}
@@ -849,7 +862,7 @@
 				: '';
 		}
 		if (this.refs.empty)    this.refs.empty.hidden    = this.state.total !== 0;
-		if (this.refs.loadMore) this.refs.loadMore.hidden = !(this.state.page <= this.state.totalPages) || this.cfg.pagination_type === 'infinite';
+		if (this.refs.loadMore) this.refs.loadMore.hidden = this.cfg.slideshow_mode || !(this.state.page <= this.state.totalPages) || this.cfg.pagination_type === 'infinite';
 		this._syncFilters();
 		this.renderStatuses();
 	};

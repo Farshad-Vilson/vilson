@@ -948,6 +948,10 @@ function ha_sites_pro_inline_styles( $id ) {
 }
 
 /* ── F13: Slideshow carousel ── */
+/* carousel wrapper — positioning context for arrows + dots */
+{$p} .ha-pro-carousel {
+    position:relative !important;
+}
 {$p} .ha-pro-grid.is-slideshow-grid {
     display:flex !important;
     flex-wrap:nowrap !important;
@@ -957,26 +961,15 @@ function ha_sites_pro_inline_styles( $id ) {
     -webkit-overflow-scrolling:touch !important;
     gap:20px !important;
     /* vertical breathing room so the hover lift is never clipped by the scroll box */
-    padding:14px 4px 22px !important;
-    /* modern thin scrollbar (Firefox) */
-    scrollbar-width:thin !important;
-    scrollbar-color:#2ec4b6 #eef2f6 !important;
+    padding:14px 4px 14px !important;
+    /* hide the native scrollbar — navigation is via arrows + dots */
+    scrollbar-width:none !important;
+    -ms-overflow-style:none !important;
 }
-/* modern scrollbar (WebKit/Chromium) */
 {$p} .ha-pro-grid.is-slideshow-grid::-webkit-scrollbar {
-    height:8px !important;
-}
-{$p} .ha-pro-grid.is-slideshow-grid::-webkit-scrollbar-track {
-    background:#eef2f6 !important;
-    border-radius:100px !important;
-    margin:0 12px !important;
-}
-{$p} .ha-pro-grid.is-slideshow-grid::-webkit-scrollbar-thumb {
-    background:linear-gradient(90deg,#2ec4b6,#1f9e92) !important;
-    border-radius:100px !important;
-}
-{$p} .ha-pro-grid.is-slideshow-grid::-webkit-scrollbar-thumb:hover {
-    background:linear-gradient(90deg,#26b0a3,#188377) !important;
+    display:none !important;
+    width:0 !important;
+    height:0 !important;
 }
 {$p} .ha-pro-grid.is-slideshow-grid > [data-ha-card] {
     scroll-snap-align:center !important;
