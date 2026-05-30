@@ -978,109 +978,104 @@
    ════════════════════════════════════════════════════════ */
 .ha-pro-compare-modal[hidden] { display: none !important; }
 .ha-pro-compare-modal {
-	position:       fixed;
-	inset:          0;
-	z-index:        100000;
-	display:        flex;
-	align-items:    center;
-	justify-content:center;
-	padding:        16px;
-	animation:      ha-modal-in .2s ease;
+	position:        fixed;
+	inset:           0;
+	z-index:         100000;
+	display:         flex;
+	align-items:     center;
+	justify-content: center;
+	padding:         24px;
+	animation:       ha-modal-in .2s ease;
 }
 .ha-pro-compare-modal-backdrop {
 	position:  absolute;
 	inset:     0;
-	background:rgba(1,22,39,.55);
+	background:rgba(1,22,39,.6);
 	backdrop-filter: blur(4px);
 }
 .ha-pro-compare-modal-inner {
-	position:     relative;
-	z-index:      1;
-	background:   #fff;
-	border-radius:18px;
-	width:        100%;
-	max-width:    960px;
-	max-height:   90vh;
-	display:      flex;
-	flex-direction:column;
-	overflow:     clip; /* clips border-radius without blocking scroll */
-	box-shadow:   0 24px 80px rgba(1,22,39,.22);
+	position:       relative;
+	z-index:        1;
+	background:     #fff;
+	border-radius:  18px;
+	width:          100%;
+	max-width:      1100px;
+	height:         calc(100vh - 48px); /* fills screen, leaves 24px padding each side */
+	display:        flex;
+	flex-direction: column;
+	overflow:       hidden;
+	box-shadow:     0 24px 80px rgba(1,22,39,.25);
 }
 .ha-pro-compare-modal-header {
-	display:      flex;
-	align-items:  center;
-	justify-content:space-between;
-	padding:      18px 24px;
-	border-bottom:1px solid #e5e7eb;
-	flex-shrink:  0;
-	direction:    rtl;
+	display:         flex;
+	align-items:     center;
+	justify-content: space-between;
+	padding:         18px 28px;
+	border-bottom:   1px solid #e5e7eb;
+	flex-shrink:     0;
+	direction:       rtl;
 }
 .ha-pro-compare-modal-title {
-	margin:    0;
-	font-size: 1.1rem;
-	font-weight:700;
-	color:     #011627;
+	margin:      0;
+	font-size:   1.15rem;
+	font-weight: 700;
+	color:       #011627;
 }
 .ha-pro-compare-modal-close-btn {
-	/* full reset — prevents theme from injecting borders, colours, or radius */
-	all:            unset !important;
-	box-sizing:     border-box !important;
-	display:        inline-flex !important;
-	align-items:    center !important;
-	justify-content:center !important;
-	width:          36px !important;
-	height:         36px !important;
-	background:     #f1f5f9 !important;
-	border:         1.5px solid #e2e8f0 !important;
-	border-radius:  10px !important;
-	color:          #64748b !important;
-	font-size:      1.25rem !important;
-	line-height:    1 !important;
-	font-family:    inherit !important;
-	cursor:         pointer !important;
-	flex-shrink:    0 !important;
-	transition:     background .18s, color .18s, border-color .18s !important;
-	box-shadow:     none !important;
-	text-decoration:none !important;
+	all:             unset !important;
+	box-sizing:      border-box !important;
+	display:         inline-flex !important;
+	align-items:     center !important;
+	justify-content: center !important;
+	width:           38px !important;
+	height:          38px !important;
+	background:      #f1f5f9 !important;
+	border:          1.5px solid #e2e8f0 !important;
+	border-radius:   10px !important;
+	color:           #64748b !important;
+	font-size:       1.3rem !important;
+	line-height:     1 !important;
+	font-family:     inherit !important;
+	cursor:          pointer !important;
+	flex-shrink:     0 !important;
+	transition:      background .18s, color .18s, border-color .18s !important;
+	box-shadow:      none !important;
+	text-decoration: none !important;
 }
 .ha-pro-compare-modal-close-btn:hover {
 	background:   #011627 !important;
 	color:        #fff !important;
 	border-color: #011627 !important;
 }
-
 .ha-pro-compare-modal-body {
-	overflow-y:  auto;
-	overflow-x:  auto;
+	flex:                    1;
+	min-height:              0;
+	overflow-y:              auto;
+	overflow-x:              auto;
 	-webkit-overflow-scrolling: touch;
-	overscroll-behavior: contain;
-	padding:     16px 24px 24px;
-	direction:   rtl;
-	flex:        1 1 0;
-	min-height:  0;
+	overscroll-behavior:     contain;
+	padding:                 20px 28px 28px;
+	direction:               rtl;
 }
+/* ── grid ── */
 .ha-pro-compare-grid {
 	display:               grid;
-	grid-template-columns: 120px repeat(var(--ha-cmp-cols, 2), 1fr);
-	min-width:             540px;
-	gap:                   0;
+	grid-template-columns: 110px repeat(var(--ha-cmp-cols, 2), 1fr);
+	min-width:             480px;
 	border:                1px solid #e5e7eb;
-	border-radius:         12px;
+	border-radius:         14px;
 	overflow:              hidden;
 }
-.ha-pro-compare-row {
-	display:  contents;
-}
+.ha-pro-compare-row { display: contents; }
 .ha-pro-compare-row > * {
-	padding:     12px 14px;
+	padding:      13px 16px;
 	border-bottom:1px solid #f1f5f9;
-	font-size:   .85rem;
-	line-height: 1.4;
-	vertical-align:middle;
+	font-size:    .875rem;
+	line-height:  1.45;
 }
 .ha-pro-compare-row:last-child > * { border-bottom: none; }
 .ha-pro-compare-label-cell {
-	font-weight:700;
+	font-weight: 700;
 	color:       #011627;
 	background:  #f8fafc;
 	white-space: nowrap;
@@ -1093,50 +1088,68 @@
 	font-weight: 700;
 	font-size:   .9rem;
 	text-align:  center;
+	padding:     14px 16px;
 }
 .ha-pro-compare-thumb {
-	width:        100%;
-	max-width:    220px;
-	height:       130px;
-	object-fit:   cover;
-	border-radius:8px;
-	display:      block;
-	margin:       0 auto;
+	width:         100%;
+	max-width:     240px;
+	height:        140px;
+	object-fit:    cover;
+	border-radius: 8px;
+	display:       block;
+	margin:        0 auto;
 }
 .ha-pro-compare-no-thumb {
-	height:      130px;
-	display:     flex;
-	align-items: center;
-	justify-content:center;
-	color:       #94a3b8;
-	font-size:   .8rem;
-	background:  #f8fafc;
-	border-radius:8px;
+	height:          140px;
+	display:         flex;
+	align-items:     center;
+	justify-content: center;
+	color:           #94a3b8;
+	font-size:       .8rem;
+	background:      #f8fafc;
+	border-radius:   8px;
 }
 .ha-pro-compare-stars { color: #f59e0b; letter-spacing: 2px; }
 .ha-pro-compare-stars small { color: #64748b; font-size: .8rem; }
 .ha-pro-compare-actions {
-	display:    flex;
-	gap:        12px;
-	flex-wrap:  wrap;
-	margin-top: 16px;
-	justify-content:center;
+	display:         flex;
+	gap:             12px;
+	flex-wrap:       wrap;
+	margin-top:      20px;
+	justify-content: center;
 }
-.ha-pro-compare-empty { text-align:center; color:#64748b; padding:40px; }
+.ha-pro-compare-empty { text-align: center; color: #64748b; padding: 48px; }
 
 /* compare bar open button */
 .ha-pro-compare-bar-open {
-	padding:       8px 18px !important;
+	padding:       8px 20px !important;
 	background:    #fff !important;
 	color:         #011627 !important;
 	border-radius: var(--ha-btn-r) !important;
 	font-size:     .88rem !important;
 	font-weight:   700 !important;
-	flex-shrink:   0;
+	flex-shrink:   0 !important;
 	border:        none !important;
-	cursor:        pointer;
+	cursor:        pointer !important;
 }
-.ha-pro-compare-bar-open:hover { opacity:.9; }
+.ha-pro-compare-bar-open:hover { opacity: .88 !important; }
+
+/* ── mobile ── */
+@media (max-width: 640px) {
+	.ha-pro-compare-modal { padding: 0; align-items: flex-end; }
+	.ha-pro-compare-modal-inner {
+		height:        92vh;
+		max-width:     100%;
+		border-radius: 20px 20px 0 0;
+	}
+	.ha-pro-compare-modal-header { padding: 14px 18px; }
+	.ha-pro-compare-modal-body   { padding: 14px 18px 24px; }
+	.ha-pro-compare-grid         { min-width: 320px; }
+	.ha-pro-compare-grid { grid-template-columns: 80px repeat(var(--ha-cmp-cols, 2), 1fr); }
+	.ha-pro-compare-label-cell   { font-size: .78rem; padding: 10px 8px; white-space: normal; }
+	.ha-pro-compare-cell         { font-size: .82rem; padding: 10px 8px; }
+	.ha-pro-compare-thumb        { height: 100px; }
+}
 
 /* ── Tech stack badges ── */
 .ha-pro-tech-badge {
