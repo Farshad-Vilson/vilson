@@ -1285,11 +1285,15 @@
 			stage.classList.toggle('is-info-hidden', isMobile);
 		}
 
-		/* F22 — Guided tour on first modal open — delay so modal animation completes */
-		if (!localStorage.getItem('ha_toured_v1')) {
-			var self = this;
-			setTimeout(function () { self._startTour(); }, 500);
-		}
+		/* F22 — Guided tour on first modal open (per session).
+		   800ms delay lets the modal CSS transition fully complete
+		   before getBoundingClientRect measures element positions. */
+		try {
+			if (!sessionStorage.getItem('ha_toured_v1')) {
+				var self = this;
+				setTimeout(function () { self._startTour(); }, 800);
+			}
+		} catch (e) {}
 	};
 
 	App.prototype._sideHtml = function (item) {
@@ -1576,100 +1580,103 @@
 		var modal = this.refs.modal;
 		if (!modal) return;
 
-		/* Find tour targets */
 		var steps = [
 			{
 				target: function () { return qs(modal, '[data-ha-device]'); },
-				tooltip: 'از اینجا پیش‌نمایش موبایل را ببینید ←',
-				position: 'bottom',
+				text: 'از اینجا پیش‌نمایش موبایل، تبلت یا دسکتاپ را ببینید.',
+				pos: 'bottom',
 			},
 			{
 				target: function () { return qs(modal, '[data-ha-preview-info-toggle]') || qs(modal, '.ha-pro-side-handle'); },
-				tooltip: 'اینجا جزئیات و امکانات قالب است',
-				position: 'left',
+				text: 'این دکمه جزئیات، قیمت و امکانات قالب را باز می‌کند.',
+				pos: 'left',
 			},
 			{
-				target: function () { return qs(modal, '.ha-pro-preview-open') || qs(modal, '.ha-pro-side-view-btn'); },
-				tooltip: 'برای سفارش یا مشاهده کامل کلیک کنید',
-				position: 'top',
+				target: function () { return qs(modal, '.ha-pro-side-view-btn') || qs(modal, '.ha-pro-preview-open'); },
+				text: 'برای سفارش یا مشاهده کامل سایت کلیک کنید.',
+				pos: 'top',
 			},
 		];
 
+		/* Filter out steps whose target is missing or zero-sized */
+		var activeSteps = steps.filter(function (s) {
+			var el = s.target();
+			if (!el) return false;
+			var r = el.getBoundingClientRect();
+			return r.width > 0 && r.height > 0;
+		});
+		if (!activeSteps.length) return;
+
+		/* Build overlay (pointer-events:none so modal beneath stays usable) */
 		var overlay = document.createElement('div');
 		overlay.className = 'ha-pro-tour-overlay';
-		overlay.setAttribute('aria-live', 'polite');
 		document.body.appendChild(overlay);
 		this._tourOverlay = overlay;
 
-		var currentStep = 0;
-		var stepTimer = null;
+		/* Persistent highlight box — transitions smoothly between steps */
+		var hl = document.createElement('div');
+		hl.className = 'ha-pro-tour-highlight';
+		overlay.appendChild(hl);
 
-		function cleanup() {
-			clearTimeout(stepTimer);
-			if (overlay && overlay.parentNode) overlay.remove();
+		/* Tooltip box */
+		var box = document.createElement('div');
+		box.className = 'ha-pro-tour-box';
+		overlay.appendChild(box);
+
+		var idx = 0;
+
+		function done() {
+			if (overlay.parentNode) overlay.remove();
 			self._tourOverlay = null;
-			try { localStorage.setItem('ha_toured_v1', '1'); } catch (e) {}
+			try { sessionStorage.setItem('ha_toured_v1', '1'); } catch (e) {}
 		}
 
-		function showStep(i) {
-			overlay.innerHTML = '';
-			if (i >= steps.length) { cleanup(); return; }
-			var step = steps[i];
-			var targetEl = step.target();
-			if (!targetEl) { showStep(i + 1); return; }
+		function render(i) {
+			var step = activeSteps[i];
+			var el = step.target();
+			if (!el) { if (i + 1 < activeSteps.length) render(i + 1); else done(); return; }
 
-			var rect = targetEl.getBoundingClientRect();
-			var pad = 6;
-			/* Highlight via box-shadow cutout */
-			var highlight = document.createElement('div');
-			highlight.className = 'ha-pro-tour-highlight';
-			highlight.style.cssText = 'position:fixed;pointer-events:none;z-index:200001;' +
-				'top:' + (rect.top - pad) + 'px;' +
-				'left:' + (rect.left - pad) + 'px;' +
-				'width:' + (rect.width + pad * 2) + 'px;' +
-				'height:' + (rect.height + pad * 2) + 'px;' +
-				'border-radius:8px;' +
-				'box-shadow:0 0 0 9999px rgba(0,0,0,0.55);';
-			overlay.appendChild(highlight);
+			var r = el.getBoundingClientRect();
+			var pad = 8;
+			var isLast = (i === activeSteps.length - 1);
 
-			/* Tooltip */
-			var tooltip = document.createElement('div');
-			tooltip.className = 'ha-pro-tour-tooltip';
-			var tipTop = rect.bottom + pad + 10;
-			if (step.position === 'top') tipTop = rect.top - 60 - pad;
-			if (step.position === 'left') tipTop = rect.top;
-			tooltip.style.cssText = 'position:fixed;z-index:200002;' +
-				'top:' + tipTop + 'px;' +
-				'left:' + Math.max(8, rect.left) + 'px;';
-			tooltip.innerHTML = '<span>' + step.tooltip + '</span>';
-			overlay.appendChild(tooltip);
+			/* Position highlight */
+			hl.style.top    = (r.top  - pad) + 'px';
+			hl.style.left   = (r.left - pad) + 'px';
+			hl.style.width  = (r.width  + pad * 2) + 'px';
+			hl.style.height = (r.height + pad * 2) + 'px';
 
-			/* Skip button */
-			var skip = document.createElement('button');
-			skip.type = 'button';
-			skip.className = 'ha-pro-tour-skip';
-			skip.textContent = 'رد کردن';
-			skip.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:200003;';
-			skip.addEventListener('click', cleanup);
-			overlay.appendChild(skip);
+			/* Position tooltip box below/above the target */
+			var boxTop = r.bottom + pad + 12;
+			if (step.pos === 'top' || boxTop + 120 > window.innerHeight) {
+				boxTop = Math.max(8, r.top - pad - 120);
+			}
+			var boxLeft = Math.min(Math.max(8, r.left), window.innerWidth - 296);
+			box.style.top  = boxTop + 'px';
+			box.style.left = boxLeft + 'px';
 
-			/* Advance on click or after 2.5s */
-			overlay.addEventListener('click', function handler() {
-				overlay.removeEventListener('click', handler);
-				clearTimeout(stepTimer);
-				showStep(i + 1);
+			box.innerHTML =
+				'<div class="ha-pro-tour-box-counter">گام ' + (i + 1) + ' از ' + activeSteps.length + '</div>' +
+				'<div class="ha-pro-tour-box-text">' + step.text + '</div>' +
+				'<div class="ha-pro-tour-box-actions">' +
+					'<button type="button" class="ha-pro-tour-btn-skip">رد کردن</button>' +
+					'<button type="button" class="ha-pro-tour-btn-next">' + (isLast ? 'پایان ✓' : 'بعدی ←') + '</button>' +
+				'</div>';
+
+			qs(box, '.ha-pro-tour-btn-next').addEventListener('click', function () {
+				if (i + 1 < activeSteps.length) render(i + 1); else done();
 			});
-			stepTimer = setTimeout(function () { showStep(i + 1); }, 2500);
+			qs(box, '.ha-pro-tour-btn-skip').addEventListener('click', done);
 		}
 
-		showStep(currentStep);
+		render(idx);
 	};
 
 	App.prototype._removeTour = function () {
 		if (this._tourOverlay && this._tourOverlay.parentNode) {
 			this._tourOverlay.remove();
 			this._tourOverlay = null;
-			try { localStorage.setItem('ha_toured_v1', '1'); } catch (e) {}
+			try { sessionStorage.setItem('ha_toured_v1', '1'); } catch (e) {}
 		}
 	};
 

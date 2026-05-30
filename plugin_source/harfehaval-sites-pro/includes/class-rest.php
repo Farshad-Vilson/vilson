@@ -83,6 +83,7 @@ class HA_Sites_Pro_REST {
 		$count = (int) get_post_meta( $post_id, '_ha_view_count', true );
 		$count++;
 		update_post_meta( $post_id, '_ha_view_count', $count );
+		self::bust_cache();
 		return rest_ensure_response( array( 'view_count' => $count ) );
 	}
 
@@ -99,6 +100,7 @@ class HA_Sites_Pro_REST {
 		$count += 1;
 		update_post_meta( $post_id, '_ha_user_rating_sum',   $sum );
 		update_post_meta( $post_id, '_ha_user_rating_count', $count );
+		self::bust_cache();
 		$avg = round( $sum / $count, 1 );
 		return rest_ensure_response( array( 'avg' => $avg, 'count' => $count ) );
 	}
