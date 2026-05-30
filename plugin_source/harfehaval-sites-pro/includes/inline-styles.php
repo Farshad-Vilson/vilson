@@ -998,6 +998,35 @@ function ha_sites_pro_inline_styles( $id ) {
         flex:0 0 calc(33.333% - 24px) !important;
     }
 }
+/* fixed per-view overrides (auto = responsive defaults above) */
+{$p} .ha-pro-grid.is-slideshow-grid.ssv-1 > [data-ha-card] { flex:0 0 calc(100% - 8px) !important; max-width:none !important; }
+{$p} .ha-pro-grid.is-slideshow-grid.ssv-2 > [data-ha-card] { flex:0 0 calc(50% - 10px) !important; max-width:none !important; }
+{$p} .ha-pro-grid.is-slideshow-grid.ssv-3 > [data-ha-card] { flex:0 0 calc(33.333% - 14px) !important; max-width:none !important; }
+{$p} .ha-pro-grid.is-slideshow-grid.ssv-4 > [data-ha-card] { flex:0 0 calc(25% - 15px) !important; max-width:none !important; }
+
+/* pagination dots */
+{$p} .ha-pro-slideshow-dots {
+    display:flex !important;
+    justify-content:center !important;
+    gap:8px !important;
+    margin-top:10px !important;
+}
+{$p} .ha-pro-slideshow-dot {
+    width:9px !important;
+    height:9px !important;
+    padding:0 !important;
+    border:0 !important;
+    border-radius:50% !important;
+    background:#cbd5e1 !important;
+    cursor:pointer !important;
+    transition:all .25s ease !important;
+}
+{$p} .ha-pro-slideshow-dot:hover { background:#94a3b8 !important; transform:scale(1.15) !important; }
+{$p} .ha-pro-slideshow-dot.is-active {
+    width:26px !important;
+    border-radius:100px !important;
+    background:linear-gradient(90deg,#2ec4b6,#1f9e92) !important;
+}
 {$p} .ha-pro-slideshow-prev,
 {$p} .ha-pro-slideshow-next {
     position:absolute !important;

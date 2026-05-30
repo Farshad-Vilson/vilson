@@ -385,13 +385,61 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'description'  => __( 'کارت‌ها به صورت خودکار با فاصله زمانی تغییر می‌کنند.', 'harfehaval-sites-pro' ),
 		] );
 
+		$this->add_control( 'slideshow_autoplay', [
+			'label'        => __( 'پخش خودکار', 'harfehaval-sites-pro' ),
+			'type'         => Controls_Manager::SWITCHER,
+			'return_value' => 'yes',
+			'default'      => 'yes',
+			'description'  => __( 'اگر خاموش باشد، فقط با فلش‌ها یا اسکرول جابجا می‌شود.', 'harfehaval-sites-pro' ),
+			'condition'    => [ 'slideshow_mode' => 'yes' ],
+		] );
+
 		$this->add_control( 'slideshow_interval', [
 			'label'     => __( 'فاصله زمانی اسلایدشو (ثانیه)', 'harfehaval-sites-pro' ),
 			'type'      => Controls_Manager::NUMBER,
 			'default'   => 4,
 			'min'       => 1,
 			'max'       => 60,
-			'condition' => [ 'slideshow_mode' => 'yes' ],
+			'condition' => [ 'slideshow_mode' => 'yes', 'slideshow_autoplay' => 'yes' ],
+		] );
+
+		$this->add_control( 'slideshow_pause_hover', [
+			'label'        => __( 'توقف هنگام نگه‌داشتن موس', 'harfehaval-sites-pro' ),
+			'type'         => Controls_Manager::SWITCHER,
+			'return_value' => 'yes',
+			'default'      => 'yes',
+			'condition'    => [ 'slideshow_mode' => 'yes', 'slideshow_autoplay' => 'yes' ],
+		] );
+
+		$this->add_control( 'slideshow_arrows', [
+			'label'        => __( 'نمایش فلش‌های ناوبری', 'harfehaval-sites-pro' ),
+			'type'         => Controls_Manager::SWITCHER,
+			'return_value' => 'yes',
+			'default'      => 'yes',
+			'condition'    => [ 'slideshow_mode' => 'yes' ],
+		] );
+
+		$this->add_control( 'slideshow_dots', [
+			'label'        => __( 'نمایش نقطه‌های صفحه‌بندی', 'harfehaval-sites-pro' ),
+			'type'         => Controls_Manager::SWITCHER,
+			'return_value' => 'yes',
+			'default'      => 'yes',
+			'condition'    => [ 'slideshow_mode' => 'yes' ],
+		] );
+
+		$this->add_control( 'slideshow_per_view', [
+			'label'       => __( 'تعداد کارت در هر نما', 'harfehaval-sites-pro' ),
+			'type'        => Controls_Manager::SELECT,
+			'default'     => 'auto',
+			'options'     => [
+				'auto' => __( 'خودکار (واکنش‌گرا)', 'harfehaval-sites-pro' ),
+				'1'    => '۱',
+				'2'    => '۲',
+				'3'    => '۳',
+				'4'    => '۴',
+			],
+			'description' => __( 'چند کارت همزمان دیده شود. «خودکار» بر اساس عرض صفحه تنظیم می‌شود.', 'harfehaval-sites-pro' ),
+			'condition'   => [ 'slideshow_mode' => 'yes' ],
 		] );
 
 		$this->add_control( 'modal', [
@@ -1565,6 +1613,11 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'show_pin'             => $s['show_pin'] ?? '',
 			'slideshow_mode'       => $s['slideshow_mode'] ?? '',
 			'slideshow_interval'   => $s['slideshow_interval'] ?? 4,
+			'slideshow_autoplay'   => $s['slideshow_autoplay'] ?? 'yes',
+			'slideshow_pause_hover'=> $s['slideshow_pause_hover'] ?? 'yes',
+			'slideshow_arrows'     => $s['slideshow_arrows'] ?? 'yes',
+			'slideshow_dots'       => $s['slideshow_dots'] ?? 'yes',
+			'slideshow_per_view'   => $s['slideshow_per_view'] ?? 'auto',
 			'show_guarantee'       => $s['show_guarantee'] ?? 'yes',
 			'guarantee_text'       => $s['guarantee_text'] ?? 'ضمانت بازگشت وجه ۷ روزه',
 			'container_mode'       => $s['container_mode'] ?? 'full',
