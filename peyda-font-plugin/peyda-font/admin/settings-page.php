@@ -9,6 +9,20 @@
 			<h1>تنظیمات فونت پیدا</h1>
 			<p>فونت فارسی پیدا با ۹ وزن مختلف — سبک، منعطف، حرفه‌ای</p>
 		</div>
+		<div class="peyda-header-meta">
+			<span class="peyda-copyright-badge">
+				<span class="dashicons dashicons-shield"></span>
+				این افزونه توسط <strong>وب گستر حرف اول</strong> طراحی شده است
+			</span>
+			<span class="peyda-author-badge">
+				<span class="dashicons dashicons-admin-users"></span>
+				نویسنده: <strong>فرشاد معتمدی‌پور</strong>
+			</span>
+			<span class="peyda-copyright-badge peyda-no-copy">
+				<span class="dashicons dashicons-lock"></span>
+				کپی‌برداری مجاز نیست
+			</span>
+		</div>
 	</div>
 
 	<?php if ( isset( $_GET['settings-updated'] ) ) : ?>
