@@ -14,10 +14,6 @@
 				<span class="dashicons dashicons-shield"></span>
 				این افزونه توسط <strong>وب گستر حرف اول</strong> طراحی شده است
 			</span>
-			<span class="peyda-author-badge">
-				<span class="dashicons dashicons-admin-users"></span>
-				نویسنده: <strong>فرشاد معتمدی‌پور</strong>
-			</span>
 			<span class="peyda-copyright-badge peyda-no-copy">
 				<span class="dashicons dashicons-lock"></span>
 				کپی‌برداری مجاز نیست

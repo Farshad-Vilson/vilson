@@ -4,7 +4,7 @@
  * Plugin URI:  https://vilson.ir
  * Description: افزونه فونت فارسی پیدا با پشتیبانی کامل از المنتور و تنظیمات پیشرفته
  * Version:     1.0.0
- * Author:      Vilson
+ * Author:      فرشاد معتمدی‌پور
  * Text Domain: peyda-font
  * Domain Path: /languages
  */
