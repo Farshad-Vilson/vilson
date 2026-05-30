@@ -51,6 +51,12 @@ class HA_Sites_Pro_Plugin {
 
 		add_action( 'elementor/widgets/register',               [ HA_Sites_Pro_Elementor::class, 'register_widgets' ] );
 		add_action( 'elementor/elements/categories_registered', [ HA_Sites_Pro_Elementor::class, 'add_category' ] );
+
+		/* Bust REST transient cache whenever an ha_site post changes */
+		add_action( 'save_post_' . HA_Sites_Pro_Post_Type::POST_TYPE, [ HA_Sites_Pro_REST::class, 'bust_cache' ] );
+		add_action( 'delete_post',                                     [ HA_Sites_Pro_REST::class, 'bust_cache' ] );
+		add_action( 'created_' . HA_Sites_Pro_Post_Type::TAX_CATEGORY, [ HA_Sites_Pro_REST::class, 'bust_cache' ] );
+		add_action( 'edited_' .  HA_Sites_Pro_Post_Type::TAX_CATEGORY, [ HA_Sites_Pro_REST::class, 'bust_cache' ] );
 	}
 
 	public function load_textdomain(): void {

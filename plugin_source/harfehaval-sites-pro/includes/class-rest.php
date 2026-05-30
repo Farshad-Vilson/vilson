@@ -145,6 +145,10 @@ class HA_Sites_Pro_REST {
 		return array_values( array_unique( $ids ) );
 	}
 
+	public static function bust_cache() {
+		update_option( 'ha_sites_pro_cache_ver', time(), false );
+	}
+
 	public static function sites( WP_REST_Request $request ) {
 		$page     = max( 1, (int) $request->get_param( 'page' ) );
 		$per_page = self::sanitize_per_page( $request->get_param( 'per_page' ) );
@@ -155,6 +159,19 @@ class HA_Sites_Pro_REST {
 		$sort     = (string) $request->get_param( 'sort' );
 		$allowed_sorts = array( 'newest', 'oldest', 'price_asc', 'price_desc', 'popular', 'rating', 'most_viewed' );
 		if ( ! in_array( $sort, $allowed_sorts, true ) ) { $sort = 'newest'; }
+
+		/* ── Server-side transient cache (5 min, keyed by all params + version) ── */
+		$cache_ver = (int) get_option( 'ha_sites_pro_cache_ver', 1 );
+		$cache_key = 'ha_sp_' . $cache_ver . '_' . substr( md5( $page . $per_page . $search . $category . $features . $status . $sort ), 0, 16 );
+		$cached = get_transient( $cache_key );
+		if ( false !== $cached ) {
+			$response = rest_ensure_response( $cached );
+			$response->header( 'X-WP-Total',      $cached['total'] );
+			$response->header( 'X-WP-TotalPages', $cached['total_pages'] );
+			$response->header( 'X-Cache', 'HIT' );
+			self::no_cache_headers( $response );
+			return $response;
+		}
 
 		$args = array(
 			'post_type'      => HA_Sites_Pro_Post_Type::POST_TYPE,
@@ -250,16 +267,18 @@ class HA_Sites_Pro_REST {
 		$query = new WP_Query( $args );
 		$items = array_map( array( __CLASS__, 'format_post' ), $query->posts );
 
-		$response = rest_ensure_response(
-			array(
-				'items'       => $items,
-				'total'       => (int) $query->found_posts,
-				'total_pages' => (int) $query->max_num_pages,
-				'page'        => $page,
-			)
+		$data = array(
+			'items'       => $items,
+			'total'       => (int) $query->found_posts,
+			'total_pages' => (int) $query->max_num_pages,
+			'page'        => $page,
 		);
-		$response->header( 'X-WP-Total', (int) $query->found_posts );
+		set_transient( $cache_key, $data, 5 * MINUTE_IN_SECONDS );
+
+		$response = rest_ensure_response( $data );
+		$response->header( 'X-WP-Total',      (int) $query->found_posts );
 		$response->header( 'X-WP-TotalPages', (int) $query->max_num_pages );
+		$response->header( 'X-Cache', 'MISS' );
 		/* NEVER let a shared cache/CDN (ArvanCloud, Cloudflare, etc.) cache filtered results.
 		   A public/s-maxage header here makes CDNs serve the first (unfiltered) response for every
 		   category/search request — which silently breaks all filtering. Always send fresh. */

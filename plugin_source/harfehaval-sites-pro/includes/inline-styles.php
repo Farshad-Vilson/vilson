@@ -433,8 +433,8 @@ function ha_sites_pro_inline_styles( $id ) {
     background: none !important; border: 0 !important; border-radius: 0 !important;
     box-shadow: none !important; outline: none !important; padding: 0 2px !important;
     margin: 0 !important; min-width: 0 !important; width: auto !important; height: auto !important;
-    font-size: 1.5rem !important; line-height: 1 !important; cursor: pointer !important;
-    color: #d1d5db !important; transition: color .15s ease, transform .15s ease !important;
+    font-size: 1.1rem !important; line-height: 1 !important; cursor: pointer !important;
+    color: #94a3b8 !important; transition: color .15s ease, transform .15s ease !important;
 }
 {$m} .ha-pro-stars .ha-pro-star.is-filled,
 {$m} .ha-pro-side-rating .ha-pro-star.is-filled { color: #f59e0b !important; }
