@@ -3,7 +3,7 @@
  * Plugin Name: فونت پیدا - Peyda Font
  * Plugin URI:  https://vilson.ir
  * Description: افزونه فونت فارسی پیدا با پشتیبانی کامل از المنتور و تنظیمات پیشرفته
- * Version:     1.0.0
+ * Version:     1.1.0
  * Author:      فرشاد معتمدی‌پور
  * Text Domain: peyda-font
  * Domain Path: /languages
@@ -13,10 +13,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'PEYDA_FONT_VERSION', '1.0.0' );
+define( 'PEYDA_FONT_VERSION', '1.1.0' );
 define( 'PEYDA_FONT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PEYDA_FONT_URL', plugin_dir_url( __FILE__ ) );
 define( 'PEYDA_FONT_OPTION', 'peyda_font_settings' );
+define( 'PEYDA_FONT_FAMILY', 'Peyda' );
 
 require_once PEYDA_FONT_DIR . 'includes/class-peyda-font.php';
 require_once PEYDA_FONT_DIR . 'includes/class-peyda-admin.php';
