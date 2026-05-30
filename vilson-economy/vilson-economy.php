@@ -1,14 +1,14 @@
 <?php
 /**
  * Plugin Name: Vilson Economy — Brand Tokens & Temporal Site
- * Description: اقتصاد برند بدون ثبت‌نام: توکن توجه، سایت زمانی، محتوای اختصاصی
- * Version:     1.0.0
+ * Description: اقتصاد برند بدون ثبت‌نام: توکن توجه، سایت زمانی، محتوای اختصاصی، ماموریت روزانه
+ * Version:     2.0.0
  * Author:      حرف اول
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'VEC_VER', '1.0.0' );
+define( 'VEC_VER', '2.0.0' );
 define( 'VEC_URL', plugin_dir_url( __FILE__ ) );
 
 /* ── Shortcode: [vfx_exclusive level="3" title="..."] ── */
@@ -66,6 +66,22 @@ add_action( 'wp_footer', function () { ?>
       <div id="vec-progress-label"></div>
     </div>
 
+    <!-- Streak multiplier badge -->
+    <div id="vec-mult-badge"></div>
+
+    <!-- 7-day streak calendar -->
+    <div id="vec-cal-wrap">
+      <div id="vec-cal-label">حضور ۷ روز اخیر</div>
+      <div id="vec-cal-dots"></div>
+    </div>
+
+    <!-- Daily quest -->
+    <div id="vec-quest-wrap">
+      <div id="vec-quest-header">ماموریت امروز</div>
+      <div id="vec-quest-label">در حال بارگذاری...</div>
+      <div id="vec-quest-status">در انجام...</div>
+    </div>
+
     <div id="vec-tokens">
       <div class="vec-token-row" id="vec-t-attn">
         <span class="vec-token-icon">◎</span>
@@ -87,7 +103,7 @@ add_action( 'wp_footer', function () { ?>
     <div id="vec-next-unlock"></div>
 
     <div id="vec-cert-wrap" style="display:none">
-      <button id="vec-cert-btn">دریافت نشان وفاداری</button>
+      <button id="vec-cert-btn">دریافت نشان وفاداری ★</button>
     </div>
   </div>
 

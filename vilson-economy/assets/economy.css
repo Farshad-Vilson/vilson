@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════
-   Vilson Economy v1.0
+   Vilson Economy v2.0
    ════════════════════════════════════════════════════════ */
 
 /* ── Locked exclusive content ── */
@@ -56,7 +56,7 @@
 #vec-dash {
   position: fixed;
   bottom: 28px;
-  left: 28px;
+  right: 28px;
   z-index: 2147483641;
   direction: rtl;
   font-family: Tahoma, Vazirmatn, -apple-system, sans-serif;
@@ -67,7 +67,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(13,10,40,.82);
+  background: rgba(13,10,40,.86);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(124,58,237,.35);
@@ -89,22 +89,21 @@
 }
 
 #vec-pill-mark {
-  color: #A78BFA;
   font-size: 14px;
   animation: vecPillPulse 3s ease-in-out infinite;
 }
 @keyframes vecPillPulse {
   0%,100% { opacity: .8; }
-  50%     { opacity: 1; text-shadow: 0 0 8px rgba(167,139,250,.8); }
+  50%     { opacity: 1; filter: drop-shadow(0 0 6px currentColor); }
 }
 
 /* ── Card (expanded) ── */
 #vec-card {
   position: absolute;
   bottom: calc(100% + 12px);
-  left: 0;
-  width: 240px;
-  background: rgba(10,8,32,.94);
+  right: 0;
+  width: 252px;
+  background: rgba(10,8,32,.96);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(124,58,237,.4);
@@ -127,9 +126,9 @@
   content: '';
   position: absolute;
   bottom: -7px;
-  left: 24px;
+  right: 20px;
   width: 14px; height: 14px;
-  background: rgba(10,8,32,.94);
+  background: rgba(10,8,32,.96);
   border-right: 1px solid rgba(124,58,237,.4);
   border-bottom: 1px solid rgba(124,58,237,.4);
   transform: rotate(45deg);
@@ -149,7 +148,6 @@
 }
 #vec-badge-mark {
   font-size: 18px;
-  color: #A78BFA;
 }
 #vec-badge-name {
   font-size: 15px;
@@ -170,7 +168,7 @@
 #vec-card-close:hover { color: rgba(255,255,255,.8); }
 
 /* Progress */
-#vec-progress-wrap { margin-bottom: 16px; }
+#vec-progress-wrap { margin-bottom: 14px; }
 #vec-progress-bar {
   height: 4px;
   background: rgba(255,255,255,.08);
@@ -189,6 +187,53 @@
   font-size: 10px;
   color: rgba(255,255,255,.4);
   text-align: left;
+}
+
+/* Streak multiplier badge */
+#vec-mult-badge {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #F59E0B;
+  background: rgba(245,158,11,.1);
+  border: 1px solid rgba(245,158,11,.25);
+  border-radius: 6px;
+  padding: 3px 8px;
+  margin-bottom: 12px;
+  direction: rtl;
+}
+
+/* Streak calendar */
+#vec-cal-wrap {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+#vec-cal-label {
+  font-size: 10px;
+  color: rgba(255,255,255,.3);
+  margin-bottom: 6px;
+  direction: rtl;
+}
+#vec-cal-dots {
+  display: flex;
+  gap: 5px;
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+.vec-cal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.12);
+  transition: background .3s;
+}
+.vec-cal-dot.vec-cal-active {
+  background: #7C3AED;
+  border-color: #A78BFA;
+  box-shadow: 0 0 6px rgba(124,58,237,.5);
 }
 
 /* Tokens */
@@ -230,6 +275,41 @@
   50%     { transform: scale(1.35); color: #A78BFA; }
 }
 
+/* Daily quest */
+#vec-quest-wrap {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(124,58,237,.25);
+  border-radius: 10px;
+  background: rgba(124,58,237,.06);
+  direction: rtl;
+  transition: border-color .3s, background .3s;
+}
+#vec-quest-wrap.vec-quest-done {
+  border-color: rgba(34,197,94,.35);
+  background: rgba(34,197,94,.06);
+}
+#vec-quest-header {
+  font-size: 9px;
+  color: rgba(255,255,255,.3);
+  margin-bottom: 4px;
+  letter-spacing: .04em;
+}
+#vec-quest-label {
+  font-size: 11px;
+  color: rgba(255,255,255,.75);
+  line-height: 1.4;
+}
+#vec-quest-status {
+  font-size: 10px;
+  color: rgba(124,58,237,.8);
+  margin-top: 4px;
+  transition: color .3s;
+}
+#vec-quest-wrap.vec-quest-done #vec-quest-status {
+  color: #22C55E;
+}
+
 /* Next unlock hint */
 #vec-next-unlock {
   font-size: 11px;
@@ -247,7 +327,7 @@
   text-align: center;
 }
 #vec-cert-btn {
-  background: linear-gradient(135deg, #7C3AED, #2563EB);
+  background: linear-gradient(135deg, #F59E0B, #D97706);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -295,7 +375,7 @@
    TEMPORAL EVOLUTION — body level classes
    ════════════════════════════════════════════════════════ */
 
-/* Level 2 — Familiar: warm subtle glow on headings */
+/* Level 2 — Familiar */
 body.vec-l2 h1,
 body.vec-l2 h2,
 body.vec-l2 .elementor-heading-title {
@@ -303,7 +383,7 @@ body.vec-l2 .elementor-heading-title {
   transition: text-shadow .8s ease;
 }
 
-/* Level 3 — Friend: headings gain a very faint underline glow */
+/* Level 3 — Friend */
 body.vec-l3 h1,
 body.vec-l3 h2,
 body.vec-l3 .elementor-heading-title {
@@ -315,7 +395,7 @@ body.vec-l3 .wp-block-button__link {
   transition: box-shadow .6s ease !important;
 }
 
-/* Level 4 — Companion: premium page edge glow */
+/* Level 4 — Companion */
 body.vec-l4::before {
   content: '';
   position: fixed;
@@ -323,11 +403,11 @@ body.vec-l4::before {
   pointer-events: none;
   z-index: 2147483620;
   background:
-    linear-gradient(to right, rgba(124,58,237,.04) 0%, transparent 120px),
-    linear-gradient(to left,  rgba(124,58,237,.04) 0%, transparent 120px);
+    linear-gradient(to left,  rgba(124,58,237,.04) 0%, transparent 120px),
+    linear-gradient(to right, rgba(124,58,237,.04) 0%, transparent 120px);
 }
 
-/* Level 5 — Brand Soul: dark mode toggle appears, premium glow */
+/* Level 5 — Brand Soul */
 body.vec-l5 .elementor-heading-title {
   text-shadow: 0 0 50px rgba(124,58,237,.22);
 }
@@ -344,7 +424,7 @@ body.vec-l5.vec-dark canvas {
 #vec-dark-toggle {
   position: fixed;
   top: 24px;
-  left: 24px;
+  right: 24px;
   z-index: 2147483641;
   background: rgba(13,10,40,.8);
   backdrop-filter: blur(10px);
@@ -364,6 +444,6 @@ body.vec-l5 #vec-dark-toggle { display: flex; }
 
 /* Mobile */
 @media (max-width: 640px) {
-  #vec-dash { bottom: 20px; left: 16px; }
-  #vec-card { width: 210px; }
+  #vec-dash { bottom: 20px; right: 16px; }
+  #vec-card { width: 222px; }
 }
