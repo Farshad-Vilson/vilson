@@ -670,13 +670,13 @@
 		this._slideshowIndex = ((this._slideshowIndex || 0) + dir + n) % n;
 		var target = cards[this._slideshowIndex];
 		if (target) {
-			/* Scroll the grid container to center the active card */
+			/* Use viewport rects + scrollBy so it works regardless of offsetParent.
+			   Center the active card inside the grid's horizontal scroll area. */
 			var grid = this.refs.grid;
-			var cardLeft = target.offsetLeft;
-			var cardWidth = target.offsetWidth;
-			var gridWidth = grid.offsetWidth;
-			var scrollTarget = cardLeft - (gridWidth - cardWidth) / 2;
-			grid.scrollTo({ left: Math.max(0, scrollTarget), behavior: 'smooth' });
+			var gridRect = grid.getBoundingClientRect();
+			var cardRect = target.getBoundingClientRect();
+			var delta = (cardRect.left - gridRect.left) - (gridRect.width - cardRect.width) / 2;
+			grid.scrollBy({ left: delta, behavior: 'smooth' });
 			cards.forEach(function (c) { c.classList.remove('is-slideshow-active'); });
 			target.classList.add('is-slideshow-active');
 		}
@@ -762,9 +762,7 @@
 			orderBtn = '<a class="ha-pro-btn ha-pro-btn-primary" href="' + esc(order) + '" target="_blank" rel="noopener noreferrer">' + esc(self.label('order_label', 'سفارش سایت')) + '</a>';
 		}
 
-		var guaranteeBadge = cfg.show_guarantee
-			? '<div class="ha-pro-guarantee">🛡️ ' + esc(item.guarantee || cfg.guarantee_text) + '</div>'
-			: '';
+		/* Guarantee is shown ONLY inside the detail panel (_sideHtml), never on the card. */
 
 		return '<article class="ha-pro-card" data-ha-card="' + esc(item.id) + '" data-hover="' + esc(this.hover) + '" role="listitem">' +
 			img + tools +
@@ -780,7 +778,6 @@
 					(cfg.show_old_price && item.old_price ? '<div class="ha-pro-old-price">' + esc(money(item.old_price)) + '</div>' : '') +
 				'</div></div>' : '') +
 				((previewBtn || orderBtn) ? '<div class="ha-pro-actions">' + previewBtn + orderBtn + '</div>' : '') +
-				guaranteeBadge +
 			'</div>' +
 		'</article>';
 	};

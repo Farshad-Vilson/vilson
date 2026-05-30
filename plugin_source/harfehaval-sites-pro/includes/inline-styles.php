@@ -846,23 +846,7 @@ function ha_sites_pro_inline_styles( $id ) {
 {$p} .ha-pro-tool-pin.is-pinned { opacity:1 !important; filter:drop-shadow(0 0 4px #f59e0b) !important; }
 {$p} .ha-pro-chip-pins { background:#f59e0b !important; color:#fff !important; border-color:#f59e0b !important; }
 
-/* ── F18: Guarantee badge (inline inside card-body, never absolute) ── */
-{$p} .ha-pro-guarantee {
-    position:static !important;
-    display:flex !important;
-    align-items:center !important;
-    gap:6px !important;
-    font-size:.78rem !important;
-    color:#059669 !important;
-    background:#ecfdf5 !important;
-    border:1px solid #6ee7b7 !important;
-    border-radius:8px !important;
-    padding:6px 10px !important;
-    margin-top:4px !important;
-    font-weight:600 !important;
-    width:auto !important;
-    z-index:auto !important;
-}
+/* ── F18: Guarantee badge — only in detail panel (never on card) ── */
 {$m} .ha-pro-side-guarantee {
     display:flex !important;
     align-items:center !important;
@@ -967,10 +951,15 @@ function ha_sites_pro_inline_styles( $id ) {
 {$p} .ha-pro-grid.is-slideshow-grid {
     display:flex !important;
     flex-wrap:nowrap !important;
-    overflow-x:hidden !important;
+    overflow-x:auto !important;
     scroll-behavior:smooth !important;
+    scroll-snap-type:x mandatory !important;
+    -webkit-overflow-scrolling:touch !important;
     gap:20px !important;
-    padding-bottom:8px !important;
+    padding-bottom:12px !important;
+}
+{$p} .ha-pro-grid.is-slideshow-grid > [data-ha-card] {
+    scroll-snap-align:center !important;
 }
 {$p} .ha-pro-grid.is-slideshow-grid > [data-ha-card] {
     flex:0 0 calc(100% - 100px) !important;
