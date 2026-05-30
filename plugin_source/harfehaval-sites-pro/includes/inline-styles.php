@@ -433,15 +433,17 @@ function ha_sites_pro_inline_styles( $id ) {
     background: none !important; border: 0 !important; border-radius: 0 !important;
     box-shadow: none !important; outline: none !important; padding: 0 2px !important;
     margin: 0 !important; min-width: 0 !important; width: auto !important; height: auto !important;
-    font-size: 1.1rem !important; line-height: 1 !important; cursor: pointer !important;
-    color: #94a3b8 !important; transition: color .15s ease, transform .15s ease !important;
+    font-size: 1.25rem !important; line-height: 1 !important; cursor: pointer !important;
+    color: #94a3b8 !important; transition: color .12s ease, transform .12s ease !important;
 }
 {$m} .ha-pro-stars .ha-pro-star.is-filled,
 {$m} .ha-pro-side-rating .ha-pro-star.is-filled { color: #f59e0b !important; }
-{$m} .ha-pro-stars .ha-pro-star:hover,
-{$m} .ha-pro-side-rating .ha-pro-star:hover { color: #fbbf24 !important; transform: scale(1.12) !important; }
+{$m} .ha-pro-stars .ha-pro-star:active,
+{$m} .ha-pro-side-rating .ha-pro-star:active { transform: scale(.85) !important; }
 {$m} .ha-pro-stars .ha-pro-star:focus,
 {$m} .ha-pro-side-rating .ha-pro-star:focus { outline: none !important; box-shadow: none !important; }
+{$m} .ha-pro-stars-wrap { display:flex !important; align-items:center !important; gap:6px !important; flex-wrap:wrap !important; }
+{$m} .ha-pro-star-hint { font-size:.78rem !important; font-weight:600 !important; color:#64748b !important; min-width:90px !important; transition:color .15s !important; }
 
 /* Side facts — right-aligned RTL layout */
 {$m} .ha-pro-side-facts { direction:rtl !important; text-align:right !important; }

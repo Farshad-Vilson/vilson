@@ -3806,16 +3806,29 @@ html body .ha-sites-pro .ha-pro-actions .ha-pro-btn-secondary:hover .ha-pro-btn-
   background:  none !important;
   border:      none !important;
   padding:     0 !important;
-  font-size:   1.1rem !important;
+  font-size:   1.25rem !important;
   cursor:      pointer !important;
-  color:       #94a3b8 !important;   /* slate-400 — clearly visible but muted */
-  transition:  color .15s ease, transform .15s ease !important;
+  color:       #94a3b8 !important;
+  transition:  color .12s ease, transform .12s ease !important;
   line-height: 1 !important;
 }
 .ha-pro-star.is-filled { color: #f59e0b !important; }
-.ha-pro-star:hover, .ha-pro-stars:hover .ha-pro-star { color: #fbbf24 !important; }
-.ha-pro-stars:hover .ha-pro-star:hover ~ .ha-pro-star { color: #94a3b8 !important; }
-.ha-pro-star:active { transform: scale(.9) !important; }
+.ha-pro-star:active    { transform: scale(.85) !important; }
+/* hover fill is handled by JS — no CSS ~sibling tricks needed */
+
+.ha-pro-stars-wrap {
+  display:     flex;
+  align-items: center;
+  gap:         6px;
+  flex-wrap:   wrap;
+}
+.ha-pro-star-hint {
+  font-size:   .78rem;
+  font-weight: 600;
+  color:       #64748b;
+  min-width:   80px;
+  transition:  color .15s;
+}
 .ha-pro-rating-count {
   font-size:   .75rem;
   color:       var(--ha-muted);

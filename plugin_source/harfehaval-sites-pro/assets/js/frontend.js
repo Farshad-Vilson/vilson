@@ -269,6 +269,39 @@
 				}
 			});
 
+			/* Star rating hover — JS-driven so RTL direction is respected */
+			this.refs.modal.addEventListener('mouseover', function (e) {
+				var btn = e.target.closest('[data-ha-rate]');
+				if (!btn) return;
+				var n = parseInt(btn.getAttribute('data-ha-rate'), 10);
+				var box = btn.closest('[data-ha-stars]');
+				if (!box) return;
+				var hint = box.parentNode && box.parentNode.querySelector('[data-ha-star-hint]');
+				[].forEach.call(box.querySelectorAll('[data-ha-rate]'), function (b) {
+					var v = parseInt(b.getAttribute('data-ha-rate'), 10);
+					b.classList.toggle('is-filled', v <= n);
+					b.textContent = v <= n ? '★' : '☆';
+				});
+				if (hint) hint.textContent = n + ' ستاره';
+			});
+			this.refs.modal.addEventListener('mouseleave', function (e) {
+				/* Only revert when mouse fully leaves the modal side panel */
+				if (e.target.closest('.ha-pro-preview-side')) return;
+			}, true);
+			this.refs.modal.addEventListener('mouseout', function (e) {
+				var box = e.target.closest('[data-ha-stars]');
+				if (!box) return;
+				/* mouse left the star box — revert to current rating */
+				var shownStars = self._currentStarDisplay || 0;
+				var hint = box.parentNode && box.parentNode.querySelector('[data-ha-star-hint]');
+				[].forEach.call(box.querySelectorAll('[data-ha-rate]'), function (b) {
+					var v = parseInt(b.getAttribute('data-ha-rate'), 10);
+					b.classList.toggle('is-filled', v <= shownStars);
+					b.textContent = v <= shownStars ? '★' : '☆';
+				});
+				if (hint) hint.textContent = shownStars ? shownStars + ' ستاره' : 'امتیاز دهید';
+			});
+
 			this.refs.modal.addEventListener('wheel', function (e) {
 				var side = e.target.closest('.ha-pro-preview-side');
 				if (!side) return;
@@ -1104,13 +1137,18 @@
 		var rateCount  = item.user_rating_count || 0;
 		var myRating   = getRatedToday(item.id); /* null, or 1-5 if rated today */
 		var shownStars = myRating !== null ? myRating : Math.round(avgRating);
+		this._currentStarDisplay = shownStars;
 		var starsHtml  = '';
 		for (var s = 1; s <= 5; s++) {
 			starsHtml += '<button type="button" class="ha-pro-star' + (s <= shownStars ? ' is-filled' : '') + '" data-ha-rate="' + s + '" aria-label="' + s + ' ستاره">' + (s <= shownStars ? '★' : '☆') + '</button>';
 		}
+		var hintText  = myRating !== null ? myRating + ' ستاره (ثبت شد)' : (shownStars ? shownStars + ' ستاره' : 'امتیاز دهید');
 		var countText = rateCount ? '(' + rateCount + ' امتیاز' + (avgRating ? ' — ' + avgRating.toFixed(1) : '') + ')' : 'اولین نفر باشید!';
 		var ratingHtml = '<div class="ha-pro-side-rating' + (myRating !== null ? ' is-rated' : '') + '" data-ha-rating-box>' +
-			'<div class="ha-pro-stars" data-ha-stars>' + starsHtml + '</div>' +
+			'<div class="ha-pro-stars-wrap">' +
+				'<div class="ha-pro-stars" data-ha-stars>' + starsHtml + '</div>' +
+				'<span class="ha-pro-star-hint" data-ha-star-hint>' + hintText + '</span>' +
+			'</div>' +
 			'<span class="ha-pro-rating-count" data-ha-rating-count>' + esc(countText) + '</span>' +
 		'</div>';
 
@@ -1196,14 +1234,20 @@
 		}
 		setRatedToday(item.id, rating);
 
+		this._currentStarDisplay = rating;
+
 		/* Optimistically fill the stars to the user's choice (no layout shift) */
 		var box   = this.refs.modal ? this.refs.modal.querySelector('[data-ha-rating-box]') : null;
 		var stars = box ? box.querySelector('[data-ha-stars]') : null;
 		if (stars) {
-			var s2 = '';
-			for (var i = 1; i <= 5; i++) s2 += '<button type="button" class="ha-pro-star' + (i <= rating ? ' is-filled' : '') + '" data-ha-rate="' + i + '" aria-label="' + i + ' ستاره">' + (i <= rating ? '★' : '☆') + '</button>';
-			stars.innerHTML = s2;
+			[].forEach.call(stars.querySelectorAll('[data-ha-rate]'), function (b) {
+				var v = parseInt(b.getAttribute('data-ha-rate'), 10);
+				b.classList.toggle('is-filled', v <= rating);
+				b.textContent = v <= rating ? '★' : '☆';
+			});
 		}
+		var hintEl = box ? box.querySelector('[data-ha-star-hint]') : null;
+		if (hintEl) hintEl.textContent = rating + ' ستاره (ثبت شد)';
 		if (box) box.classList.add('is-rated');
 
 		fetch(buildUrl('sites/' + item.id + '/rate', {}), {
