@@ -646,7 +646,7 @@
 		return '<article class="ha-pro-card" data-ha-card="' + esc(item.id) + '" data-hover="' + esc(this.hover) + '" role="listitem">' +
 			img + tools +
 			'<div class="ha-pro-card-body">' +
-				(item.highlight ? '<div class="ha-pro-highlight">' + esc(item.highlight) + '</div>' : '') +
+				(cfg.show_highlight && item.highlight ? '<div class="ha-pro-highlight">' + esc(item.highlight) + '</div>' : '') +
 				'<h3 class="ha-pro-card-title">' + esc(item.title) + '</h3>' +
 				(cfg.show_excerpt ? '<p class="ha-pro-card-excerpt">' + esc(item.excerpt || '') + '</p>' : '') +
 				(facts ? '<div class="ha-pro-facts">' + facts + '</div>' : '') +
