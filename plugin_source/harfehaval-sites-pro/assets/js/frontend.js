@@ -761,6 +761,24 @@
 		this.refs.compareModal.hidden = false;
 		this.refs.compareModal.setAttribute('aria-hidden', 'false');
 		document.documentElement.classList.add('ha-pro-modal-open');
+
+		/* Route all wheel events inside the modal to the scrollable body */
+		var body = this.refs.compareContent && this.refs.compareContent.closest('.ha-pro-compare-modal-body');
+		if (body && !this._cmpWheelBound) {
+			this._cmpWheelHandler = function (e) {
+				/* if the body itself can scroll in the requested direction, consume the event */
+				var atTop    = body.scrollTop === 0;
+				var atBottom = body.scrollTop + body.clientHeight >= body.scrollHeight - 1;
+				if (!(atTop && e.deltaY < 0) && !(atBottom && e.deltaY > 0)) {
+					e.stopPropagation();
+				}
+				/* always prevent page scroll */
+				e.preventDefault();
+				body.scrollTop += e.deltaY;
+			};
+			this.refs.compareModal.addEventListener('wheel', this._cmpWheelHandler, { passive: false });
+			this._cmpWheelBound = true;
+		}
 	};
 
 	App.prototype._closeCompareModal = function () {
@@ -768,6 +786,11 @@
 		this.refs.compareModal.hidden = true;
 		this.refs.compareModal.setAttribute('aria-hidden', 'true');
 		if (!this.refs.modal || this.refs.modal.hidden) document.documentElement.classList.remove('ha-pro-modal-open');
+		if (this._cmpWheelHandler) {
+			this.refs.compareModal.removeEventListener('wheel', this._cmpWheelHandler);
+			this._cmpWheelBound  = false;
+			this._cmpWheelHandler = null;
+		}
 	};
 
 	App.prototype._buildCompareHtml = function () {

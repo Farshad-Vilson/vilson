@@ -1122,17 +1122,33 @@
 
 /* compare bar open button */
 .ha-pro-compare-bar-open {
-	padding:       8px 20px !important;
-	background:    #fff !important;
-	color:         #011627 !important;
-	border-radius: var(--ha-btn-r) !important;
-	font-size:     .88rem !important;
-	font-weight:   700 !important;
-	flex-shrink:   0 !important;
-	border:        none !important;
-	cursor:        pointer !important;
+	all:             unset !important;
+	box-sizing:      border-box !important;
+	display:         inline-flex !important;
+	align-items:     center !important;
+	justify-content: center !important;
+	gap:             6px !important;
+	padding:         0 20px !important;
+	height:          38px !important;
+	background:      #fff !important;
+	color:           #011627 !important;
+	border:          1.5px solid #fff !important;
+	border-radius:   999px !important;
+	font-size:       .875rem !important;
+	font-weight:     700 !important;
+	font-family:     inherit !important;
+	line-height:     1 !important;
+	white-space:     nowrap !important;
+	flex-shrink:     0 !important;
+	cursor:          pointer !important;
+	text-decoration: none !important;
+	box-shadow:      0 2px 8px rgba(1,22,39,.15) !important;
+	transition:      background .18s, color .18s, box-shadow .18s !important;
 }
-.ha-pro-compare-bar-open:hover { opacity: .88 !important; }
+.ha-pro-compare-bar-open:hover {
+	background:  #e8f0fe !important;
+	box-shadow:  0 4px 14px rgba(1,22,39,.2) !important;
+}
 
 /* ── mobile ── */
 @media (max-width: 640px) {
