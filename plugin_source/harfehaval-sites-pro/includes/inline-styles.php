@@ -841,5 +841,191 @@ function ha_sites_pro_inline_styles( $id ) {
   {$m} .ha-pro-frame-fallback p  { font-size:.8rem !important; }
 }
 
+/* ── F14: Pin/Bookmark ── */
+{$p} .ha-pro-tool-pin { opacity:.7 !important; }
+{$p} .ha-pro-tool-pin.is-pinned { opacity:1 !important; filter:drop-shadow(0 0 4px #f59e0b) !important; }
+{$p} .ha-pro-chip-pins { background:#f59e0b !important; color:#fff !important; border-color:#f59e0b !important; }
+
+/* ── F18: Guarantee badge ── */
+{$p} .ha-pro-guarantee {
+    display:flex !important;
+    align-items:center !important;
+    gap:6px !important;
+    font-size:.78rem !important;
+    color:#059669 !important;
+    background:#ecfdf5 !important;
+    border:1px solid #6ee7b7 !important;
+    border-radius:8px !important;
+    padding:6px 10px !important;
+    margin-top:8px !important;
+    font-weight:600 !important;
+}
+{$m} .ha-pro-side-guarantee {
+    display:flex !important;
+    align-items:center !important;
+    gap:6px !important;
+    font-size:.82rem !important;
+    color:#059669 !important;
+    background:#ecfdf5 !important;
+    border:1px solid #6ee7b7 !important;
+    border-radius:8px !important;
+    padding:8px 12px !important;
+    margin:8px 20px !important;
+    font-weight:600 !important;
+}
+
+/* ── F17: Client sites ── */
+{$m} .ha-pro-client-sites {
+    padding:12px 20px !important;
+    border-top:1px solid #e8edf2 !important;
+}
+{$m} .ha-pro-client-sites strong {
+    display:block !important;
+    font-size:.82rem !important;
+    color:#6b7280 !important;
+    margin-bottom:8px !important;
+    text-transform:uppercase !important;
+    letter-spacing:.05em !important;
+}
+{$m} .ha-pro-client-links {
+    display:flex !important;
+    flex-wrap:wrap !important;
+    gap:6px !important;
+}
+{$m} .ha-pro-client-links a {
+    font-size:.8rem !important;
+    color:#2ec4b6 !important;
+    text-decoration:none !important;
+    background:#f0fdf9 !important;
+    border:1px solid #99f6e4 !important;
+    border-radius:6px !important;
+    padding:4px 8px !important;
+    transition:background .15s !important;
+}
+{$m} .ha-pro-client-links a:hover { background:#ccfbf1 !important; }
+
+/* ── F19: WhatsApp question button ── */
+{$m} .ha-pro-btn-question {
+    background:linear-gradient(135deg,#25d366 0%,#128c7e 100%) !important;
+    color:#fff !important;
+    box-shadow:0 4px 12px rgba(37,211,102,.3) !important;
+    flex:none !important;
+    width:100% !important;
+    margin-top:6px !important;
+}
+{$m} .ha-pro-btn-question:hover { transform:translateY(-2px) !important; box-shadow:0 8px 20px rgba(37,211,102,.4) !important; }
+
+/* ── F11: Similar templates ── */
+{$m} .ha-pro-similar-list {
+    padding:0 20px 16px !important;
+    display:flex !important;
+    flex-direction:column !important;
+    gap:8px !important;
+}
+{$m} .ha-pro-similar-card {
+    display:flex !important;
+    align-items:center !important;
+    gap:10px !important;
+    padding:8px !important;
+    background:#f8fafc !important;
+    border-radius:8px !important;
+    cursor:pointer !important;
+    border:1px solid #e2e8f0 !important;
+    transition:background .15s, border-color .15s !important;
+}
+{$m} .ha-pro-similar-card:hover { background:#f0f9ff !important; border-color:#2ec4b6 !important; }
+{$m} .ha-pro-similar-card img {
+    width:60px !important;
+    height:45px !important;
+    object-fit:cover !important;
+    border-radius:6px !important;
+    flex-shrink:0 !important;
+}
+{$m} .ha-pro-similar-no-thumb {
+    width:60px !important;
+    height:45px !important;
+    background:#e2e8f0 !important;
+    border-radius:6px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    flex-shrink:0 !important;
+    font-size:1.2rem !important;
+    color:#94a3b8 !important;
+}
+{$m} .ha-pro-similar-card span {
+    font-size:.83rem !important;
+    font-weight:600 !important;
+    color:#1e293b !important;
+    line-height:1.4 !important;
+}
+
+/* ── F13: Slideshow ── */
+{$p} .ha-pro-slideshow-prev,
+{$p} .ha-pro-slideshow-next {
+    position:absolute !important;
+    top:50% !important;
+    transform:translateY(-50%) !important;
+    z-index:10 !important;
+    background:rgba(1,22,39,.7) !important;
+    color:#fff !important;
+    border:0 !important;
+    border-radius:50% !important;
+    width:40px !important;
+    height:40px !important;
+    font-size:1.5rem !important;
+    cursor:pointer !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    transition:background .2s !important;
+    line-height:1 !important;
+    padding:0 !important;
+    box-shadow:0 2px 8px rgba(0,0,0,.2) !important;
+}
+{$p} .ha-pro-slideshow-prev { right:8px !important; }
+{$p} .ha-pro-slideshow-next { left:8px !important; }
+{$p} .ha-pro-slideshow-prev:hover,
+{$p} .ha-pro-slideshow-next:hover { background:rgba(46,196,182,.9) !important; }
+{$p} .ha-pro-card.is-slideshow-active { box-shadow:0 0 0 3px #2ec4b6 !important; }
+
+/* ── F22: Guided Tour ── */
+.ha-pro-tour-overlay {
+    position:fixed !important;
+    inset:0 !important;
+    z-index:200000 !important;
+    pointer-events:auto !important;
+}
+.ha-pro-tour-highlight {
+    transition:all .3s ease !important;
+}
+.ha-pro-tour-tooltip {
+    background:#011627 !important;
+    color:#fff !important;
+    font-size:.88rem !important;
+    font-weight:600 !important;
+    padding:10px 16px !important;
+    border-radius:10px !important;
+    max-width:260px !important;
+    box-shadow:0 4px 20px rgba(0,0,0,.4) !important;
+    pointer-events:none !important;
+    font-family:IRANYekan, Vazirmatn, Tahoma, system-ui, sans-serif !important;
+    direction:rtl !important;
+    line-height:1.5 !important;
+}
+.ha-pro-tour-skip {
+    background:rgba(255,255,255,.15) !important;
+    color:#fff !important;
+    border:1px solid rgba(255,255,255,.3) !important;
+    border-radius:8px !important;
+    padding:8px 20px !important;
+    font-size:.85rem !important;
+    cursor:pointer !important;
+    font-family:IRANYekan, Vazirmatn, Tahoma, system-ui, sans-serif !important;
+    backdrop-filter:blur(4px) !important;
+    pointer-events:auto !important;
+}
+.ha-pro-tour-skip:hover { background:rgba(255,255,255,.25) !important; }
+
 ";
 }

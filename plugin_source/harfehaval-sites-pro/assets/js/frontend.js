@@ -195,6 +195,9 @@
 		this.renderStatuses();
 		this.loadFilters();
 		this.load(true);
+		/* F14 — init pin chip if any pins already stored */
+		var self = this;
+		setTimeout(function () { self._updatePinChip(); }, 0);
 
 		/* Infinite scroll */
 		if (this.cfg.pagination_type === 'infinite') {
@@ -228,6 +231,7 @@
 				if ((b = t.closest('[data-ha-device]')))           { self.setDevice(b.getAttribute('data-ha-device')); return; }
 				if ((b = t.closest('[data-ha-preview-info-toggle]'))) { self._toggleInfo(); return; }
 				if ((b = t.closest('[data-ha-side-tab]')))         { self._activateSideTab(b.getAttribute('data-ha-side-tab')); return; }
+				if ((b = t.closest('[data-ha-similar]')))          { self.openPreview(b.getAttribute('data-ha-similar')); return; }
 				if ((b = t.closest('[data-ha-rate]'))) {
 					var rating = parseInt(b.getAttribute('data-ha-rate'), 10);
 					self._submitRating(rating);
@@ -357,6 +361,7 @@
 			if ((b = t.closest('[data-ha-preview]'))  && self.el.contains(b)) { self.openPreview(b.getAttribute('data-ha-preview')); return; }
 			if ((b = t.closest('[data-ha-favorite]')) && self.el.contains(b)) { self._toggleFavorite(b.getAttribute('data-ha-favorite')); return; }
 			if ((b = t.closest('[data-ha-compare]'))  && self.el.contains(b)) { self._toggleCompare(b.getAttribute('data-ha-compare')); return; }
+			if ((b = t.closest('[data-ha-pin]'))      && self.el.contains(b)) { self._togglePin(b.getAttribute('data-ha-pin')); return; }
 			if ((b = t.closest('[data-ha-modal-close]')) && self.el.contains(b)) { self.closeModal(); return; }
 			if ((b = t.closest('[data-ha-device]'))   && self.el.contains(b)) { self.setDevice(b.getAttribute('data-ha-device')); return; }
 			if ((b = t.closest('[data-ha-preview-info-toggle]')) && self.el.contains(b)) { self._toggleInfo(); return; }
@@ -469,17 +474,22 @@
 	};
 
 	App.prototype._params = function () {
-		return {
+		var p = {
 			page:     this.state.page,
 			per_page: this.cfg.per_page || settings.per_page || 12,
 			search:   this.state.search,
-			category: this.state.category,
+			category: this.state.category === '__pins__' ? '' : this.state.category,
 			features: this.state.features.join(','),
 			status:   this.state.status,
 			sort:     this.state.sort,
 			/* cache-buster: guarantees filtered/search requests never hit a stale CDN/browser cache */
 			_:        Date.now(),
 		};
+		if (this.state.category === '__pins__') {
+			var pins = storageGet('ha_pins');
+			p.ids = pins.join(',');
+		}
+		return p;
 	};
 
 	App.prototype.loadFilters = function () {
@@ -597,6 +607,59 @@
 		this._refreshCards();
 		/* Activate lazy loading for newly inserted images */
 		observeLazyImages(this.refs.grid);
+		/* F13 — start slideshow if configured */
+		if (this.cfg.slideshow_mode && reset) {
+			this._startSlideshow();
+		}
+	};
+
+	/* F13 — Slideshow mode */
+	App.prototype._startSlideshow = function () {
+		var self = this;
+		if (this._slideshowTimer) clearInterval(this._slideshowTimer);
+		var interval = (this.cfg.slideshow_interval || 4) * 1000;
+
+		/* Add nav arrows if not already present */
+		if (!this.el.querySelector('.ha-pro-slideshow-prev')) {
+			var gridWrap = this.refs.grid.parentNode;
+			if (gridWrap) {
+				var prev = document.createElement('button');
+				prev.type = 'button';
+				prev.className = 'ha-pro-slideshow-prev';
+				prev.setAttribute('aria-label', 'قبلی');
+				prev.innerHTML = '&#8249;';
+				prev.addEventListener('click', function () { self._slideshowStep(-1); });
+
+				var next = document.createElement('button');
+				next.type = 'button';
+				next.className = 'ha-pro-slideshow-next';
+				next.setAttribute('aria-label', 'بعدی');
+				next.innerHTML = '&#8250;';
+				next.addEventListener('click', function () { self._slideshowStep(1); });
+
+				gridWrap.style.position = 'relative';
+				gridWrap.appendChild(prev);
+				gridWrap.appendChild(next);
+			}
+		}
+
+		this._slideshowIndex = 0;
+		this._slideshowTimer = setInterval(function () {
+			self._slideshowStep(1);
+		}, interval);
+	};
+
+	App.prototype._slideshowStep = function (dir) {
+		var cards = qsa(this.refs.grid, '[data-ha-card]');
+		if (!cards.length) return;
+		var n = cards.length;
+		this._slideshowIndex = ((this._slideshowIndex || 0) + dir + n) % n;
+		var target = cards[this._slideshowIndex];
+		if (target) {
+			target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+			cards.forEach(function (c) { c.classList.remove('is-slideshow-active'); });
+			target.classList.add('is-slideshow-active');
+		}
 	};
 
 	App.prototype._cardHtml = function (item) {
@@ -604,6 +667,7 @@
 		var cfg  = this.cfg;
 		var badge = cfg.show_badge ? statusLabel(item.status) : '';
 		var order = this._whatsappUrl(item);
+		var pins  = storageGet('ha_pins');
 
 		var img = '';
 		if (cfg.show_image) {
@@ -643,10 +707,12 @@
 		}
 
 		var tools = '';
-		if (cfg.show_favorite || cfg.show_compare) {
+		if (cfg.show_favorite || cfg.show_compare || cfg.show_pin) {
+			var isPinned = pins.indexOf(String(item.id)) >= 0;
 			tools = '<div class="ha-pro-card-tools">' +
 				(cfg.show_favorite ? '<button type="button" class="ha-pro-tool" data-ha-favorite="' + esc(item.id) + '" aria-label="علاقه‌مندی">♡</button>' : '') +
 				(cfg.show_compare  ? '<button type="button" class="ha-pro-tool" data-ha-compare="'  + esc(item.id) + '" aria-label="مقایسه">⇄</button>' : '') +
+				(cfg.show_pin      ? '<button type="button" class="ha-pro-tool ha-pro-tool-pin' + (isPinned ? ' is-pinned' : '') + '" data-ha-pin="' + esc(item.id) + '" aria-label="پین">📌</button>' : '') +
 				'</div>';
 		}
 
@@ -676,6 +742,10 @@
 			orderBtn = '<a class="ha-pro-btn ha-pro-btn-primary" href="' + esc(order) + '" target="_blank" rel="noopener noreferrer">' + esc(self.label('order_label', 'سفارش سایت')) + '</a>';
 		}
 
+		var guaranteeBadge = cfg.show_guarantee
+			? '<div class="ha-pro-guarantee">🛡️ ' + esc(item.guarantee || cfg.guarantee_text) + '</div>'
+			: '';
+
 		return '<article class="ha-pro-card" data-ha-card="' + esc(item.id) + '" data-hover="' + esc(this.hover) + '" role="listitem">' +
 			img + tools +
 			'<div class="ha-pro-card-body">' +
@@ -690,6 +760,7 @@
 					(cfg.show_old_price && item.old_price ? '<div class="ha-pro-old-price">' + esc(money(item.old_price)) + '</div>' : '') +
 				'</div></div>' : '') +
 				((previewBtn || orderBtn) ? '<div class="ha-pro-actions">' + previewBtn + orderBtn + '</div>' : '') +
+				guaranteeBadge +
 			'</div>' +
 		'</article>';
 	};
@@ -746,6 +817,42 @@
 		toast(was ? 'از علاقه‌مندی‌ها حذف شد' : 'به علاقه‌مندی‌ها افزوده شد', was ? 'info' : 'success', was ? '🤍' : '❤️');
 	};
 
+	App.prototype._togglePin = function (id) {
+		id = String(id);
+		var list = storageGet('ha_pins');
+		var was  = list.indexOf(id) >= 0;
+		if (was) list = list.filter(function (x) { return x !== id; });
+		else list.push(id);
+		storageSet('ha_pins', list);
+		this._refreshCards();
+		this._updatePinChip();
+		toast(was ? 'پین حذف شد' : 'پین شد', was ? 'info' : 'success', '📌');
+	};
+
+	App.prototype._updatePinChip = function () {
+		var self = this;
+		if (!this.refs.cats) return;
+		var pins = storageGet('ha_pins');
+		var existing = this.refs.cats.querySelector('[data-ha-cat="__pins__"]');
+		if (pins.length && !existing) {
+			var chip = document.createElement('button');
+			chip.type = 'button';
+			chip.className = 'ha-pro-chip ha-pro-chip-pins' + (self.state.category === '__pins__' ? ' is-active' : '');
+			chip.setAttribute('data-ha-cat', '__pins__');
+			chip.style.cssText = 'background:#f59e0b!important;color:#fff!important;border-color:#f59e0b!important;';
+			chip.textContent = '📌 پین‌شده‌ها';
+			this.refs.cats.insertBefore(chip, this.refs.cats.firstChild);
+		} else if (!pins.length && existing) {
+			existing.remove();
+			if (self.state.category === '__pins__') {
+				self.state.category = '';
+				self.resetAndLoad();
+			}
+		} else if (existing) {
+			existing.classList.toggle('is-active', self.state.category === '__pins__');
+		}
+	};
+
 	App.prototype._toggleCompare = function (id) {
 		id = String(id);
 		var list = this.state.compare.slice();
@@ -765,14 +872,18 @@
 
 	App.prototype._refreshCards = function () {
 		var self = this;
+		var pins = storageGet('ha_pins');
 		qsa(this.el, '[data-ha-card]').forEach(function (card) {
 			var id = String(card.getAttribute('data-ha-card'));
 			card.classList.toggle('is-favorite', self.state.favorites.indexOf(id) >= 0);
 			card.classList.toggle('is-compared',  self.state.compare.indexOf(id) >= 0);
+			card.classList.toggle('is-pinned', pins.indexOf(id) >= 0);
 			var fav = qs(card, '[data-ha-favorite]');
 			if (fav) fav.innerHTML = self.state.favorites.indexOf(id) >= 0 ? '♥' : '♡';
 			var cmp = qs(card, '[data-ha-compare]');
 			if (cmp) cmp.classList.toggle('is-active', self.state.compare.indexOf(id) >= 0);
+			var pin = qs(card, '[data-ha-pin]');
+			if (pin) pin.classList.toggle('is-pinned', pins.indexOf(id) >= 0);
 		});
 	};
 
@@ -869,6 +980,7 @@
 			{ label: 'تحویل',    render: function (item) { return esc(item.delivery) || '—'; } },
 			{ label: 'پشتیبانی', render: function (item) { return esc(item.support) || '—'; } },
 			{ label: 'امکانات',  render: feats },
+			{ label: 'مزیت نسبت به رقبا', render: function (item) { return esc(item.vs_competitors) || '—'; } },
 		];
 
 		var html = '<div class="ha-pro-compare-grid" style="--ha-cmp-cols:' + cols + '">';
@@ -1100,6 +1212,11 @@
 			var isMobile = window.innerWidth <= 768;
 			stage.classList.toggle('is-info-hidden', isMobile);
 		}
+
+		/* F22 — Guided tour on first modal open */
+		if (!localStorage.getItem('ha_toured_v1')) {
+			this._startTour();
+		}
 	};
 
 	App.prototype._sideHtml = function (item) {
@@ -1162,6 +1279,59 @@
 			'</div>' +
 			urgencyHtml;
 
+		/* F18 — guarantee section in side panel */
+		var guaranteeSide = '';
+		if (self.cfg.show_guarantee) {
+			guaranteeSide = '<div class="ha-pro-side-guarantee">🛡️ ' + esc(item.guarantee || self.cfg.guarantee_text) + '</div>';
+		}
+
+		/* F17 — client sites section */
+		var clientSitesHtml = '';
+		if (item.client_sites && item.client_sites.length) {
+			var links = item.client_sites.map(function (url, idx) {
+				return '<a href="' + esc(url) + '" target="_blank" rel="noopener">🔗 نمونه ' + (idx + 1) + '</a>';
+			}).join('');
+			clientSitesHtml = '<div class="ha-pro-client-sites"><strong>نمونه‌های اجرا شده</strong><div class="ha-pro-client-links">' + links + '</div></div>';
+		}
+
+		/* F19 — WhatsApp question button */
+		var whatsappQuestion = '';
+		var ph = (settings.whatsapp || '').replace(/\D/g, '');
+		if (ph) {
+			var qMsg = 'سلام، درباره قالب ' + (item.title || '') + ' سوال دارم';
+			var qUrl = 'https://wa.me/' + ph + '?text=' + encodeURIComponent(qMsg);
+			whatsappQuestion = '<a class="ha-pro-btn ha-pro-btn-question" href="' + esc(qUrl) + '" target="_blank" rel="noopener noreferrer">' +
+				'<span class="ha-pro-side-btn-icon">💬</span>سوال دارم' +
+				'</a>';
+		}
+
+		/* F11 — similar templates */
+		var similarHtml = '';
+		var itemCatIds = (item.categories || []).map(function (c) { return c.slug; });
+		if (itemCatIds.length) {
+			var similar = [];
+			var order2 = self.state.order;
+			for (var si = 0; si < order2.length && similar.length < 3; si++) {
+				var sid = order2[si];
+				if (String(sid) === String(item.id)) continue;
+				var sitem = self.state.items[sid];
+				if (!sitem) continue;
+				var scats = (sitem.categories || []).map(function (c) { return c.slug; });
+				var shared = scats.some(function (s) { return itemCatIds.indexOf(s) >= 0; });
+				if (shared) similar.push(sitem);
+			}
+			if (similar.length) {
+				var simCards = similar.map(function (s) {
+					return '<div class="ha-pro-similar-card" data-ha-similar="' + esc(s.id) + '">' +
+						(s.thumb ? '<img src="' + esc(s.thumb) + '" alt="' + esc(s.title) + '" width="60" height="45" loading="lazy">' : '<div class="ha-pro-similar-no-thumb">⌁</div>') +
+						'<span>' + esc(s.title) + '</span>' +
+						'</div>';
+				}).join('');
+				similarHtml = '<div class="ha-pro-side-section-title">قالب‌های مشابه</div>' +
+					'<div class="ha-pro-similar-list">' + simCards + '</div>';
+			}
+		}
+
 		return '<div class="ha-pro-side-head">' +
 			(item.code ? '<div style="margin-bottom:10px"><span class="ha-pro-code-badge" style="position:static;display:inline-flex">' + esc(item.code) + '</span></div>' : '') +
 			(statusLabel(item.status) ? '<div class="ha-pro-badge ha-pro-badge-' + esc(item.status) + '" style="position:static;margin-bottom:8px">' + esc(statusLabel(item.status)) + '</div>' : '') +
@@ -1173,8 +1343,10 @@
 			'<div class="ha-pro-side-tabs"><div class="ha-pro-side-tabs-nav">' + nav + '</div><div class="ha-pro-side-tabs-content">' + panels + '</div></div>' +
 			(feats ? '<div class="ha-pro-side-section-title">ویژگی‌های کلیدی</div><div class="ha-pro-card-features" style="padding:8px 20px 0">' + feats + '</div>' : '') +
 			(facts ? '<ul class="ha-pro-side-facts">' + facts + '</ul>' : '') +
+			clientSitesHtml +
 			(item.demo_url ? this._qrHtml(item.demo_url) : '') +
 			(this.cfg.show_price ? '<div class="ha-pro-side-price"><strong>' + esc(money(item.price)) + '</strong>' + (item.old_price ? '<del>' + esc(money(item.old_price)) + '</del>' : '') + '</div>' : '') +
+			guaranteeSide +
 			'<div class="ha-pro-side-action-group">' +
 				'<a class="ha-pro-btn ha-pro-side-view-btn" href="' + esc(item.demo_url) + '" target="_blank" rel="noopener noreferrer">' +
 				'<span class="ha-pro-side-btn-icon">🔗</span>' + esc(self.label('new_tab_label', 'مشاهده کامل')) +
@@ -1182,7 +1354,9 @@
 				(order ? '<a class="ha-pro-btn ha-pro-btn-whatsapp" href="' + esc(order) + '" target="_blank" rel="noopener noreferrer">' +
 				'<span class="ha-pro-side-btn-icon">💬</span>' + esc(self.label('order_label', 'سفارش با واتساپ')) +
 				'</a>' : '') +
-			'</div>';
+				whatsappQuestion +
+			'</div>' +
+			similarHtml;
 	};
 
 	/* Smart "live viewers" derived from the project's real view count.
@@ -1270,6 +1444,8 @@
 
 	App.prototype.closeModal = function () {
 		if (!this.refs.modal) return;
+		/* F22 tour cleanup */
+		this._removeTour();
 		this.refs.modal.hidden = true;
 		this.refs.modal.setAttribute('aria-hidden', 'true');
 		if (this.refs.frame) { this.refs.frame.src = 'about:blank'; this.refs.frame.onload = null; }
@@ -1319,6 +1495,109 @@
 		list = list.slice(0, 12);
 		storageSet(this._recentKey(), list);
 		this._refreshCards();
+	};
+
+	/* ── F22: Guided Tour ── */
+	App.prototype._startTour = function () {
+		var self = this;
+		var modal = this.refs.modal;
+		if (!modal) return;
+
+		/* Find tour targets */
+		var steps = [
+			{
+				target: function () { return qs(modal, '[data-ha-device]'); },
+				tooltip: 'از اینجا پیش‌نمایش موبایل را ببینید ←',
+				position: 'bottom',
+			},
+			{
+				target: function () { return qs(modal, '[data-ha-preview-info-toggle]') || qs(modal, '.ha-pro-side-handle'); },
+				tooltip: 'اینجا جزئیات و امکانات قالب است',
+				position: 'left',
+			},
+			{
+				target: function () { return qs(modal, '.ha-pro-preview-open') || qs(modal, '.ha-pro-side-view-btn'); },
+				tooltip: 'برای سفارش یا مشاهده کامل کلیک کنید',
+				position: 'top',
+			},
+		];
+
+		var overlay = document.createElement('div');
+		overlay.className = 'ha-pro-tour-overlay';
+		overlay.setAttribute('aria-live', 'polite');
+		document.body.appendChild(overlay);
+		this._tourOverlay = overlay;
+
+		var currentStep = 0;
+		var stepTimer = null;
+
+		function cleanup() {
+			clearTimeout(stepTimer);
+			if (overlay && overlay.parentNode) overlay.remove();
+			self._tourOverlay = null;
+			try { localStorage.setItem('ha_toured_v1', '1'); } catch (e) {}
+		}
+
+		function showStep(i) {
+			overlay.innerHTML = '';
+			if (i >= steps.length) { cleanup(); return; }
+			var step = steps[i];
+			var targetEl = step.target();
+			if (!targetEl) { showStep(i + 1); return; }
+
+			var rect = targetEl.getBoundingClientRect();
+			var pad = 6;
+			/* Highlight via box-shadow cutout */
+			var highlight = document.createElement('div');
+			highlight.className = 'ha-pro-tour-highlight';
+			highlight.style.cssText = 'position:fixed;pointer-events:none;z-index:200001;' +
+				'top:' + (rect.top - pad) + 'px;' +
+				'left:' + (rect.left - pad) + 'px;' +
+				'width:' + (rect.width + pad * 2) + 'px;' +
+				'height:' + (rect.height + pad * 2) + 'px;' +
+				'border-radius:8px;' +
+				'box-shadow:0 0 0 9999px rgba(0,0,0,0.55);';
+			overlay.appendChild(highlight);
+
+			/* Tooltip */
+			var tooltip = document.createElement('div');
+			tooltip.className = 'ha-pro-tour-tooltip';
+			var tipTop = rect.bottom + pad + 10;
+			if (step.position === 'top') tipTop = rect.top - 60 - pad;
+			if (step.position === 'left') tipTop = rect.top;
+			tooltip.style.cssText = 'position:fixed;z-index:200002;' +
+				'top:' + tipTop + 'px;' +
+				'left:' + Math.max(8, rect.left) + 'px;';
+			tooltip.innerHTML = '<span>' + step.tooltip + '</span>';
+			overlay.appendChild(tooltip);
+
+			/* Skip button */
+			var skip = document.createElement('button');
+			skip.type = 'button';
+			skip.className = 'ha-pro-tour-skip';
+			skip.textContent = 'رد کردن';
+			skip.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:200003;';
+			skip.addEventListener('click', cleanup);
+			overlay.appendChild(skip);
+
+			/* Advance on click or after 2.5s */
+			overlay.addEventListener('click', function handler() {
+				overlay.removeEventListener('click', handler);
+				clearTimeout(stepTimer);
+				showStep(i + 1);
+			});
+			stepTimer = setTimeout(function () { showStep(i + 1); }, 2500);
+		}
+
+		showStep(currentStep);
+	};
+
+	App.prototype._removeTour = function () {
+		if (this._tourOverlay && this._tourOverlay.parentNode) {
+			this._tourOverlay.remove();
+			this._tourOverlay = null;
+			try { localStorage.setItem('ha_toured_v1', '1'); } catch (e) {}
+		}
 	};
 
 	/* ── QR code ── */
