@@ -9,10 +9,17 @@ class Peyda_Font {
 	public function init() {
 		$this->options = get_option( PEYDA_FONT_OPTION, array() );
 		$this->build_font_faces();
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend' ) );
+
+		// @font-face را زود در <head> بارگذاری کن تا مرورگر فایل‌ها را زودتر شروع کند
+		add_action( 'wp_head', array( $this, 'output_font_face' ), 1 );
 		add_action( 'wp_head', array( $this, 'output_preload' ), 1 );
+
+		// سلکتورها را با اولویت 999 بارگذاری کن — بعد از theme و تمام افزونه‌ها
+		// این باعث می‌شود بدون !important هم روی theme اثر بگذارد
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_selectors' ), 999 );
+
 		if ( ! empty( $this->options['load_in_admin'] ) ) {
-			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_frontend' ) );
+			add_action( 'admin_head', array( $this, 'output_font_face' ), 1 );
 		}
 	}
 
@@ -32,7 +39,6 @@ class Peyda_Font {
 	}
 
 	private function build_font_faces() {
-		// 9 weights declared but browser only downloads weights actually used on the page
 		$weights = array(
 			'Thin'       => 100,
 			'ExtraLight' => 200,
@@ -52,17 +58,25 @@ class Peyda_Font {
 		foreach ( $weights as $weight_name => $weight_value ) {
 			$this->font_faces[] = array(
 				'weight' => $weight_value,
-				'woff2'  => $base_url . $prefix . '-' . $weight_name . '.woff2',
+				'url'    => $base_url . $prefix . '-' . $weight_name . '.woff2',
 			);
 		}
 	}
 
-	public function get_font_face_css() {
-		$css = '';
+	// @font-face مستقیم در <head> — نه inline style — تا مرورگر سریع‌تر فونت را بشناسد
+	public function output_font_face() {
+		echo "<style id='peyda-font-face'>\n";
 		foreach ( $this->font_faces as $face ) {
-			$css .= "@font-face{font-family:'Peyda';font-weight:{$face['weight']};font-style:normal;font-display:swap;src:url('{$face['woff2']}') format('woff2')}\n";
+			echo "@font-face{font-family:'Peyda';font-weight:{$face['weight']};font-style:normal;font-display:swap;src:url('" . esc_url( $face['url'] ) . "') format('woff2')}\n";
 		}
-		return $css;
+		echo "</style>\n";
+	}
+
+	public function output_preload() {
+		$prefix = $this->get_variant_prefix();
+		$folder = $this->get_variant_folder();
+		$url    = PEYDA_FONT_URL . 'fonts/' . $folder . '/woff2/' . $prefix . '-Regular.woff2';
+		echo '<link rel="preload" href="' . esc_url( $url ) . '" as="font" type="font/woff2" crossorigin>' . "\n";
 	}
 
 	public function get_selectors_css() {
@@ -106,22 +120,34 @@ class Peyda_Font {
 			return '';
 		}
 
-		// No !important — Elementor's inline styles (higher specificity) override correctly
-		$selector_string = implode( ',', $active_selectors );
-		return $selector_string . "{font-family:'Peyda',Tahoma,Arial,sans-serif}\n";
+		$css = '';
+
+		// body با !important — چون body فقط base است و Elementor فونت را روی المان‌های فرزند تغییر می‌دهد
+		// Elementor روی div/h1/p فرزند inline style می‌گذارد که inherited value را override می‌کند
+		if ( in_array( 'body', $active_selectors, true ) ) {
+			$css .= "body{font-family:'Peyda',Tahoma,Arial,sans-serif !important}\n";
+		}
+
+		// بقیه تگ‌ها بدون !important — اولویت 999 یعنی بعد از theme CSS لود می‌شود
+		// Elementor وقتی روی یک المان فونت تغییر می‌دهد، inline style می‌زند که بر این CSS غلبه می‌کند
+		$other = array_filter( $active_selectors, function( $s ) {
+			return $s !== 'body';
+		} );
+
+		if ( ! empty( $other ) ) {
+			$css .= implode( ',', array_values( $other ) ) . "{font-family:'Peyda',Tahoma,Arial,sans-serif}\n";
+		}
+
+		return $css;
 	}
 
-	public function output_preload() {
-		$prefix   = $this->get_variant_prefix();
-		$folder   = $this->get_variant_folder();
-		$url      = PEYDA_FONT_URL . 'fonts/' . $folder . '/woff2/' . $prefix . '-Regular.woff2';
-		echo '<link rel="preload" href="' . esc_url( $url ) . '" as="font" type="font/woff2" crossorigin>' . "\n";
-	}
-
-	public function enqueue_frontend() {
-		$css = $this->get_font_face_css() . $this->get_selectors_css();
-		wp_register_style( 'peyda-font', false );
-		wp_enqueue_style( 'peyda-font' );
-		wp_add_inline_style( 'peyda-font', $css );
+	public function enqueue_selectors() {
+		$css = $this->get_selectors_css();
+		if ( empty( $css ) ) {
+			return;
+		}
+		wp_register_style( 'peyda-selectors', false );
+		wp_enqueue_style( 'peyda-selectors' );
+		wp_add_inline_style( 'peyda-selectors', $css );
 	}
 }
