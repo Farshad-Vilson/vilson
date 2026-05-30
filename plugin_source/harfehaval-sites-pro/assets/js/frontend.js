@@ -634,7 +634,7 @@
 
 		/* Switch grid to carousel layout + per-view sizing */
 		grid.classList.add('is-slideshow-grid');
-		grid.classList.remove('ssv-1', 'ssv-2', 'ssv-3', 'ssv-4');
+		grid.classList.remove('ssv-1', 'ssv-2', 'ssv-3', 'ssv-4', 'ssv-5', 'ssv-6');
 		if (this.cfg.slideshow_per_view && this.cfg.slideshow_per_view !== 'auto') {
 			grid.classList.add('ssv-' + this.cfg.slideshow_per_view);
 		}

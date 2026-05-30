@@ -437,8 +437,10 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 				'2'    => '۲',
 				'3'    => '۳',
 				'4'    => '۴',
+				'5'    => '۵',
+				'6'    => '۶',
 			],
-			'description' => __( 'چند کارت همزمان دیده شود. «خودکار» بر اساس عرض صفحه تنظیم می‌شود.', 'harfehaval-sites-pro' ),
+			'description' => __( 'چند کارت همزمان دیده شود. هرچه بیشتر، کارت‌ها کوچک‌تر. «خودکار» بر اساس عرض صفحه تنظیم می‌شود.', 'harfehaval-sites-pro' ),
 			'condition'   => [ 'slideshow_mode' => 'yes' ],
 		] );
 

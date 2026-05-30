@@ -251,7 +251,7 @@ class HA_Sites_Pro_Renderer {
 			'slideshow_pause_hover'=> self::bool_attr( $atts['slideshow_pause_hover'] ),
 			'slideshow_arrows'     => self::bool_attr( $atts['slideshow_arrows'] ),
 			'slideshow_dots'       => self::bool_attr( $atts['slideshow_dots'] ),
-			'slideshow_per_view'   => self::choice( isset( $atts['slideshow_per_view'] ) ? $atts['slideshow_per_view'] : 'auto', array( 'auto', '1', '2', '3', '4' ), 'auto' ),
+			'slideshow_per_view'   => self::choice( isset( $atts['slideshow_per_view'] ) ? $atts['slideshow_per_view'] : 'auto', array( 'auto', '1', '2', '3', '4', '5', '6' ), 'auto' ),
 			'show_guarantee'       => self::bool_attr( $atts['show_guarantee'] ),
 			'guarantee_text'       => self::label( $atts, 'guarantee_text', $defaults['guarantee_text'] ),
 			'class'                => sanitize_html_class( $atts['class'] ),

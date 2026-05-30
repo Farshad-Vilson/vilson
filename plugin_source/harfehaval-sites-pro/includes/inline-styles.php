@@ -991,11 +991,29 @@ function ha_sites_pro_inline_styles( $id ) {
         flex:0 0 calc(33.333% - 24px) !important;
     }
 }
-/* fixed per-view overrides (auto = responsive defaults above) */
-{$p} .ha-pro-grid.is-slideshow-grid.ssv-1 > [data-ha-card] { flex:0 0 calc(100% - 8px) !important; max-width:none !important; }
-{$p} .ha-pro-grid.is-slideshow-grid.ssv-2 > [data-ha-card] { flex:0 0 calc(50% - 10px) !important; max-width:none !important; }
-{$p} .ha-pro-grid.is-slideshow-grid.ssv-3 > [data-ha-card] { flex:0 0 calc(33.333% - 14px) !important; max-width:none !important; }
-{$p} .ha-pro-grid.is-slideshow-grid.ssv-4 > [data-ha-card] { flex:0 0 calc(25% - 15px) !important; max-width:none !important; }
+/* fixed per-view overrides (auto = responsive defaults above).
+   min-width:0 lets cards shrink so 5–6 fit in a row and look smaller. */
+{$p} .ha-pro-grid.is-slideshow-grid.ssv-1 > [data-ha-card] { flex:0 0 calc(100% - 8px) !important;     min-width:0 !important; max-width:none !important; }
+{$p} .ha-pro-grid.is-slideshow-grid.ssv-2 > [data-ha-card] { flex:0 0 calc(50% - 10px) !important;      min-width:0 !important; max-width:none !important; }
+{$p} .ha-pro-grid.is-slideshow-grid.ssv-3 > [data-ha-card] { flex:0 0 calc(33.333% - 14px) !important;  min-width:0 !important; max-width:none !important; }
+{$p} .ha-pro-grid.is-slideshow-grid.ssv-4 > [data-ha-card] { flex:0 0 calc(25% - 15px) !important;      min-width:0 !important; max-width:none !important; }
+{$p} .ha-pro-grid.is-slideshow-grid.ssv-5 > [data-ha-card] { flex:0 0 calc(20% - 16px) !important;      min-width:0 !important; max-width:none !important; }
+{$p} .ha-pro-grid.is-slideshow-grid.ssv-6 > [data-ha-card] { flex:0 0 calc(16.666% - 17px) !important;  min-width:0 !important; max-width:none !important; }
+/* shorter thumbnails for dense layouts (override --ha-thumb-h so the
+   hover-scroll reveal math stays in sync with the new height) */
+{$p} .ha-pro-grid.is-slideshow-grid.ssv-4 > [data-ha-card] { --ha-thumb-h:180px !important; }
+{$p} .ha-pro-grid.is-slideshow-grid.ssv-5 > [data-ha-card] { --ha-thumb-h:150px !important; }
+{$p} .ha-pro-grid.is-slideshow-grid.ssv-6 > [data-ha-card] { --ha-thumb-h:130px !important; }
+/* on small screens, dense layouts fall back to a comfortable width */
+@media (max-width:768px) {
+    {$p} .ha-pro-grid.is-slideshow-grid.ssv-3 > [data-ha-card],
+    {$p} .ha-pro-grid.is-slideshow-grid.ssv-4 > [data-ha-card],
+    {$p} .ha-pro-grid.is-slideshow-grid.ssv-5 > [data-ha-card],
+    {$p} .ha-pro-grid.is-slideshow-grid.ssv-6 > [data-ha-card] {
+        flex:0 0 calc(50% - 12px) !important;
+        --ha-thumb-h:170px !important;
+    }
+}
 
 /* pagination dots */
 {$p} .ha-pro-slideshow-dots {
