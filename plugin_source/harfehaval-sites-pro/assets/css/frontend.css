@@ -1003,7 +1003,7 @@
 	max-height:   90vh;
 	display:      flex;
 	flex-direction:column;
-	overflow:     hidden;
+	overflow:     clip; /* clips border-radius without blocking scroll */
 	box-shadow:   0 24px 80px rgba(1,22,39,.22);
 }
 .ha-pro-compare-modal-header {
@@ -1022,23 +1022,42 @@
 	color:     #011627;
 }
 .ha-pro-compare-modal-close-btn {
-	background: none;
-	border:     none;
-	font-size:  1.4rem;
-	line-height:1;
-	cursor:     pointer;
-	color:      #64748b;
-	padding:    4px 8px;
-	border-radius:8px;
-	transition: background .15s, color .15s;
+	/* full reset — prevents theme from injecting borders, colours, or radius */
+	all:            unset !important;
+	box-sizing:     border-box !important;
+	display:        inline-flex !important;
+	align-items:    center !important;
+	justify-content:center !important;
+	width:          36px !important;
+	height:         36px !important;
+	background:     #f1f5f9 !important;
+	border:         1.5px solid #e2e8f0 !important;
+	border-radius:  10px !important;
+	color:          #64748b !important;
+	font-size:      1.25rem !important;
+	line-height:    1 !important;
+	font-family:    inherit !important;
+	cursor:         pointer !important;
+	flex-shrink:    0 !important;
+	transition:     background .18s, color .18s, border-color .18s !important;
+	box-shadow:     none !important;
+	text-decoration:none !important;
 }
-.ha-pro-compare-modal-close-btn:hover { background:#f1f5f9; color:#011627; }
+.ha-pro-compare-modal-close-btn:hover {
+	background:   #011627 !important;
+	color:        #fff !important;
+	border-color: #011627 !important;
+}
 
 .ha-pro-compare-modal-body {
 	overflow-y:  auto;
 	overflow-x:  auto;
+	-webkit-overflow-scrolling: touch;
+	overscroll-behavior: contain;
 	padding:     16px 24px 24px;
 	direction:   rtl;
+	flex:        1 1 0;
+	min-height:  0;
 }
 .ha-pro-compare-grid {
 	display:               grid;
