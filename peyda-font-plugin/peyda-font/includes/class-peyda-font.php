@@ -10,6 +10,7 @@ class Peyda_Font {
 		$this->options = get_option( PEYDA_FONT_OPTION, array() );
 		$this->build_font_faces();
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend' ) );
+		add_action( 'wp_head', array( $this, 'output_preload' ), 1 );
 		if ( ! empty( $this->options['load_in_admin'] ) ) {
 			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_frontend' ) );
 		}
@@ -31,6 +32,7 @@ class Peyda_Font {
 	}
 
 	private function build_font_faces() {
+		// 9 weights declared but browser only downloads weights actually used on the page
 		$weights = array(
 			'Thin'       => 100,
 			'ExtraLight' => 200,
@@ -43,15 +45,14 @@ class Peyda_Font {
 			'Black'      => 900,
 		);
 
-		$prefix = $this->get_variant_prefix();
-		$folder = $this->get_variant_folder();
-		$base_url = PEYDA_FONT_URL . 'fonts/' . $folder . '/';
+		$prefix   = $this->get_variant_prefix();
+		$folder   = $this->get_variant_folder();
+		$base_url = PEYDA_FONT_URL . 'fonts/' . $folder . '/woff2/';
 
 		foreach ( $weights as $weight_name => $weight_value ) {
 			$this->font_faces[] = array(
-				'weight'      => $weight_value,
-				'woff2'       => $base_url . 'woff2/' . $prefix . '-' . $weight_name . '.woff2',
-				'woff'        => $base_url . 'woff/' . $prefix . '-' . $weight_name . '.woff',
+				'weight' => $weight_value,
+				'woff2'  => $base_url . $prefix . '-' . $weight_name . '.woff2',
 			);
 		}
 	}
@@ -59,14 +60,7 @@ class Peyda_Font {
 	public function get_font_face_css() {
 		$css = '';
 		foreach ( $this->font_faces as $face ) {
-			$css .= "@font-face {\n";
-			$css .= "\tfont-family: 'Peyda';\n";
-			$css .= "\tfont-weight: {$face['weight']};\n";
-			$css .= "\tfont-style: normal;\n";
-			$css .= "\tfont-display: swap;\n";
-			$css .= "\tsrc: url('{$face['woff2']}') format('woff2'),\n";
-			$css .= "\t     url('{$face['woff']}') format('woff');\n";
-			$css .= "}\n";
+			$css .= "@font-face{font-family:'Peyda';font-weight:{$face['weight']};font-style:normal;font-display:swap;src:url('{$face['woff2']}') format('woff2')}\n";
 		}
 		return $css;
 	}
@@ -112,16 +106,20 @@ class Peyda_Font {
 			return '';
 		}
 
-		$selector_string = implode( ",\n", $active_selectors );
-		$css  = $selector_string . " {\n";
-		$css .= "\tfont-family: 'Peyda', Tahoma, Arial, sans-serif !important;\n";
-		$css .= "}\n";
+		// No !important — Elementor's inline styles (higher specificity) override correctly
+		$selector_string = implode( ',', $active_selectors );
+		return $selector_string . "{font-family:'Peyda',Tahoma,Arial,sans-serif}\n";
+	}
 
-		return $css;
+	public function output_preload() {
+		$prefix   = $this->get_variant_prefix();
+		$folder   = $this->get_variant_folder();
+		$url      = PEYDA_FONT_URL . 'fonts/' . $folder . '/woff2/' . $prefix . '-Regular.woff2';
+		echo '<link rel="preload" href="' . esc_url( $url ) . '" as="font" type="font/woff2" crossorigin>' . "\n";
 	}
 
 	public function enqueue_frontend() {
-		$css = $this->get_font_face_css() . "\n" . $this->get_selectors_css();
+		$css = $this->get_font_face_css() . $this->get_selectors_css();
 		wp_register_style( 'peyda-font', false );
 		wp_enqueue_style( 'peyda-font' );
 		wp_add_inline_style( 'peyda-font', $css );
