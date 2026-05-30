@@ -94,6 +94,11 @@ class HA_Sites_Pro_Renderer {
 			'show_support'         => 'no',
 			'show_tech_stack'      => 'no',
 			'show_view_count'      => 'no',
+			'show_pin'             => 'no',
+			'slideshow_mode'       => 'no',
+			'slideshow_interval'   => '4',
+			'show_guarantee'       => 'yes',
+			'guarantee_text'       => 'ضمانت بازگشت وجه ۷ روزه',
 			'class'                => '',
 		);
 	}
@@ -234,6 +239,11 @@ class HA_Sites_Pro_Renderer {
 			'show_support'         => self::bool_attr( $atts['show_support'] ),
 			'show_tech_stack'      => self::bool_attr( $atts['show_tech_stack'] ),
 			'show_view_count'      => self::bool_attr( $atts['show_view_count'] ),
+			'show_pin'             => self::bool_attr( $atts['show_pin'] ),
+			'slideshow_mode'       => self::bool_attr( $atts['slideshow_mode'] ),
+			'slideshow_interval'   => max( 1, min( 60, (int) ( isset( $atts['slideshow_interval'] ) ? $atts['slideshow_interval'] : 4 ) ) ),
+			'show_guarantee'       => self::bool_attr( $atts['show_guarantee'] ),
+			'guarantee_text'       => self::label( $atts, 'guarantee_text', $defaults['guarantee_text'] ),
 			'class'                => sanitize_html_class( $atts['class'] ),
 		);
 	}

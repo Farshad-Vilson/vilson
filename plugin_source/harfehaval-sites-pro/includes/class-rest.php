@@ -70,6 +70,7 @@ class HA_Sites_Pro_REST {
 			'features' => array( 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
 			'status'   => array( 'default' => '', 'sanitize_callback' => 'sanitize_key' ),
 			'sort'     => array( 'default' => 'newest', 'sanitize_callback' => 'sanitize_key' ),
+			'ids'      => array( 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
 		);
 	}
 
@@ -157,12 +158,13 @@ class HA_Sites_Pro_REST {
 		$features = (string) $request->get_param( 'features' );
 		$status   = (string) $request->get_param( 'status' );
 		$sort     = (string) $request->get_param( 'sort' );
+		$ids      = (string) $request->get_param( 'ids' );
 		$allowed_sorts = array( 'newest', 'oldest', 'price_asc', 'price_desc', 'popular', 'rating', 'most_viewed' );
 		if ( ! in_array( $sort, $allowed_sorts, true ) ) { $sort = 'newest'; }
 
 		/* ── Server-side transient cache (5 min, keyed by all params + version) ── */
 		$cache_ver = (int) get_option( 'ha_sites_pro_cache_ver', 1 );
-		$cache_key = 'ha_sp_' . $cache_ver . '_' . substr( md5( $page . $per_page . $search . $category . $features . $status . $sort ), 0, 16 );
+		$cache_key = 'ha_sp_' . $cache_ver . '_' . substr( md5( $page . $per_page . $search . $category . $features . $status . $sort . $ids ), 0, 16 );
 		$cached = get_transient( $cache_key );
 		if ( false !== $cached ) {
 			$response = rest_ensure_response( $cached );
@@ -180,6 +182,14 @@ class HA_Sites_Pro_REST {
 			'paged'          => $page,
 			'no_found_rows'  => false,
 		);
+
+		if ( '' !== $ids ) {
+			$id_list = array_filter( array_map( 'absint', explode( ',', $ids ) ) );
+			if ( $id_list ) {
+				$args['post__in'] = $id_list;
+				$args['orderby']  = 'post__in';
+			}
+		}
 
 		if ( '' !== $search ) {
 			$args['s'] = $search;
@@ -360,6 +370,9 @@ class HA_Sites_Pro_REST {
 			'view_count'   => (int) get_post_meta( $post_id, '_ha_view_count', true ),
 			'user_rating_avg'   => (float) get_post_meta( $post_id, '_ha_user_rating_sum', true )   > 0 ? round( (float) get_post_meta( $post_id, '_ha_user_rating_sum', true ) / max( 1, (int) get_post_meta( $post_id, '_ha_user_rating_count', true ) ), 1 ) : 0,
 			'user_rating_count' => (int) get_post_meta( $post_id, '_ha_user_rating_count', true ),
+			'guarantee'         => (string) get_post_meta( $post_id, '_ha_guarantee', true ),
+			'client_sites'      => array_slice( array_filter( array_map( 'trim', explode( "\n", (string) get_post_meta( $post_id, '_ha_client_sites', true ) ) ) ), 0, 5 ),
+			'vs_competitors'    => (string) get_post_meta( $post_id, '_ha_vs_competitors', true ),
 		);
 	}
 

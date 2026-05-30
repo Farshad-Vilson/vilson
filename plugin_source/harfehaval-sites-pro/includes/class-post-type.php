@@ -135,7 +135,10 @@ class HA_Sites_Pro_Post_Type {
 			'_ha_project_type' => array( 'label' => 'نوع پروژه', 'type' => 'text', 'sanitize' => 'sanitize_text_field', 'placeholder' => 'پزشکی، آموزشی، فروشگاهی...' ),
 			'_ha_pages_count'  => array( 'label' => 'تعداد صفحات/بخش‌ها', 'type' => 'text', 'sanitize' => 'sanitize_text_field', 'placeholder' => 'مثلاً ۸ صفحه اصلی' ),
 			'_ha_support'      => array( 'label' => 'پشتیبانی', 'type' => 'text', 'sanitize' => 'sanitize_text_field', 'placeholder' => 'مثلاً ۳۰ روز پشتیبانی' ),
-			'_ha_tech_stack'   => array( 'label' => 'تکنولوژی/سازگاری', 'type' => 'text', 'sanitize' => 'sanitize_text_field', 'placeholder' => 'وردپرس، المنتور، ووکامرس، بوکلی...' ),
+			'_ha_tech_stack'      => array( 'label' => 'تکنولوژی/سازگاری', 'type' => 'text', 'sanitize' => 'sanitize_text_field', 'placeholder' => 'وردپرس، المنتور، ووکامرس، بوکلی...' ),
+			'_ha_guarantee'       => array( 'label' => 'متن ضمانت', 'type' => 'text', 'sanitize' => 'sanitize_text_field', 'placeholder' => 'ضمانت بازگشت وجه ۷ روزه' ),
+			'_ha_client_sites'    => array( 'label' => 'سایت‌های ساخته شده', 'type' => 'textarea', 'sanitize' => 'sanitize_textarea_field', 'placeholder' => 'https://example.com' ),
+			'_ha_vs_competitors'  => array( 'label' => 'مزیت نسبت به رقبا', 'type' => 'textarea', 'sanitize' => 'sanitize_textarea_field', 'placeholder' => 'نسبت به رقبا چه مزیتی داره؟' ),
 		);
 	}
 
@@ -159,6 +162,8 @@ class HA_Sites_Pro_Post_Type {
 								<option value="featured" <?php selected( $value, 'featured' ); ?>>⭐ ویژه</option>
 								<option value="premium" <?php selected( $value, 'premium' ); ?>>💎 پریمیوم</option>
 							</select>
+						<?php elseif ( 'textarea' === $field['type'] ) : ?>
+							<textarea id="<?php echo esc_attr( $key ); ?>" name="<?php echo esc_attr( $key ); ?>" rows="3" placeholder="<?php echo esc_attr( $field['placeholder'] ?? '' ); ?>"><?php echo esc_textarea( $value ); ?></textarea>
 						<?php else : ?>
 							<input id="<?php echo esc_attr( $key ); ?>" name="<?php echo esc_attr( $key ); ?>" type="<?php echo esc_attr( $field['type'] ); ?>" value="<?php echo esc_attr( $value ); ?>" placeholder="<?php echo esc_attr( $field['placeholder'] ?? '' ); ?>" <?php echo 'number' === $field['type'] ? 'step="any" min="0"' : ''; ?>>
 						<?php endif; ?>
@@ -366,6 +371,9 @@ class HA_Sites_Pro_Post_Type {
 					if ( ! in_array( $value, $allowed, true ) ) {
 						$value = '';
 					}
+					break;
+				case 'sanitize_textarea_field':
+					$value = sanitize_textarea_field( $raw );
 					break;
 				default:
 					$value = sanitize_text_field( $raw );

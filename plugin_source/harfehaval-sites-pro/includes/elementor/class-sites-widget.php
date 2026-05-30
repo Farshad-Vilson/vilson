@@ -354,6 +354,46 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'description'  => __( 'تعداد بازدید هر پروژه را روی تصویر کارت نمایش می‌دهد.', 'harfehaval-sites-pro' ),
 		] );
 
+		$this->add_control( 'show_pin', [
+			'label'        => __( 'دکمه پین/بوکمارک', 'harfehaval-sites-pro' ),
+			'type'         => Controls_Manager::SWITCHER,
+			'return_value' => 'yes',
+			'default'      => '',
+			'description'  => __( 'دکمه 📌 روی کارت برای پین کردن قالب‌ها در localStorage.', 'harfehaval-sites-pro' ),
+		] );
+
+		$this->add_control( 'show_guarantee', [
+			'label'        => __( 'نمایش ضمانت بازگشت وجه', 'harfehaval-sites-pro' ),
+			'type'         => Controls_Manager::SWITCHER,
+			'return_value' => 'yes',
+			'default'      => 'yes',
+		] );
+
+		$this->add_control( 'guarantee_text', [
+			'label'     => __( 'متن ضمانت پیش‌فرض', 'harfehaval-sites-pro' ),
+			'type'      => Controls_Manager::TEXTAREA,
+			'default'   => 'ضمانت بازگشت وجه ۷ روزه',
+			'rows'      => 2,
+			'condition' => [ 'show_guarantee' => 'yes' ],
+		] );
+
+		$this->add_control( 'slideshow_mode', [
+			'label'        => __( 'حالت اسلایدشو', 'harfehaval-sites-pro' ),
+			'type'         => Controls_Manager::SWITCHER,
+			'return_value' => 'yes',
+			'default'      => '',
+			'description'  => __( 'کارت‌ها به صورت خودکار با فاصله زمانی تغییر می‌کنند.', 'harfehaval-sites-pro' ),
+		] );
+
+		$this->add_control( 'slideshow_interval', [
+			'label'     => __( 'فاصله زمانی اسلایدشو (ثانیه)', 'harfehaval-sites-pro' ),
+			'type'      => Controls_Manager::NUMBER,
+			'default'   => 4,
+			'min'       => 1,
+			'max'       => 60,
+			'condition' => [ 'slideshow_mode' => 'yes' ],
+		] );
+
 		$this->add_control( 'modal', [
 			'label'        => __( 'مودال پیش‌نمایش', 'harfehaval-sites-pro' ),
 			'type'         => Controls_Manager::SWITCHER,
