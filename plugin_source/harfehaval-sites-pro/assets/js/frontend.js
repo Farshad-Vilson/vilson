@@ -228,6 +228,7 @@
 			this.refs.modal.addEventListener('click', function (e) {
 				var t = e.target, b;
 				if ((b = t.closest('[data-ha-modal-close]')))      { self.closeModal(); return; }
+				if ((b = t.closest('[data-ha-tour]')))             { self._startTour(true); return; }
 				if ((b = t.closest('[data-ha-device]')))           { self.setDevice(b.getAttribute('data-ha-device')); return; }
 				if ((b = t.closest('[data-ha-preview-info-toggle]'))) { self._toggleInfo(); return; }
 				if ((b = t.closest('[data-ha-side-tab]')))         { self._activateSideTab(b.getAttribute('data-ha-side-tab')); return; }
@@ -1287,13 +1288,16 @@
 
 		/* F22 — Guided tour on first modal open (per session).
 		   800ms delay lets the modal CSS transition fully complete
-		   before getBoundingClientRect measures element positions. */
-		try {
-			if (!sessionStorage.getItem('ha_toured_v1')) {
+		   before getBoundingClientRect measures element positions.
+		   Users can always re-launch via the «؟ راهنما» button. */
+		if (this.cfg.show_tour) {
+			var seen = false;
+			try { seen = !!sessionStorage.getItem('ha_toured_v1'); } catch (e) {}
+			if (!seen) {
 				var self = this;
 				setTimeout(function () { self._startTour(); }, 800);
 			}
-		} catch (e) {}
+		}
 	};
 
 	App.prototype._sideHtml = function (item) {
@@ -1575,10 +1579,12 @@
 	};
 
 	/* ── F22: Guided Tour ── */
-	App.prototype._startTour = function () {
+	App.prototype._startTour = function (force) {
 		var self = this;
 		var modal = this.refs.modal;
 		if (!modal) return;
+		/* Don't stack two overlays */
+		if (this._tourOverlay) { this._removeTour(); }
 
 		var steps = [
 			{

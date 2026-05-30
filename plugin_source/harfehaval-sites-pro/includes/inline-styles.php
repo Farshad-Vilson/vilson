@@ -247,6 +247,18 @@ function ha_sites_pro_inline_styles( $id ) {
 }
 {$m} .ha-pro-preview-open:hover { background: rgba(255,255,255,.2) !important; color: #fff !important; }
 
+{$m} .ha-pro-tour-launch {
+    display: inline-flex !important; align-items: center !important; gap: 4px !important;
+    padding: 7px 14px !important;
+    background: rgba(46,196,182,.18) !important; color: #2ec4b6 !important;
+    border: 1px solid rgba(46,196,182,.4) !important; border-radius: 7px !important;
+    font-size: .8rem !important; font-weight: 700 !important;
+    flex: none !important; min-height: 0 !important; white-space: nowrap !important;
+    cursor: pointer !important;
+    font-family: IRANYekan, Vazirmatn, Tahoma, system-ui, sans-serif !important;
+}
+{$m} .ha-pro-tour-launch:hover { background: rgba(46,196,182,.32) !important; color: #fff !important; }
+
 {$m} .ha-pro-preview-devices {
     display: flex !important;
     background: rgba(255,255,255,.08) !important;
@@ -1070,7 +1082,8 @@ function ha_sites_pro_inline_styles( $id ) {
 .ha-pro-tour-overlay {
     position:fixed !important;
     inset:0 !important;
-    z-index:200000 !important;
+    /* must sit above the portaled modal (z-index 2147483646) */
+    z-index:2147483647 !important;
     pointer-events:none !important;
 }
 .ha-pro-tour-highlight {

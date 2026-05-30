@@ -444,6 +444,14 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'condition'   => [ 'slideshow_mode' => 'yes' ],
 		] );
 
+		$this->add_control( 'show_tour', [
+			'label'        => __( 'تور راهنمای پیش‌نمایش', 'harfehaval-sites-pro' ),
+			'type'         => Controls_Manager::SWITCHER,
+			'return_value' => 'yes',
+			'default'      => 'yes',
+			'description'  => __( 'دکمه «؟ راهنما» در مودال پیش‌نمایش و نمایش خودکار تور در اولین بازدید هر نشست.', 'harfehaval-sites-pro' ),
+		] );
+
 		$this->add_control( 'modal', [
 			'label'        => __( 'مودال پیش‌نمایش', 'harfehaval-sites-pro' ),
 			'type'         => Controls_Manager::SWITCHER,
@@ -1622,6 +1630,7 @@ class HA_Sites_Pro_Elementor_Sites_Widget extends Widget_Base {
 			'slideshow_per_view'   => $s['slideshow_per_view'] ?? 'auto',
 			'show_guarantee'       => $s['show_guarantee'] ?? 'yes',
 			'guarantee_text'       => $s['guarantee_text'] ?? 'ضمانت بازگشت وجه ۷ روزه',
+			'show_tour'            => $s['show_tour'] ?? 'yes',
 			'container_mode'       => $s['container_mode'] ?? 'full',
 			'container_max_width'  => $s['container_max_width'] ?? 1220,
 			'image_height'         => ( isset( $s['image_height']['size'] ) && '' !== $s['image_height']['size'] ) ? $s['image_height']['size'] : 260,

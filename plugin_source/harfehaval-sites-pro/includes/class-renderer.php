@@ -104,6 +104,7 @@ class HA_Sites_Pro_Renderer {
 			'slideshow_per_view'   => 'auto',
 			'show_guarantee'       => 'yes',
 			'guarantee_text'       => 'ضمانت بازگشت وجه ۷ روزه',
+			'show_tour'            => 'yes',
 			'class'                => '',
 		);
 	}
@@ -254,6 +255,7 @@ class HA_Sites_Pro_Renderer {
 			'slideshow_per_view'   => self::choice( isset( $atts['slideshow_per_view'] ) ? $atts['slideshow_per_view'] : 'auto', array( 'auto', '1', '2', '3', '4', '5', '6' ), 'auto' ),
 			'show_guarantee'       => self::bool_attr( $atts['show_guarantee'] ),
 			'guarantee_text'       => self::label( $atts, 'guarantee_text', $defaults['guarantee_text'] ),
+			'show_tour'            => self::bool_attr( $atts['show_tour'] ),
 			'class'                => sanitize_html_class( $atts['class'] ),
 		);
 	}
@@ -418,6 +420,9 @@ class HA_Sites_Pro_Renderer {
 								<button type="button" data-ha-device="mobile">📱 <?php echo esc_html( $config['mobile_label'] ); ?></button>
 							</div>
 							<div class="ha-pro-preview-actions">
+								<?php if ( $config['show_tour'] ) : ?>
+									<button class="ha-pro-tour-launch" data-ha-tour type="button" aria-label="<?php esc_attr_e( 'راهنمای استفاده', 'harfehaval-sites-pro' ); ?>" title="<?php esc_attr_e( 'راهنمای استفاده', 'harfehaval-sites-pro' ); ?>">؟ <?php esc_html_e( 'راهنما', 'harfehaval-sites-pro' ); ?></button>
+								<?php endif; ?>
 								<a class="ha-pro-preview-open" data-ha-preview-open target="_blank" rel="noopener noreferrer" href="#"><?php echo esc_html( $config['new_tab_label'] ); ?> ↗</a>
 								<button class="ha-pro-preview-close" data-ha-modal-close type="button" aria-label="<?php esc_attr_e( 'بستن', 'harfehaval-sites-pro' ); ?>">×</button>
 							</div>
