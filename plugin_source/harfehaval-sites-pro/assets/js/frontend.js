@@ -616,26 +616,39 @@
 	/* F13 — Slideshow mode */
 	App.prototype._startSlideshow = function () {
 		var self = this;
+		var grid = this.refs.grid;
+		if (!grid) return;
 		if (this._slideshowTimer) clearInterval(this._slideshowTimer);
 		var interval = (this.cfg.slideshow_interval || 4) * 1000;
 
+		/* Switch grid to carousel layout */
+		grid.classList.add('is-slideshow-grid');
+
 		/* Add nav arrows if not already present */
 		if (!this.el.querySelector('.ha-pro-slideshow-prev')) {
-			var gridWrap = this.refs.grid.parentNode;
+			var gridWrap = grid.parentNode;
 			if (gridWrap) {
 				var prev = document.createElement('button');
 				prev.type = 'button';
 				prev.className = 'ha-pro-slideshow-prev';
 				prev.setAttribute('aria-label', 'قبلی');
 				prev.innerHTML = '&#8249;';
-				prev.addEventListener('click', function () { self._slideshowStep(-1); });
+				prev.addEventListener('click', function () {
+					clearInterval(self._slideshowTimer);
+					self._slideshowStep(-1);
+					self._slideshowTimer = setInterval(function () { self._slideshowStep(1); }, interval);
+				});
 
 				var next = document.createElement('button');
 				next.type = 'button';
 				next.className = 'ha-pro-slideshow-next';
 				next.setAttribute('aria-label', 'بعدی');
 				next.innerHTML = '&#8250;';
-				next.addEventListener('click', function () { self._slideshowStep(1); });
+				next.addEventListener('click', function () {
+					clearInterval(self._slideshowTimer);
+					self._slideshowStep(1);
+					self._slideshowTimer = setInterval(function () { self._slideshowStep(1); }, interval);
+				});
 
 				gridWrap.style.position = 'relative';
 				gridWrap.appendChild(prev);
@@ -644,6 +657,7 @@
 		}
 
 		this._slideshowIndex = 0;
+		this._slideshowStep(0); /* highlight first card */
 		this._slideshowTimer = setInterval(function () {
 			self._slideshowStep(1);
 		}, interval);
@@ -656,7 +670,13 @@
 		this._slideshowIndex = ((this._slideshowIndex || 0) + dir + n) % n;
 		var target = cards[this._slideshowIndex];
 		if (target) {
-			target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+			/* Scroll the grid container to center the active card */
+			var grid = this.refs.grid;
+			var cardLeft = target.offsetLeft;
+			var cardWidth = target.offsetWidth;
+			var gridWidth = grid.offsetWidth;
+			var scrollTarget = cardLeft - (gridWidth - cardWidth) / 2;
+			grid.scrollTo({ left: Math.max(0, scrollTarget), behavior: 'smooth' });
 			cards.forEach(function (c) { c.classList.remove('is-slideshow-active'); });
 			target.classList.add('is-slideshow-active');
 		}
@@ -1213,9 +1233,10 @@
 			stage.classList.toggle('is-info-hidden', isMobile);
 		}
 
-		/* F22 — Guided tour on first modal open */
+		/* F22 — Guided tour on first modal open — delay so modal animation completes */
 		if (!localStorage.getItem('ha_toured_v1')) {
-			this._startTour();
+			var self = this;
+			setTimeout(function () { self._startTour(); }, 500);
 		}
 	};
 

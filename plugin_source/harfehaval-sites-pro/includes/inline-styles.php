@@ -846,8 +846,9 @@ function ha_sites_pro_inline_styles( $id ) {
 {$p} .ha-pro-tool-pin.is-pinned { opacity:1 !important; filter:drop-shadow(0 0 4px #f59e0b) !important; }
 {$p} .ha-pro-chip-pins { background:#f59e0b !important; color:#fff !important; border-color:#f59e0b !important; }
 
-/* ── F18: Guarantee badge ── */
+/* ── F18: Guarantee badge (inline inside card-body, never absolute) ── */
 {$p} .ha-pro-guarantee {
+    position:static !important;
     display:flex !important;
     align-items:center !important;
     gap:6px !important;
@@ -857,8 +858,10 @@ function ha_sites_pro_inline_styles( $id ) {
     border:1px solid #6ee7b7 !important;
     border-radius:8px !important;
     padding:6px 10px !important;
-    margin-top:8px !important;
+    margin-top:4px !important;
     font-weight:600 !important;
+    width:auto !important;
+    z-index:auto !important;
 }
 {$m} .ha-pro-side-guarantee {
     display:flex !important;
@@ -960,7 +963,32 @@ function ha_sites_pro_inline_styles( $id ) {
     line-height:1.4 !important;
 }
 
-/* ── F13: Slideshow ── */
+/* ── F13: Slideshow carousel ── */
+{$p} .ha-pro-grid.is-slideshow-grid {
+    display:flex !important;
+    flex-wrap:nowrap !important;
+    overflow-x:hidden !important;
+    scroll-behavior:smooth !important;
+    gap:20px !important;
+    padding-bottom:8px !important;
+}
+{$p} .ha-pro-grid.is-slideshow-grid > [data-ha-card] {
+    flex:0 0 calc(100% - 100px) !important;
+    min-width:260px !important;
+    max-width:420px !important;
+    transition:box-shadow .3s ease !important;
+}
+@media (min-width:600px) {
+    {$p} .ha-pro-grid.is-slideshow-grid > [data-ha-card] {
+        flex:0 0 calc(50% - 30px) !important;
+        max-width:none !important;
+    }
+}
+@media (min-width:900px) {
+    {$p} .ha-pro-grid.is-slideshow-grid > [data-ha-card] {
+        flex:0 0 calc(33.333% - 24px) !important;
+    }
+}
 {$p} .ha-pro-slideshow-prev,
 {$p} .ha-pro-slideshow-next {
     position:absolute !important;
