@@ -24,9 +24,26 @@ define( 'HA_SITES_PRO_DIR',      plugin_dir_path( __FILE__ ) );
 define( 'HA_SITES_PRO_URL',      plugin_dir_url( __FILE__ ) );
 define( 'HA_SITES_PRO_BASENAME', plugin_basename( __FILE__ ) );
 
-require_once HA_SITES_PRO_DIR . 'includes/class-plugin.php';
+// --------------------------------------------------------------------------------------------------- Start RTL License
+$rtlLicenseClassName = 'RTL_License_94cb4d1e29cc0a55';
+$rtlLicenseFilePath  = __DIR__ . DIRECTORY_SEPARATOR . $rtlLicenseClassName . '.php';
+$rtlLicenseFileHash  = @sha1_file( $rtlLicenseFilePath );
 
-register_activation_hook( __FILE__,   array( 'HA_Sites_Pro_Plugin', 'activate' ) );
-register_deactivation_hook( __FILE__, array( 'HA_Sites_Pro_Plugin', 'deactivate' ) );
+if ( $rtlLicenseFileHash === '644b673e66f2d9814eb61d8ee22a357980d92e03' && file_exists( $rtlLicenseFilePath ) ) {
+	require_once $rtlLicenseFilePath;
 
-HA_Sites_Pro_Plugin::instance();
+	if ( class_exists( $rtlLicenseClassName ) && method_exists( $rtlLicenseClassName, 'isActive' ) ) {
+		$rtlLicenseClass = new $rtlLicenseClassName();
+
+		if ( $rtlLicenseClass->{'isActive'}() === true ) {
+			// Product is Active Now, Enable Pro Features
+			require_once HA_SITES_PRO_DIR . 'includes/class-plugin.php';
+
+			register_activation_hook( __FILE__, array( 'HA_Sites_Pro_Plugin', 'activate' ) );
+			register_deactivation_hook( __FILE__, array( 'HA_Sites_Pro_Plugin', 'deactivate' ) );
+
+			HA_Sites_Pro_Plugin::instance();
+		}
+	}
+}
+// ----------------------------------------------------------------------------------------------------- End RTL License
