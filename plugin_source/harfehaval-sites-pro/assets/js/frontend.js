@@ -1295,7 +1295,11 @@
 			try { seen = !!sessionStorage.getItem('ha_toured_v1'); } catch (e) {}
 			if (!seen) {
 				var self = this;
-				setTimeout(function () { self._startTour(); }, 800);
+				if (self._tourTimeout) clearTimeout(self._tourTimeout);
+				self._tourTimeout = setTimeout(function () {
+					self._tourTimeout = null;
+					self._startTour();
+				}, 800);
 			}
 		}
 	};
@@ -1583,8 +1587,10 @@
 		var self = this;
 		var modal = this.refs.modal;
 		if (!modal) return;
-		/* Don't stack two overlays */
-		if (this._tourOverlay) { this._removeTour(); }
+
+		/* Cancel any pending auto-trigger and remove any existing overlay */
+		if (this._tourTimeout) { clearTimeout(this._tourTimeout); this._tourTimeout = null; }
+		this._removeTour();
 
 		var steps = [
 			{
@@ -1604,7 +1610,7 @@
 			},
 		];
 
-		/* Filter out steps whose target is missing or zero-sized */
+		/* Filter out steps whose target is missing or has zero size */
 		var activeSteps = steps.filter(function (s) {
 			var el = s.target();
 			if (!el) return false;
@@ -1613,26 +1619,28 @@
 		});
 		if (!activeSteps.length) return;
 
-		/* Build overlay (pointer-events:none so modal beneath stays usable) */
+		/* Build overlay — pointer-events:none so modal remains usable */
 		var overlay = document.createElement('div');
 		overlay.className = 'ha-pro-tour-overlay';
 		document.body.appendChild(overlay);
 		this._tourOverlay = overlay;
 
-		/* Persistent highlight box — transitions smoothly between steps */
+		/* Highlight (spotlight ring around the target) */
 		var hl = document.createElement('div');
 		hl.className = 'ha-pro-tour-highlight';
 		overlay.appendChild(hl);
 
-		/* Tooltip box */
+		/* Tooltip card */
 		var box = document.createElement('div');
 		box.className = 'ha-pro-tour-box';
 		overlay.appendChild(box);
 
-		var idx = 0;
-
+		/* done() removes ALL tour overlays — guarantees nothing is left behind */
 		function done() {
-			if (overlay.parentNode) overlay.remove();
+			var all = document.querySelectorAll('.ha-pro-tour-overlay');
+			for (var k = 0; k < all.length; k++) {
+				if (all[k].parentNode) all[k].parentNode.removeChild(all[k]);
+			}
 			self._tourOverlay = null;
 			try { sessionStorage.setItem('ha_toured_v1', '1'); } catch (e) {}
 		}
@@ -1646,21 +1654,22 @@
 			var pad = 8;
 			var isLast = (i === activeSteps.length - 1);
 
-			/* Position highlight */
-			hl.style.top    = (r.top  - pad) + 'px';
-			hl.style.left   = (r.left - pad) + 'px';
+			/* Spotlight ring */
+			hl.style.top    = (r.top    - pad) + 'px';
+			hl.style.left   = (r.left   - pad) + 'px';
 			hl.style.width  = (r.width  + pad * 2) + 'px';
 			hl.style.height = (r.height + pad * 2) + 'px';
 
-			/* Position tooltip box below/above the target */
-			var boxTop = r.bottom + pad + 12;
-			if (step.pos === 'top' || boxTop + 120 > window.innerHeight) {
-				boxTop = Math.max(8, r.top - pad - 120);
+			/* Tooltip position: prefer below, flip above if not enough space */
+			var boxTop  = r.bottom + pad + 12;
+			if (step.pos === 'top' || boxTop + 140 > window.innerHeight) {
+				boxTop = Math.max(8, r.top - pad - 140);
 			}
-			var boxLeft = Math.min(Math.max(8, r.left), window.innerWidth - 296);
-			box.style.top  = boxTop + 'px';
+			var boxLeft = Math.min(Math.max(8, r.left), window.innerWidth - 300);
+			box.style.top  = boxTop  + 'px';
 			box.style.left = boxLeft + 'px';
 
+			/* Rebuild tooltip HTML — fresh buttons, no handler leak */
 			box.innerHTML =
 				'<div class="ha-pro-tour-box-counter">گام ' + (i + 1) + ' از ' + activeSteps.length + '</div>' +
 				'<div class="ha-pro-tour-box-text">' + step.text + '</div>' +
@@ -1669,21 +1678,26 @@
 					'<button type="button" class="ha-pro-tour-btn-next">' + (isLast ? 'پایان ✓' : 'بعدی ←') + '</button>' +
 				'</div>';
 
-			qs(box, '.ha-pro-tour-btn-next').addEventListener('click', function () {
+			/* Use {once:true} so even a double-click can't fire twice */
+			var btnNext = qs(box, '.ha-pro-tour-btn-next');
+			var btnSkip = qs(box, '.ha-pro-tour-btn-skip');
+			btnNext.addEventListener('click', function () {
 				if (i + 1 < activeSteps.length) render(i + 1); else done();
-			});
-			qs(box, '.ha-pro-tour-btn-skip').addEventListener('click', done);
+			}, { once: true });
+			btnSkip.addEventListener('click', done, { once: true });
 		}
 
-		render(idx);
+		render(0);
 	};
 
 	App.prototype._removeTour = function () {
-		if (this._tourOverlay && this._tourOverlay.parentNode) {
-			this._tourOverlay.remove();
-			this._tourOverlay = null;
-			try { sessionStorage.setItem('ha_toured_v1', '1'); } catch (e) {}
+		if (this._tourTimeout) { clearTimeout(this._tourTimeout); this._tourTimeout = null; }
+		var all = document.querySelectorAll('.ha-pro-tour-overlay');
+		for (var k = 0; k < all.length; k++) {
+			if (all[k].parentNode) all[k].parentNode.removeChild(all[k]);
 		}
+		this._tourOverlay = null;
+		try { sessionStorage.setItem('ha_toured_v1', '1'); } catch (e) {}
 	};
 
 	/* ── QR code ── */

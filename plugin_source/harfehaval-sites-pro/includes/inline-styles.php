@@ -1100,29 +1100,30 @@ function ha_sites_pro_inline_styles( $id ) {
     z-index:200002 !important;
     background:#011627 !important;
     color:#fff !important;
-    border-radius:14px !important;
-    padding:16px 20px !important;
-    max-width:280px !important;
+    border-radius:12px !important;
+    padding:12px 16px !important;
+    max-width:240px !important;
     box-shadow:0 8px 32px rgba(0,0,0,.5) !important;
     pointer-events:auto !important;
     font-family:IRANYekan, Vazirmatn, Tahoma, system-ui, sans-serif !important;
     direction:rtl !important;
-    line-height:1.6 !important;
+    line-height:1.55 !important;
 }
 .ha-pro-tour-box-counter {
-    font-size:.72rem !important;
+    font-size:.65rem !important;
     color:#2ec4b6 !important;
-    margin-bottom:6px !important;
+    margin-bottom:5px !important;
     font-weight:700 !important;
 }
 .ha-pro-tour-box-text {
-    font-size:.88rem !important;
+    font-size:.76rem !important;
     font-weight:600 !important;
-    margin-bottom:14px !important;
+    margin-bottom:12px !important;
+    line-height:1.65 !important;
 }
 .ha-pro-tour-box-actions {
     display:flex !important;
-    gap:8px !important;
+    gap:6px !important;
     justify-content:flex-end !important;
     align-items:center !important;
 }
@@ -1130,9 +1131,9 @@ function ha_sites_pro_inline_styles( $id ) {
     background:#2ec4b6 !important;
     color:#011627 !important;
     border:0 !important;
-    border-radius:8px !important;
-    padding:7px 18px !important;
-    font-size:.82rem !important;
+    border-radius:7px !important;
+    padding:6px 14px !important;
+    font-size:.74rem !important;
     font-weight:700 !important;
     cursor:pointer !important;
     font-family:inherit !important;
@@ -1142,9 +1143,9 @@ function ha_sites_pro_inline_styles( $id ) {
 .ha-pro-tour-btn-next:hover { background:#26b0a3 !important; }
 .ha-pro-tour-btn-skip {
     background:transparent !important;
-    color:rgba(255,255,255,.6) !important;
+    color:rgba(255,255,255,.55) !important;
     border:0 !important;
-    font-size:.8rem !important;
+    font-size:.72rem !important;
     cursor:pointer !important;
     font-family:inherit !important;
     pointer-events:auto !important;
