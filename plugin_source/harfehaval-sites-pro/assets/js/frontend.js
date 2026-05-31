@@ -1645,11 +1645,8 @@
 			try { sessionStorage.setItem('ha_toured_v1', '1'); } catch (e) {}
 		}
 
-		function render(i) {
-			var step = activeSteps[i];
-			var el = step.target();
-			if (!el) { if (i + 1 < activeSteps.length) render(i + 1); else done(); return; }
-
+		/* Position the spotlight + tooltip for step i, clamped inside the viewport */
+		function place(i, step, el) {
 			var r = el.getBoundingClientRect();
 			var pad = 8;
 			var isLast = (i === activeSteps.length - 1);
@@ -1660,16 +1657,7 @@
 			hl.style.width  = (r.width  + pad * 2) + 'px';
 			hl.style.height = (r.height + pad * 2) + 'px';
 
-			/* Tooltip position: prefer below, flip above if not enough space */
-			var boxTop  = r.bottom + pad + 12;
-			if (step.pos === 'top' || boxTop + 140 > window.innerHeight) {
-				boxTop = Math.max(8, r.top - pad - 140);
-			}
-			var boxLeft = Math.min(Math.max(8, r.left), window.innerWidth - 300);
-			box.style.top  = boxTop  + 'px';
-			box.style.left = boxLeft + 'px';
-
-			/* Rebuild tooltip HTML — fresh buttons, no handler leak */
+			/* Build tooltip content first so we can measure its real height */
 			box.innerHTML =
 				'<div class="ha-pro-tour-box-counter">گام ' + (i + 1) + ' از ' + activeSteps.length + '</div>' +
 				'<div class="ha-pro-tour-box-text">' + step.text + '</div>' +
@@ -1678,6 +1666,23 @@
 					'<button type="button" class="ha-pro-tour-btn-next">' + (isLast ? 'پایان ✓' : 'بعدی ←') + '</button>' +
 				'</div>';
 
+			var boxH = box.offsetHeight || 120;
+			var boxW = box.offsetWidth  || 240;
+
+			/* Prefer below the target; flip above if it would overflow the bottom */
+			var boxTop = r.bottom + pad + 12;
+			if (step.pos === 'top' || boxTop + boxH + 8 > window.innerHeight) {
+				boxTop = r.top - pad - 12 - boxH;
+			}
+			/* Final clamp so the tooltip is ALWAYS fully on screen */
+			boxTop = Math.min(Math.max(8, boxTop), window.innerHeight - boxH - 8);
+
+			var boxLeft = Math.min(Math.max(8, r.left), window.innerWidth - boxW - 8);
+			boxLeft = Math.max(8, boxLeft);
+
+			box.style.top  = boxTop  + 'px';
+			box.style.left = boxLeft + 'px';
+
 			/* Use {once:true} so even a double-click can't fire twice */
 			var btnNext = qs(box, '.ha-pro-tour-btn-next');
 			var btnSkip = qs(box, '.ha-pro-tour-btn-skip');
@@ -1685,6 +1690,26 @@
 				if (i + 1 < activeSteps.length) render(i + 1); else done();
 			}, { once: true });
 			btnSkip.addEventListener('click', done, { once: true });
+		}
+
+		function render(i) {
+			var step = activeSteps[i];
+			var el = step.target();
+			if (!el) { if (i + 1 < activeSteps.length) render(i + 1); else done(); return; }
+
+			/* Bring the target into view if it lives inside a scrollable panel
+			   (e.g. the «مشاهده کامل» button at the bottom of the details panel),
+			   then measure on the next frames once scrolling has settled. */
+			try { el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' }); }
+			catch (e) { try { el.scrollIntoView(); } catch (e2) {} }
+
+			requestAnimationFrame(function () {
+				requestAnimationFrame(function () {
+					var elNow = step.target();
+					if (!elNow) { if (i + 1 < activeSteps.length) render(i + 1); else done(); return; }
+					place(i, step, elNow);
+				});
+			});
 		}
 
 		render(0);
